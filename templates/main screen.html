@@ -102,6 +102,20 @@
         .register-link a:hover {
             text-decoration: underline;
         }
+
+        .forgot-pass {
+        display: block;
+        text-align: right;
+        margin-top: 8px;
+        font-size: 13px;
+        color: #003366;
+        text-decoration: none;
+        font-weight: 600;
+        }
+
+        .forgot-pass:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -120,9 +134,12 @@
             <div class="input-box">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" placeholder="••••••••" required>
+                
+                <a href="{{ url_for('forgot_password') }}" class="forgot-pass">Forgot Password?</a>
             </div>
-            
+
             <button type="submit">Log In</button>
+            
         </form>
 
         <div class="register-link">
