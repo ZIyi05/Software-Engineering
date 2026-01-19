@@ -104,7 +104,9 @@ def verify_identity():
             user = cur.fetchone()
             
             if user:
-                session['reset_user_id'] = uid # Save ID temporarily
+                session['reset_user_id'] = uid 
+                # DIRECTLY render the password page. 
+                # The "Verification Done" popup is handled inside this HTML file.
                 return render_template('reset_password.html')
             else:
                 flash("Error: User ID and Email do not match our records.")
@@ -133,7 +135,7 @@ def update_password():
         connection.commit()
         
         session.pop('reset_user_id', None) # Clear temp session
-        return "Password updated successfully! <a href='/'>Click here to Login</a>"
+        return render_template('reset_success.html')
     except Exception as e:
         connection.rollback()
         return f"Error updating password: {e}"

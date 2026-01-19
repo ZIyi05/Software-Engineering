@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Updated | Multimedia University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* MMU Theme Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: linear-gradient(rgba(0, 51, 102, 0.7), rgba(0, 51, 102, 0.7)), url('/static/mmu_picture.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-top: 6px solid #28a745; /* Green for Success */
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        h2 {
+            color: #003366;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        p {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .login-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px 0;
+            background-color: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3);
+            transition: 0.3s ease;
+            box-sizing: border-box; /* Ensures padding doesn't mess up width */
+        }
+
+        .login-btn:hover {
+            background-color: #002244;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <span class="success-icon">✓</span>
+        <h2>Password Updated!</h2>
+        <p>Your password has been changed successfully. You can now login with your new credentials.</p>
+        
+        <a href="/" class="login-btn">Back to Login</a>
+    </div>
+
+</body>
+</html>
