@@ -128,12 +128,12 @@
         <form id="loginForm" action="/login_submit" method="POST">
             <div class="input-box">
                 <label for="userid">User ID</label>
-                <input type="text" id="userid" name="userid" placeholder="Student or Staff ID" required>
+                <input type="text" id="userid" name="userid" placeholder="Student or Staff ID" required autocomplete="off">
             </div>
             
             <div class="input-box">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required>
+                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="new-password">
                 
                 <a href="{{ url_for('forgot_password') }}" class="forgot-pass">Forgot Password?</a>
             </div>
