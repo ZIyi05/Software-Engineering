@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Define Scholarship</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized with Icon + Word logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic - Visible in both states */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in expanded state */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* Shrunk State Logic */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+
+        .content { padding: 40px 60px; overflow-y: auto; box-sizing: border-box; }
+
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
+        .draft-badge { background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; margin-left: 12px; text-transform: uppercase; }
+        .btn-discard { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: 700; color: var(--nav-dark); cursor: pointer; font-size: 0.85rem; }
+
+        /* FORM CARD */
+        .form-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 35px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); max-width: 1000px; margin: 0 auto; }
+        .step-title { font-size: 1rem; font-weight: 800; color: var(--nav-dark); margin-bottom: 20px; margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        
+        .field label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .field input, .field select, .field textarea { 
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.85rem; box-sizing: border-box; 
+        }
+
+        .field textarea { resize: none; min-height: 250px; line-height: 1.5; }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+        .button-footer { display: flex; gap: 20px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px; }
+        .btn-save-draft { flex: 1; background: white; color: var(--nav-dark); border: 2px solid var(--nav-dark); padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
+        .btn-publish { flex: 1.5; background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. COMMITTEE</h2>
+        <nav>
+            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="committee_dashboard.html"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="committee_portfolio.html" class="active"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="committee_calendar.html"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Committee Member: <b>Zi Yi</b></div>
+        </div>
+
+        <div class="content">
+            <div class="header-row">
+                <div>
+                    <h1 id="pageHeading" style="font-weight: 800; font-size: 2rem; margin: 0; display: inline-block;">Define Scholarship</h1>
+                    <span id="pageBadge" class="draft-badge">Draft Mode</span>
+                </div>
+                <button class="btn-discard" onclick="window.location.href='committee_portfolio.html'">Cancel & Discard</button>
+            </div>
+
+            <div class="form-card">
+                <h2 class="step-title">1. Core Information</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Scholarship Name</label>
+                        <input type="text" id="schName" placeholder="e.g. STEM Innovation Award 2026">
+                    </div>
+                    <div class="field">
+                        <label>Award Amount (RM)</label>
+                        <input type="number" id="schAmount" placeholder="e.g. 15000" min="1" oninput="validatePos(this)">
+                    </div>
+                </div>
+
+                <h2 class="step-title">2. Eligibility Configuration</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Min. CGPA Requirement</label>
+                        <input type="text" id="schGPA" placeholder="e.g. 3.80">
+                    </div>
+                    <div class="field">
+                        <label>Target Faculty</label>
+                        <select id="schFaculty">
+                            <option>All Faculties</option>
+                            <option>Computing Faculty</option>
+                            <option>Engineering Faculty</option>
+                            <option>Business Faculty</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Deadline</label>
+                        <input type="date" id="schDate">
+                    </div>
+                    <div class="field">
+                        <label>Total Award Slots</label>
+                        <input type="number" id="schSlots" placeholder="e.g. 20" min="1" oninput="validatePos(this)">
+                    </div>
+                </div>
+
+                <h2 class="step-title">3. Content & Instructions</h2>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Program Brief (Description)</label>
+                        <textarea id="schDesc" placeholder="Describe what this scholarship is about and who it is for..."></textarea>
+                    </div>
+                    <div class="field">
+                        <label>Application Instructions</label>
+                        <textarea id="schInstructions" placeholder="List the steps students need to take..."></textarea>
+                    </div>
+                </div>
+
+                <div class="button-footer">
+                    <button class="btn-save-draft" onclick="saveAsDraft()">Save as Draft</button>
+                    <button class="btn-publish" id="publishBtn" onclick="publishNow()">Publish to Portal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        function validatePos(input) {
+            if (input.value !== "" && input.value < 1) { input.value = 1; }
+        }
+
+        function saveAsDraft() {
+            alert("Scholarship draft saved successfully.");
+            window.location.href = 'committee_portfolio.html';
+        }
+
+        function publishNow() {
+            if(!document.getElementById('schName').value) {
+                alert("Please provide at least a scholarship name.");
+                return;
+            }
+            alert("Scholarship is now live on the student discovery portal.");
+            window.location.href = 'committee_portfolio.html';
+        }
+    </script>
+</body>
+</html>

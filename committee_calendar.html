@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Interview Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized with Icon + Word logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic - Visible in both states */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in expanded state alongside words */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* COLLAPSED STATE: Center icon and hide the span text */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+
+        .content { padding: 40px 60px; overflow-y: auto; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; }
+
+        /* Calendar Table Style */
+        .calendar-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .calendar-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .calendar-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+
+        .time-tag { background: #F1F5F9; color: var(--nav-dark); padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; }
+        
+        .btn-status { padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem; transition: 0.2s; }
+        .btn-complete { background: var(--emerald); color: white; }
+        .btn-complete:hover { background: #043d2f; }
+        
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. COMMITTEE</h2>
+        <nav>
+            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="committee_dashboard.html"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="committee_portfolio.html"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="committee_calendar.html" class="active"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Committee Member: <b>Zi Yi</b></div>
+        </div>
+
+        <div class="content">
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Interview Calendar</h1>
+                <p style="color: var(--slate); margin-top: 5px;">Manage scheduled interviews. Once an interview is finished, click "Complete & Score".</p>
+            </div>
+
+            <div class="card">
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Applicant</th>
+                            <th>Venue / Platform</th>
+                            <th>Status Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Jan 21, 2026</b><br><span class="time-tag">02:30 PM</span></td>
+                            <td><b>Bernice Gan</b><br><small style="color: var(--slate);">ID: 243UC247</small></td>
+                            <td>Physical (Room 4A)</td>
+                            <td>
+                                <button class="btn-status btn-complete" onclick="location.href='committee_decision.html'">Complete & Score</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Jan 20, 2026</b><br><span class="time-tag">10:00 AM</span></td>
+                            <td><b>Ariff Shauqi</b><br><small style="color: var(--slate);">ID: 243UC881</small></td>
+                            <td>Zoom Meeting</td>
+                            <td>
+                                <button class="btn-status btn-complete" onclick="location.href='committee_decision.html'">Complete & Score</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+    </script>
+</body>
+</html>

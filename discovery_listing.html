@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Find Scholarships</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B;
+            --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
+            --sidebar-width: 240px; --sidebar-collapsed: 70px;
+        }
+
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--sidebar); color: white;
+            padding: 30px 15px; display: flex; flex-direction: column; flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
+        .sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; color: #FFFFFF; padding-left: 10px; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
+
+        .sidebar a {
+            color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px;
+            display: flex; align-items: center; overflow: hidden; font-size: 0.85rem; transition: 0.2s;
+        }
+        .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a i { margin-right: 0; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
+
+        .toggle-btn {
+            position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white;
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100;
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        /* TOP BAR & NOTIFICATIONS */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
+
+        .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
+        .notif-badge {
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
+            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;
+            display: block; border: 2px solid white; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        .notif-dropdown {
+            position: absolute; top: 45px; right: 0; width: 280px; background: white; 
+            border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
+            display: none; z-index: 1000; overflow: hidden;
+        }
+        .notif-dropdown.show { display: block; }
+        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); }
+
+        .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
+
+        /* LAYOUT & CONTENT */
+        .layout-body { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .filter-pane { width: 0; background: white; border-right: none; padding: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; gap: 20px; opacity: 0; }
+        .filter-pane.open { width: 250px; padding: 30px; border-right: 1px solid var(--border); opacity: 1; }
+        .filter-label { font-size: 0.65rem; font-weight: 800; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .filter-select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.8rem; font-family: 'Inter'; }
+        
+        .workspace { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 25px 40px; overflow-y: auto; transition: all 0.4s ease; }
+        .content-container { width: 100%; max-width: 750px; }
+        h1 { font-size: 2.1rem; font-weight: 800; margin: 0; color: var(--sidebar); }
+        .header-desc { font-size: 1rem; color: var(--slate); margin-bottom: 35px; }
+
+        .search-wrapper { display: flex; gap: 10px; width: 100%; margin-bottom: 30px; }
+        .search-bar { flex: 1; padding: 12px 18px; border: 1px solid var(--border); border-radius: 10px; font-family: 'Inter'; font-size: 0.9rem; outline: none; }
+        .btn-filter-toggle { background: white; border: 1px solid var(--border); padding: 0 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; }
+
+        .sch-card { background: white; border: 1px solid var(--border); padding: 18px 25px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; }
+        .sch-card:hover { border-color: #94A3B8; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .theme-badge { font-size: 0.55rem; background: #F1F5F9; color: var(--slate); padding: 3px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sch-info h4 { margin: 8px 0 4px 0; font-size: 1rem; color: var(--sidebar); font-weight: 700; }
+        .sch-info p { margin: 0; font-size: 0.8rem; color: var(--slate); }
+        .view-details-arrow { color: #CBD5E1; transition: 0.2s; }
+        .btn-apply-filter { background: var(--sidebar); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MeritHub.</h2>
+        <nav>
+            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="discovery_listing.html" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="tracking_hub.html"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="profile.html"><i data-feather="user"></i><span>Academic Profile</span></a>
+        </nav>
+        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="position: relative;">
+                <div class="notification-bell" onclick="toggleNotifs()">
+                    <i data-feather="bell" style="width: 18px; height: 18px;"></i>
+                    <div class="notif-badge" id="notifBadge">2</div>
+                </div>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-item"><b>Application Approved</b><br>Your STEM Grant documents are verified.</div>
+                    <div class="notif-item"><b>Interview Scheduled</b><br>Interview set for Jan 25.</div>
+                </div>
+            </div>
+            <div class="user-tag" id="topUserTag">Loading Identity...</div>
+        </div>
+
+        <div class="layout-body">
+            <div class="filter-pane" id="filterPane">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="filter-label">Filters</span>
+                    <i data-feather="x" style="cursor:pointer; width:16px;" onclick="toggleFilters()"></i>
+                </div>
+                <div>
+                    <label class="filter-label">Category</label>
+                    <select id="themeFilter" class="filter-select">
+                        <option value="All">All Themes</option>
+                        <option value="Academic Merit">Academic Merit</option>
+                        <option value="Social Impact">Social Impact</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Entrepreneurship">Entrepreneurship</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="filter-label">Minimum CGPA: <b id="cgpaVal">2.50</b></label>
+                    <input type="range" id="cgpaFilter" min="2.0" max="4.0" step="0.1" value="2.5" oninput="document.getElementById('cgpaVal').innerText = parseFloat(this.value).toFixed(2)">
+                </div>
+                <div>
+                    <label class="filter-label">Faculty</label>
+                    <select id="facultyFilter" class="filter-select">
+                        <option value="All">All Faculties</option>
+                        <option value="Computing">Computing</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Business">Business</option>
+                    </select>
+                </div>
+                <button class="btn-apply-filter" onclick="applyFilters()">Apply Filters</button>
+            </div>
+
+            <div class="workspace">
+                <div class="content-container">
+                    <h1>Scholarship Discovery</h1>
+                    <p class="header-desc">Explore available awards. Click a card to view criteria and check eligibility.</p>
+                    <div class="search-wrapper">
+                        <input type="text" id="searchInput" class="search-bar" placeholder="Search by scholarship title...">
+                        <button class="btn-filter-toggle" onclick="toggleFilters()">
+                            <i data-feather="filter" style="width:16px;"></i>
+                        </button>
+                    </div>
+                    <div id="scholarshipList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+
+        const scholarships = [
+            { id: 'global', name: 'Global Excellence Grant', cgpa: 3.80, faculty: 'Computing', theme: 'Academic Merit', slots: 50 },
+            { id: 'future', name: 'Future Leaders Fund', cgpa: 3.50, faculty: 'All', theme: 'Social Impact', slots: 15 },
+            { id: 'stem', name: 'STEM Innovation Award', cgpa: 3.90, faculty: 'Engineering', theme: 'Technology', slots: 8 },
+            { id: 'biz', name: 'Business Venture Grant', cgpa: 3.30, faculty: 'Business', theme: 'Entrepreneurship', slots: 25 }
+        ];
+
+        window.onload = function() {
+            const savedData = JSON.parse(localStorage.getItem('studentProfile'));
+            if (savedData) {
+                document.getElementById('topUserTag').innerText = `ID: ${savedData.id || '243UC247'} | ${savedData.name || 'Bernice Gan'}`;
+            }
+            renderCards(scholarships);
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        function toggleNotifs() { 
+            document.getElementById('notifDropdown').classList.toggle('show'); 
+            // FIXED: This line hides the badge once the menu is opened
+            document.getElementById('notifBadge').style.display = 'none';
+        }
+
+        function toggleFilters() { document.getElementById('filterPane').classList.toggle('open'); }
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const minCGPA = parseFloat(document.getElementById('cgpaFilter').value);
+            const faculty = document.getElementById('facultyFilter').value;
+            const theme = document.getElementById('themeFilter').value;
+            const filtered = scholarships.filter(s => {
+                const matchesSearch = s.name.toLowerCase().includes(search);
+                const matchesCGPA = s.cgpa >= minCGPA;
+                const matchesFaculty = (faculty === 'All' || s.faculty === faculty || s.faculty === 'All');
+                const matchesTheme = (theme === 'All' || s.theme === theme);
+                return matchesSearch && matchesCGPA && matchesFaculty && matchesTheme;
+            });
+            renderCards(filtered);
+            toggleFilters();
+        }
+
+        function renderCards(data) {
+            const container = document.getElementById('scholarshipList');
+            container.innerHTML = data.map(s => `
+                <div class="sch-card" onclick="location.href='scholarship_detail.html?id=${s.id}'">
+                    <div class="sch-info">
+                        <span class="theme-badge">${s.theme}</span>
+                        <h4>${s.name}</h4>
+                        <p>Faculty: ${s.faculty} • <span style="color:var(--emerald); font-weight:600;">${s.slots} slots available</span></p>
+                    </div>
+                    <div class="view-details-arrow"><i data-feather="chevron-right" style="width: 18px;"></i></div>
+                </div>
+            `).join('');
+            feather.replace();
+        }
+    </script>
+</body>
+</html>

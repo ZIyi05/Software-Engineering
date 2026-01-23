@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Committee Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized with Icon + Word logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in expanded state */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* Shrunk State Logic */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+
+        .content { padding: 40px 60px; overflow-y: auto; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        .decision-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .decision-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .decision-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+
+        .status-badge { padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+        .status-pending { background: #FEF3C7; color: #92400E; }
+        .status-interviewed { background: #E0F2FE; color: #0369A1; }
+
+        .btn-decide { background: var(--emerald); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-decide:hover { opacity: 0.9; }
+        .btn-disabled { background: #F1F5F9; color: #94A3B8; border: 1px solid var(--border); cursor: not-allowed; }
+        
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. COMMITTEE</h2>
+        <nav>
+            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="committee_dashboard.html" class="active"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="committee_portfolio.html"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="committee_calendar.html"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Committee Member: <b>Zi Yi</b></div>
+        </div>
+
+        <div class="content">
+            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Decision Hub</h1>
+            <p style="color: var(--slate); margin-top: 5px;">Review successful candidates and manage interview slots.</p>
+
+            <div class="card" style="margin-top: 30px;">
+                <table class="decision-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant Name</th>
+                            <th>Reviewer Score</th>
+                            <th>Interview Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Ariff Shauqi</b><br><small style="color: var(--slate);">ID: 243UC881</small></td>
+                            <td><b style="color: var(--emerald);">19 / 20</b></td>
+                            <td><span class="status-badge status-interviewed">Interviewed</span></td>
+                            <td><button class="btn-decide btn-disabled" disabled>Scheduled</button></td>
+                        </tr>
+                        <tr>
+                            <td><b>Bernice Gan</b><br><small style="color: var(--slate);">ID: 243UC247</small></td>
+                            <td><b style="color: var(--emerald);">18 / 20</b></td>
+                            <td><span class="status-badge status-pending">Awaiting Interview</span></td>
+                            <td><button class="btn-decide" onclick="location.href='committee_scheduler.html'">Assign Slot</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+    </script>
+</body>
+</html>
