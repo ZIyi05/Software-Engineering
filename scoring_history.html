@@ -22,7 +22,7 @@
         
         /* Brand Heading Shrink logic */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
         .sidebar a { 
             color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
@@ -62,7 +62,7 @@
         .badge-Waitlist { background: #FFFBEB; color: #92400E; }
         .badge-Rejected { background: #FEF2F2; color: #991B1B; }
 
-        .btn-view { background: white; color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .btn-view { background: white; color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-view:hover { background: var(--nav-dark); color: white; border-color: var(--nav-dark); }
         .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
     </style>
@@ -103,11 +103,11 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><b>Bernice Gan</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC247</span></td>
+                            <td><b>Bernice Gan</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 123456789</span></td>
                             <td style="font-weight: 800; color: var(--emerald);">18 / 20</td>
                             <td><span class="badge badge-Approved">Approved</span></td>
                             <td>Jan 18, 2026</td>
-                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
                         </tr>
                         
                         <tr>
@@ -115,7 +115,7 @@
                             <td style="font-weight: 800; color: var(--slate);">12 / 20</td>
                             <td><span class="badge badge-Waitlist">Waitlist</span></td>
                             <td>Jan 17, 2026</td>
-                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
                         </tr>
 
                         <tr>
@@ -123,7 +123,7 @@
                             <td style="font-weight: 800; color: #ef4444;">05 / 20</td>
                             <td><span class="badge badge-Rejected">Rejected</span></td>
                             <td>Jan 16, 2026</td>
-                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
                         </tr>
                     </tbody>
                 </table>
