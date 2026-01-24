@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +21,7 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         
-        /* Brand Heading Shrink logic - Visible in both states */
+        /* Brand Heading Shrink logic */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
@@ -30,10 +31,7 @@
             transition: 0.2s; white-space: nowrap;
         }
 
-        /* ICONS - Visible in expanded state */
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
-        
-        /* Shrunk State Logic */
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
 
@@ -46,10 +44,16 @@
         }
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* TOP BAR - Fixed alignment to right */
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        
+        /* IDENTITY BADGE */
+        .user-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+
         .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
 
-        .content { padding: 40px 60px; overflow-y: auto; box-sizing: border-box; }
+        .content { padding: 40px 60px; overflow-y: auto; box-sizing: border-box; flex: 1; }
 
         .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
         .draft-badge { background: #FEF3C7; color: #92400E; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; margin-left: 12px; text-transform: uppercase; }
@@ -92,7 +96,7 @@
 
     <div class="main">
         <div class="top-bar">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Committee Member: <b>Zi Yi</b></div>
+            <div class="user-badge">Committee: Zi Yi</div>
         </div>
 
         <div class="content">

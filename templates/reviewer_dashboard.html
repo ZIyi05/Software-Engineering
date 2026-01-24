@@ -21,7 +21,7 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
         .sidebar a { 
             color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
@@ -39,16 +39,20 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* MAIN AREA */
-        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        /* MAIN AREA - Constrained to 100vh */
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
         
-        /* TOP BAR - Positioning name at the end */
-        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
+        /* TOP BAR - Locked at the top */
+        .top-bar { 
+            height: 60px; background: white; border-bottom: 1px solid var(--border); 
+            display: flex; align-items: center; justify-content: flex-end; 
+            padding: 0 40px; flex-shrink: 0; position: sticky; top: 0; z-index: 1000;
+        }
         
-        /* Reviewer Name Badge - No bold formatting */
         .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
-        .content { padding: 40px 60px; }
+        /* CONTENT - This part will scroll */
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
         /* STATISTICS GRID */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
