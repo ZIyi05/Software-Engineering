@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub Admin | Dashboard Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B; 
+            --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
+            --sidebar-width: 250px; /* Matched to Scholarship Manager */
+            --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Matched exactly to Scholarship Manager placements */
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--sidebar); color: white;
+            padding: 40px 24px; /* Matched padding */
+            display: flex; flex-direction: column; flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; 
+        }
+
+        /* CHANGE MADE HERE: Icons are now visible when expanded */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; } 
+        .sidebar a span { display: block; }
+
+        /* Logic: COLLAPSED = Icons Only (Margin-right removed to center icon) */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+        
+        .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+
+        /* MAIN AREA & TOP BAR - Matched Placements */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        
+        .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+        .admin-tag b { color: var(--sidebar); }
+
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
+
+        /* ANALYTICS CONTENT */
+        .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-report { background: var(--sidebar); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 30px; }
+        .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px; }
+        .stat-card h4 { margin: 0; font-size: 0.7rem; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+        .stat-card .value { font-size: 2.2rem; font-weight: 800; color: var(--sidebar); margin: 10px 0; }
+        .stat-card .sub-text { font-size: 0.8rem; color: var(--slate); }
+        
+        .trend-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .chart-placeholder { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px; min-height: 400px; }
+        .chart-visual { height: 300px; margin-top: 40px; border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); display: flex; align-items: flex-end; justify-content: space-around; padding: 0 10px; }
+        .bar { width: 50px; background: var(--emerald); border-radius: 4px 4px 0 0; position: relative; }
+        .bar.current { background: var(--sidebar); }
+        .bar::after { content: attr(data-month); position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; color: var(--slate); }
+        .dist-row { margin-bottom: 25px; }
+        .dist-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--slate); margin-bottom: 10px; text-transform: uppercase; }
+        .progress-bg { height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. ADMIN</h2>
+        <nav>
+            <a href="admin_dashboard.html" class="active"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="scholarship_manager.html"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+            <a href="user_management.html"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+        </nav>
+        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="admin-tag">Admin: <b>Amr Loay</b></div>
+        </div>
+
+        <div class="content">
+            <div class="content-header">
+                <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Dashboard Overview</h1>
+                <button class="btn-report" onclick="alert('Analytics report generated.')">Generate System Report</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Total Applications</h4>
+                    <div class="value">1,242</div>
+                    <div class="sub-text">Volume across all active programs</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Review Completion</h4>
+                    <div class="value">92%</div>
+                    <div class="sub-text">Evaluated applications in current cycle</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Funds Disbursed</h4>
+                    <div class="value">RM 500k</div>
+                    <div class="sub-text">Financial allocation for 2026 awards</div>
+                </div>
+            </div>
+
+            <div class="trend-grid">
+                <div class="chart-placeholder">
+                    <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Application Volume Trend</h3>
+                    <div class="chart-visual">
+                        <div class="bar" style="height: 35%" data-month="Oct"></div>
+                        <div class="bar" style="height: 55%" data-month="Nov"></div>
+                        <div class="bar" style="height: 75%" data-month="Dec"></div>
+                        <div class="bar current" style="height: 90%" data-month="Jan"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Award Distribution</h3>
+                    <div style="margin-top: 40px;">
+                        <div class="dist-row">
+                            <div class="dist-label"><span>Computing</span><span>80%</span></div>
+                            <div class="progress-bg"><div style="width: 80%; height: 100%; background: var(--emerald);"></div></div>
+                        </div>
+                        <div class="dist-row">
+                            <div class="dist-label"><span>Engineering</span><span>50%</span></div>
+                            <div class="progress-bg"><div style="width: 50%; height: 100%; background: var(--sidebar);"></div></div>
+                        </div>
+                        <div class="dist-row">
+                            <div class="dist-label"><span>Business</span><span>35%</span></div>
+                            <div class="progress-bg"><div style="width: 35%; height: 100%; background: var(--slate);"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+    </script>
+</body>
+</html>

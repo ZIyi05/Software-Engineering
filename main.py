@@ -31,8 +31,8 @@ def register():
         # Get form data
         uID = request.form.get('studentID')
         fullName = request.form.get('fullName')
-        email = request.form.get('email')
-        password = request.form.get('password') 
+        email = request.form.get('new_reg_email')        
+        password = request.form.get('password')
         phone = request.form.get('phone')
         gender = request.form.get('gender')
         dob = request.form.get('dob')

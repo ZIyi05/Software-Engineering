@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Tracking Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B;
+            --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
+            --amber: #D97706; --amber-light: #FFEDD5; --crimson: #991B1B;
+            --sidebar-width: 240px; --sidebar-collapsed: 70px;
+        }
+
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--sidebar); color: white;
+            padding: 30px 15px; display: flex; flex-direction: column; flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
+        .sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; color: #FFFFFF; padding-left: 10px; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px; display: flex; align-items: center; font-size: 0.85rem; transition: 0.2s; }
+        .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
+
+        .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+
+        /* TOP BAR */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
+
+        /* NOTIFICATIONS */
+        .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; border: 2px solid white; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
+        .notif-dropdown.show { display: block; }
+        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); }
+        .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
+
+        /* CONTENT & TABS */
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
+        .tab-nav { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin: 25px 0 30px 0; }
+        .tab-item { padding: 10px 0; color: var(--slate); font-weight: 500; cursor: pointer; font-size: 0.9rem; position: relative; }
+        .tab-item.active { color: var(--emerald); font-weight: 700; }
+        .tab-item.active::after { content: ""; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--emerald); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* CARDS & TIMELINE (Keeping your original style) */
+        .app-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+        .card-top h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--sidebar); }
+        .card-top p { margin: 5px 0 0 0; color: var(--slate); font-size: 0.85rem; }
+        .status-badge { padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .badge-draft { background: #FEF3C7; color: #92400E; }
+        .badge-review { background: #E0E7FF; color: #3730A3; }
+        .badge-interview { background: #FFEDD5; color: #9A3412; }
+        .badge-awarded { background: #D1FAE5; color: #065F46; }
+        .badge-rejected { background: #FEE2E2; color: #991B1B; }
+
+        .tracker-wrapper { position: relative; padding: 20px 0 40px 0; margin-top: 20px; width: 100%; }
+        .line-base { position: absolute; top: 12px; left: 7%; right: 7%; height: 2px; background: #E2E8F0; z-index: 1; }
+        .line-fill { position: absolute; top: 12px; left: 7%; height: 2px; background: var(--line-color, #064E3B); z-index: 2; transition: width 1s ease; }
+        .steps { position: relative; z-index: 3; display: flex; justify-content: space-between; padding: 0 10px; }
+        .step { display: flex; flex-direction: column; align-items: center; width: 14%; }
+        .dot { width: 18px; height: 18px; border-radius: 50%; background: white; border: 2px solid var(--border); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .step.done .dot { background: var(--dot-color, #064E3B); border-color: var(--dot-color, #064E3B); }
+        .step.done .dot::after { content: '✓'; color: white; font-size: 10px; font-weight: 900; }
+        .step.active .dot { background: white; border-color: var(--amber); border-width: 3px; box-shadow: 0 0 0 4px var(--amber-light); }
+        .label { font-size: 0.55rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; text-align: center; line-height: 1.3; }
+        .step.done .label { color: var(--dot-color, #064E3B); }
+        .step.active .label { color: var(--amber); }
+
+        .btn-continue { background: var(--sidebar); color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-block; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MeritHub.</h2>
+        <nav>
+            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="discovery_listing.html"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="tracking_hub.html" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="profile.html"><i data-feather="user"></i><span>Academic Profile</span></a>
+        </nav>
+        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="position: relative;">
+                <div class="notification-bell" onclick="toggleNotifs()">
+                    <i data-feather="bell" style="width: 18px; height: 18px;"></i>
+                    <div class="notif-badge" id="notifBadge">2</div>
+                </div>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-item"><b>Decision Update</b><br>Academic Merit Fund result is out.</div>
+                    <div class="notif-item"><b>Interview Update</b><br>Future Leaders Grant: Jan 25.</div>
+                </div>
+            </div>
+            <div class="user-tag">ID: 243UC247 | <b>Bernice Gan</b></div>
+        </div>
+
+        <div class="content">
+            <div class="page-header">
+                <h1 style="font-weight: 800; font-size: 2.1rem; color: var(--sidebar); margin: 0;">My Applications</h1>
+                <p style="color: var(--slate); font-size: 0.95rem; margin-top: 5px;">Track your journey and milestones.</p>
+            </div>
+
+            <div class="tab-nav">
+                <div class="tab-item active" onclick="switchTab('active')">Active (2)</div>
+                <div class="tab-item" onclick="switchTab('drafts')">Drafts (1)</div>
+                <div class="tab-item" onclick="switchTab('completed')">Completed (2)</div>
+            </div>
+
+            <div id="active" class="tab-content active">
+                <div class="app-card">
+                    <div class="card-top">
+                        <div><h3>STEM Innovation Award 2026</h3><p>Submitted on: Jan 15, 2026</p></div>
+                        <span class="status-badge badge-review">In Review</span>
+                    </div>
+                    <div class="tracker-wrapper">
+                        <div class="line-base"></div><div class="line-fill" style="width: 14%;"></div>
+                        <div class="steps">
+                            <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
+                            <div class="step active"><div class="dot"></div><span class="label">In Review</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">App Approved</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Interview Scheduled</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Final Decision</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="app-card">
+                    <div class="card-top">
+                        <div><h3>Future Leaders Grant</h3><p>Submitted on: Jan 10, 2026</p></div>
+                        <span class="status-badge badge-interview">Interview Scheduled</span>
+                    </div>
+                    <div class="tracker-wrapper">
+                        <div class="line-base"></div><div class="line-fill" style="width: 43%;"></div>
+                        <div class="steps">
+                            <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">In Review</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">App Approved</span></div>
+                            <div class="step active"><div class="dot"></div><span class="label">Interview Scheduled</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                            <div class="step"><div class="dot"></div><span class="label">Final Decision</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="drafts" class="tab-content">
+                <div class="app-card">
+                    <div class="card-top">
+                        <div><h3>Global Excellence Grant 2026</h3><p>Last updated: Jan 20, 2026</p></div>
+                        <span class="status-badge badge-draft">Draft Mode</span>
+                    </div>
+                    <a href="application_form.html?id=global" class="btn-continue">Continue Application →</a>
+                </div>
+            </div>
+
+            <div id="completed" class="tab-content">
+                <div class="app-card">
+                    <div class="card-top">
+                        <div><h3>Academic Merit Fund</h3><p>Decided on: Jan 05, 2026</p></div>
+                        <span class="status-badge badge-awarded">Awarded</span>
+                    </div>
+                    <div class="tracker-wrapper">
+                        <div class="line-base"></div><div class="line-fill" style="width: 86%;"></div>
+                        <div class="steps">
+                            <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">In Review</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">App Approved</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Interview Scheduled</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Final Decision</span></div>
+                        </div>
+                    </div>
+                    <div style="background: #F0FDF4; padding: 15px; border-radius: 8px; color: #166534; font-size: 0.85rem; font-weight: 700; border: 1px solid #BBF7D0;">✓ Accepted: Please check your email for disbursement.</div>
+                </div>
+
+                <div class="app-card">
+                    <div class="card-top">
+                        <div><h3>Global Sports Grant</h3><p>Decided on: Jan 02, 2026</p></div>
+                        <span class="status-badge badge-rejected">Rejected</span>
+                    </div>
+                    <div class="tracker-wrapper" style="--line-color: var(--crimson); --dot-color: var(--crimson);">
+                        <div class="line-base"></div><div class="line-fill" style="width: 86%;"></div>
+                        <div class="steps">
+                            <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">In Review</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">App Approved</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Interview Scheduled</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                            <div class="step done"><div class="dot"></div><span class="label">Final Decision</span></div>
+                        </div>
+                    </div>
+                    <div style="background: #FEF2F2; padding: 15px; border-radius: 8px; color: #991B1B; font-size: 0.85rem; font-weight: 700; border: 1px solid #FEE2E2;">Thank you for your interest. Application not selected.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+        function toggleNotifs() { 
+            document.getElementById('notifDropdown').classList.toggle('show'); 
+            document.getElementById('notifBadge').style.display = 'none'; 
+        }
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Final Award Decision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in both states */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* Shrunk State Logic */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+
+        .content { padding: 40px 60px; overflow-y: auto; display: flex; gap: 30px; }
+        .pane { flex: 1; } 
+
+        .data-box { background: #FFFFFF; border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .label { font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--slate); margin-bottom: 10px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; box-sizing: border-box; }
+        .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; box-sizing: border-box; resize: none; min-height: 200px; }
+
+        .btn-accept { background: var(--emerald); color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 0.95rem; transition: 0.2s; }
+        .btn-reject { background: #DC2626; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; font-size: 0.95rem; opacity: 0.9; }
+        .btn-accept:hover, .btn-reject:hover { filter: brightness(1.1); }
+        .btn-back { background: #F1F5F9; color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 0.85rem; margin-bottom: 20px; display: inline-block; }
+
+        .total-merit-box { background: #F0FDF4; border: 1px dashed var(--emerald); padding: 15px; border-radius: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. COMMITTEE</h2>
+        <nav>
+            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="committee_dashboard.html"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="committee_portfolio.html"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="committee_calendar.html" class="active"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Committee Member: <b>Zi Yi</b></div>
+        </div>
+
+        <div class="content">
+            <div class="pane">
+                <a href="committee_calendar.html" class="btn-back">← Back to Calendar</a>
+                <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Bernice Gan</h1>
+                <p style="color: var(--slate); margin-bottom: 30px; font-size: 1rem;">Final Decision Phase (ID: 243UC247)</p>
+
+                <div class="data-box" style="border-left: 5px solid var(--emerald);">
+                    <span class="label">Reviewer Aggregate Score</span>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--emerald);" id="revScore">18 / 20</div>
+                </div>
+
+                <div class="data-box">
+                    <span class="label">Reviewer Feedback Summary</span>
+                    <p style="color: var(--slate); font-style: italic; line-height: 1.5; margin: 0; font-size: 0.9rem;">
+                        "Candidate demonstrates exceptional coding skills and leadership in community tech outreach. Highly recommended for the final award based on technical merit."
+                    </p>
+                </div>
+            </div>
+
+            <div class="pane" style="background: white; padding: 40px; border-radius: 16px; border: 1px solid var(--border); height: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 60px;">
+                <h3 style="margin-top: 0; font-weight: 800; font-size: 1.2rem;">Interview Evaluation</h3>
+                
+                <div class="form-group">
+                    <label>Interview Performance Score (1-10)</label>
+                    <input type="number" min="0" max="10" placeholder="Enter numeric score..." id="intScore" oninput="calculateTotal()">
+                </div>
+
+                <div class="form-group">
+                    <label>Committee Interview Notes</label>
+                    <textarea placeholder="Type detailed observations, strengths, weaknesses, and final committee consensus here..." id="intNotes"></textarea>
+                </div>
+
+                <div class="total-merit-box">
+                    <span style="font-weight: 700; color: var(--emerald); font-size: 0.9rem;">FINAL MERIT SCORE</span>
+                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--emerald);" id="totalScoreDisplay">18 / 30</span>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+
+                <button class="btn-accept" onclick="finalize('Awarded')">Accept Scholarship</button>
+                <button class="btn-reject" onclick="finalize('Rejected')">Reject Application</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        function calculateTotal() {
+            const reviewerScore = 18; 
+            const interviewScore = parseInt(document.getElementById('intScore').value) || 0;
+            const total = reviewerScore + interviewScore;
+            document.getElementById('totalScoreDisplay').innerText = total + " / 30";
+        }
+
+        function finalize(status) {
+            const score = document.getElementById('intScore').value;
+            if(score === "" || score < 0 || score > 10) {
+                alert("Please provide a valid interview score (0-10) before finalizing.");
+                return;
+            }
+            if(confirm("Are you sure you want to mark this applicant as " + status + "? This action will officially update the student's portal.")) {
+                alert("Decision recorded. Bernice Gan has been " + status + ".");
+                window.location.href = 'committee_dashboard.html';
+            }
+        }
+    </script>
+</body>
+</html>

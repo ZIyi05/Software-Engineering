@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub | Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F8FAFC; 
+            --nav-dark: #0F172A;
+            --emerald: #064E3B;
+            --slate: #475569;
+            --border: #E2E8F0;
+            --white: #FFFFFF;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        .register-card {
+            background: var(--white);
+            padding: 50px 45px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+        }
+
+        .brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--nav-dark);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--slate);
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--slate);
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            background-color: #FAFBFC;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .btn-register {
+            background: #003366; /* MMU Blue style */
+            color: white;
+            border: none;
+            padding: 16px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: opacity 0.2s;
+        }
+
+        .login-link {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--slate);
+        }
+
+        .login-link a {
+            color: var(--nav-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <div class="brand">MERITHUB.</div>
+        <div class="subtitle">Student Registration Portal</div>
+
+        <form id="registrationForm" action="/register" method="POST" autocomplete="off">
+            
+            <div style="height: 0; overflow: hidden; opacity: 0; position: absolute;">
+                <input type="text" name="fake_email_autofill">
+                <input type="password" name="fake_password_autofill">
+            </div>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Full Name</label>
+                    <input type="text" name="fullName" placeholder="Legal name as per IC/Passport" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Student ID</label>
+                    <input type="text" name="studentID" placeholder="e.g. 1234567890" required>
+                </div>
+
+                <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" name="new_reg_email" id="regEmail" 
+                                placeholder="student@university.edu" required 
+                                autocomplete="new-password">
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" name="phone" placeholder="+60 12-345 6789" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dob" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Faculty</label>
+                    <select name="faculty">
+                        <option value="FCI">Computing</option>
+                        <option value="FOE">Engineering</option>
+                        <option value="FOB">Business</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Course Name</label>
+                    <input type="text" name="course" placeholder="e.g. Software Engineering" required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Home Address</label>
+                    <textarea name="address" rows="2" placeholder="Residential Address" required></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                            <label>Create Password</label>
+                            <input type="password" name="password" id="regPass" 
+                                placeholder="Min. 8 characters" minlength="8" 
+                                required autocomplete="new-password">
+                </div>
+            </div> <button type="submit" class="btn-register">Register Account</button>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="/">Log In</a>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            // Wait slightly longer for the browser to finish its autofill attempt
+            setTimeout(function() {
+                const emailField = document.getElementById('regEmail');
+                const passField = document.getElementById('regPass');
+                if (emailField) emailField.value = "";
+                if (passField) passField.value = "";
+            }, 300); // 300ms is usually enough to beat the browser
+        });
+    </script>
+</body>
+</html>

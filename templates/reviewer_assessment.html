@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reviewer | Assessment Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized with Icon + Word logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in expanded state */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* Shrunk State Logic */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main-container { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* FIXED TOP BAR */
+        .fixed-top-header { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; z-index: 10; }
+        .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+
+        .split-view { display: flex; flex: 1; overflow: hidden; }
+
+        /* LEFT PANE */
+        .left-pane { flex: 1; background: white; padding: 40px; overflow-y: auto; border-right: 1px solid var(--border); }
+        .student-header h1 { font-size: 2.8rem; font-weight: 800; margin: 0; }
+        .student-meta { font-size: 1.1rem; color: var(--slate); margin: 10px 0 40px 0; }
+        
+        .doc-section { margin-bottom: 35px; }
+        .doc-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; display: block; color: var(--slate); letter-spacing: 1px; }
+        .pdf-viewer-box { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; height: 320px; display: flex; align-items: center; justify-content: center; color: var(--slate); font-style: italic; margin-bottom: 10px; }
+
+        .writing-box { background: #F8FAFC; border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+        .writing-box p { color: var(--slate); font-size: 0.95rem; line-height: 1.6; margin: 0; }
+
+        /* RIGHT PANE */
+        .right-pane { flex: 1; background: white; padding: 40px; overflow-y: auto; }
+        .rubric-title { font-size: 2rem; font-weight: 800; margin-top: 0; margin-bottom: 30px; }
+        
+        .field { margin-bottom: 30px; }
+        .field label { display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--slate); margin-bottom: 12px; letter-spacing: 0.5px; }
+        .field select, .field input, .field textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 1rem; box-sizing: border-box; }
+        
+        .total-score-label { font-size: 0.75rem; font-weight: 800; color: var(--slate); text-transform: uppercase; }
+        .weighted-val { font-size: 3rem; font-weight: 800; color: var(--emerald); margin: 10px 0 40px 0; }
+
+        .btn-emerald-submit { background-color: var(--emerald); color: white; border: none; padding: 18px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; }
+        .btn-emerald-submit:hover { background-color: #043d2e; }
+
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. REVIEWER</h2>
+        <nav>
+            <a href="reviewer_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="reviewer_queue.html"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="#" class="active"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            <a href="scoring_history.html"><i data-feather="clock"></i><span>Scoring History</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+    </div>
+
+    <div class="main-container">
+        <div class="fixed-top-header">
+            <div class="reviewer-badge">Reviewer: <b>Vicky Pong</b></div>
+        </div>
+
+        <div class="split-view">
+            
+            <div class="left-pane">
+                <div class="student-header">
+                    <h1>Bernice Gan</h1>
+                    <p class="student-meta">ID: 243UC247 | Computing Faculty</p>
+                </div>
+
+                <div class="doc-section">
+                    <span class="doc-label">Academic Transcript (Required)</span>
+                    <div class="pdf-viewer-box">
+                        <embed src="sample_transcript.pdf" type="application/pdf" style="width:100%; height:100%;">
+                    </div>
+                </div>
+
+                <div class="doc-section">
+                    <span class="doc-label">Family Income Slip / EA Form (Required)</span>
+                    <div class="pdf-viewer-box">
+                        <embed src="sample_income.pdf" type="application/pdf" style="width:100%; height:100%;">
+                    </div>
+                </div>
+
+                <div class="doc-section">
+                    <span class="doc-label">Applicant Personal Statement</span>
+                    <div class="writing-box">
+                        <p>"I aspire to lead in the field of Cybersecurity..."</p>
+                    </div>
+                </div>
+
+                <div class="doc-section">
+                    <span class="doc-label">Leadership Positions Held</span>
+                    <div class="writing-box">
+                        <p>1. President of University Computing Society<br>2. Team Lead for National Hackathon 2025</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-pane">
+                <h1 class="rubric-title">Assessment Rubric</h1>
+
+                <div class="field">
+                    <label>ACADEMIC MERIT SCORE (BASED ON CGPA)</label>
+                    <select id="academicScore" onchange="updateTotal()">
+                        <option value="0">0 - Below Requirement</option>
+                        <option value="5">5 - Satisfactory (CGPA 2.5 - 2.99)</option>
+                        <option value="7">7 - Good (CGPA 3.0 - 3.49)</option>
+                        <option value="8">8 - Excellent (CGPA 3.5 - 3.79)</option>
+                        <option value="10">10 - Outstanding (CGPA 3.8+)</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>LEADERSHIP POTENTIAL (0-10)</label>
+                    <input type="number" id="leadershipScore" value="0" min="0" max="10" oninput="updateTotal()">
+                </div>
+
+                <div class="total-score-label">TOTAL WEIGHTED SCORE</div>
+                <div class="weighted-val" id="totalDisplay">0 / 20</div>
+
+                <div class="field">
+                    <label>FINAL STATUS RECOMMENDATION</label>
+                    <select id="finalStatus">
+                        <option value="Approved">Approved for Interview Stage</option>
+                        <option value="Waitlist">Waitlist</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>REVIEWER FEEDBACK SUMMARY</label>
+                    <textarea id="feedback" rows="4" placeholder="Provide a brief explanation for your scores..."></textarea>
+                </div>
+
+                <button class="btn-emerald-submit" onclick="submitAssessment()">Submit Final Assessment</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        function updateTotal() {
+            const academic = parseInt(document.getElementById('academicScore').value) || 0;
+            const leadership = parseInt(document.getElementById('leadershipScore').value) || 0;
+            document.getElementById('totalDisplay').innerText = (academic + leadership) + " / 20";
+        }
+
+        function submitAssessment() {
+            const status = document.getElementById('finalStatus').value;
+            alert("Assessment successfully finalized as: " + status + ".\nReturning to your Queue Overview.");
+            location.href = 'reviewer_queue.html';
+        }
+    </script>
+</body>
+</html>
