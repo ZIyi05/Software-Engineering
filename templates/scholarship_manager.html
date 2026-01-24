@@ -6,8 +6,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        :root { --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --amber: #D97706; 
-                --sidebar-width: 250px; --sidebar-collapsed: 70px; }
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --amber: #D97706; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px; 
+        }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
         /* SIDEBAR - Matched to Dashboard Overview exactly */
@@ -18,7 +20,6 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         
-        /* Brand Heading Shrink logic - Visible in both states */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
@@ -28,10 +29,8 @@
             transition: 0.2s; white-space: nowrap;
         }
 
-        /* ICONS - Visible in both states */
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         
-        /* Shrunk State: Center icon and hide span text */
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
 
@@ -44,9 +43,14 @@
         }
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* TOP BAR - Positioning name at the end */
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        
+        /* Admin Tag Name weight updated */
+        .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
-        .content { padding: 40px 60px; overflow-y: auto; }
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
         /* RECENT ACTIVITY */
         .notif-bar { background: #E0F2FE; border: 1px solid #BAE6FD; padding: 12px 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
@@ -71,12 +75,12 @@
             <a href="user_management.html"><i data-feather="users"></i><span>User Management</span></a>
             <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="login.html" style="margin-top: auto;" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div style="font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px;">Admin: <b>Amr Loay</b></div>
+            <div class="admin-tag">Admin: Amr Loay</div>
         </div>
 
         <div class="content">

@@ -20,7 +20,6 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         
-        /* Brand Heading Logic */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
@@ -29,14 +28,9 @@
             border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
             transition: 0.2s; white-space: nowrap;
         }
-
-        /* ICONS - Visible in both states */
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
-        
-        /* Shrunk State Logic */
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
-
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
 
         .toggle-btn { 
@@ -46,13 +40,14 @@
         }
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* TOP BAR - Correct placement */
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
         
-        /* User Tag Style */
+        /* Admin Tag - Removed bold from Amr Loay */
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
-        .admin-tag b { color: var(--nav-dark); }
 
-        .content { padding: 40px 60px; overflow-y: auto; }
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
         /* HEADER & FILTERS */
         .header-section { margin-bottom: 30px; }
@@ -72,6 +67,8 @@
 
         .btn-confirm { background: var(--emerald); color: white; border: none; padding: 18px 40px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; display: block; margin: 40px 0 0 auto; transition: 0.2s; }
         .btn-confirm:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -84,12 +81,12 @@
             <a href="user_management.html"><i data-feather="users"></i><span>User Management</span></a>
             <a href="reviewer_assignment.html" class="active"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="admin-tag">Admin Access: <b>Amr Loay</b></div>
+            <div class="admin-tag">Admin Access: Amr Loay</div>
         </div>
 
         <div class="content">
@@ -104,6 +101,7 @@
                     <option>All Faculties</option>
                     <option>Faculty of Computing</option>
                     <option>Faculty of Engineering</option>
+                    <option>Faculty of Business</option>
                 </select>
             </div>
 

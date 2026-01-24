@@ -26,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* SIDEBAR - Compact Version */
+        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--sidebar);
@@ -39,7 +39,10 @@
             position: relative;
         }
 
-        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
+        .sidebar.collapsed { 
+            width: var(--sidebar-collapsed); 
+            padding: 30px 10px; 
+        }
         
         .sidebar h2 {
             font-size: 0.75rem;
@@ -51,7 +54,12 @@
             transition: all 0.3s ease;
             padding-left: 10px;
         }
-        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
+
+        .sidebar.collapsed h2 { 
+            font-size: 0.55rem; 
+            padding-left: 0; 
+            text-align: center; 
+        }
 
         .sidebar a {
             color: #94A3B8;
@@ -73,9 +81,17 @@
             flex-shrink: 0;
         }
 
-        .sidebar.collapsed a i { margin-right: 0; }
-        .sidebar.collapsed a { justify-content: center; }
-        .sidebar.collapsed a span { display: none; }
+        .sidebar.collapsed a i { 
+            margin-right: 0; 
+        }
+
+        .sidebar.collapsed a { 
+            justify-content: center; 
+        }
+
+        .sidebar.collapsed a span { 
+            display: none; 
+        }
 
         .sidebar a.active {
             color: #FFFFFF;
@@ -102,7 +118,12 @@
             font-size: 0.7rem;
         }
 
-        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 0; 
+        }
 
         .top-bar {
             height: 56px;
@@ -115,8 +136,19 @@
             gap: 15px;
         }
 
-        .notification-bell { cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notification-bell i { width: 18px; height: 18px; color: var(--slate); }
+        .notification-bell { 
+            cursor: pointer; 
+            padding: 6px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        .notification-bell i { 
+            width: 18px; 
+            height: 18px; 
+            color: var(--slate); 
+        }
 
         .user-tag {
             font-size: 0.75rem;
@@ -127,9 +159,22 @@
             border-radius: 6px;
         }
 
-        .workspace { padding: 40px 60px; overflow-y: auto; }
-        .hero h1 { font-size: 2.2rem; font-weight: 800; margin: 0; }
-        .hero p { font-size: 1rem; color: var(--slate); margin-top: 10px; }
+        .workspace { 
+            padding: 40px 60px; 
+            overflow-y: auto; 
+        }
+
+        .hero h1 { 
+            font-size: 2.2rem; 
+            font-weight: 800; 
+            margin: 0; 
+        }
+
+        .hero p { 
+            font-size: 1rem; 
+            color: var(--slate); 
+            margin-top: 10px; 
+        }
         
         .btn-browse {
             background-color: var(--sidebar);
@@ -141,6 +186,9 @@
             cursor: pointer;
             margin-top: 25px;
             font-size: 0.9rem;
+            margin-right: 15px;
+            text-decoration: none; 
+            display: inline-block; 
         }
 
         .card {
@@ -155,44 +203,50 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .card:hover { border-color: #94A3B8; transform: translateX(3px); }
+
+        .card:hover { 
+            border-color: #94A3B8; 
+            transform: translateX(3px); 
+        }
 
         .notif-dropdown {
-            position: absolute; top: 45px; right: 0; width: 280px;
-            background: white; border: 1px solid var(--border); border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000;
+            position: absolute; 
+            top: 45px; 
+            right: 0; 
+            width: 280px;
+            background: white; 
+            border: 1px solid var(--border); 
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
+            display: none; 
+            z-index: 1000;
         }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; }
+
+        .notif-dropdown.show { 
+            display: block; 
+        }
+
+        .notif-item { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #F1F5F9; 
+            font-size: 0.8rem; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MeritHub.</h2>
         <nav>
-            <a href="student_dashboard.html" class="active">
-                <i data-feather="grid"></i>
-                <span>Overview</span>
-            </a>
-            <a href="discovery_listing.html">
-                <i data-feather="search"></i>
-                <span>Find Scholarships</span>
-            </a>
-            <a href="tracking_hub.html">
-                <i data-feather="file-text"></i>
-                <span>My Applications</span>
-            </a>
-            <a href="profile.html">
-                <i data-feather="user"></i>
-                <span>Academic Profile</span>
-            </a>
+            <a href="{{ url_for('student_dashboard') }}" class="active"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="{{ url_for('scholarship_detail') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
         
-        <a href="login.html" style="margin-top: auto;">
-            <i data-feather="log-out"></i>
-            <span>Log out</span>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;">
+            <i data-feather="log-out"></i><span>Log out</span>
         </a>
     </div>
 
@@ -205,24 +259,19 @@
                 <div class="notif-dropdown" id="notifDropdown">
                     <div class="notif-item">
                         <small style="color: var(--emerald); font-weight: 800;">INTERVIEW SET</small>
-                        <b>Global Excellence Grant</b>
-                        Scheduled for Jan 21, 2:30 PM.
+                        <b>Global Excellence Grant</b> Scheduled for Jan 21, 2:30 PM.
                     </div>
                 </div>
             </div>
-            <div class="user-tag" id="topUserTag">ID: 12345678 | Bernice Gan</div>
+            <div class="user-tag" id="topUserTag">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="workspace">
             <div class="hero">
-                <h1 id="welcomeHeading">Welcome back, Bernice.</h1>
+                <h1 id="welcomeHeading">Welcome back, {{ name }}.</h1>
                 <p>You have <b>2</b> active applications. Check your status below.</p>
-                <button class="btn-browse" onclick="window.location.href='discovery_listing.html'">Browse Scholarships</button>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 50px 0 25px 0;">
-                <span style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--slate); letter-spacing: 0.1em;">Active Application Trackers</span>
-                <a href="tracking_hub.html" style="font-size: 0.8rem; color: var(--emerald); text-decoration: none; font-weight: 600;">View History →</a>
+                <a href="{{ url_for('scholarship_detail') }}" class="btn-browse">Browse Scholarships</a>                
+                <a href="{{ url_for('tracking_hub') }}" style="font-size: 0.8rem; color: var(--emerald); text-decoration: none; font-weight: 600;">View History →</a>
             </div>
             
             <div class="scroll-area">
@@ -248,17 +297,6 @@
     <script>
         feather.replace();
 
-        // 1. DATA SYNC LOGIC: Load ID and Name from the "Database"
-        window.onload = function() {
-            const savedData = JSON.parse(localStorage.getItem('studentProfile'));
-            if (savedData) {
-                // Update Welcome Heading
-                document.getElementById('welcomeHeading').innerText = "Welcome back, " + (savedData.name || "Bernice") + ".";
-                // Update Top Bar Tag (ID + Name)
-                document.getElementById('topUserTag').innerText = "ID: " + (savedData.id || "12345678") + " | " + (savedData.name || "Bernice Gan");
-            }
-        };
-
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const btn = document.querySelector('.toggle-btn');
@@ -281,3 +319,4 @@
     </script>
 </body>
 </html>
+

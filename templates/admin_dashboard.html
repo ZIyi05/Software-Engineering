@@ -9,15 +9,15 @@
         :root { 
             --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B; 
             --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
-            --sidebar-width: 250px; /* Matched to Scholarship Manager */
+            --sidebar-width: 250px;
             --sidebar-collapsed: 70px;
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Matched exactly to Scholarship Manager placements */
+        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width); background-color: var(--sidebar); color: white;
-            padding: 40px 24px; /* Matched padding */
+            padding: 40px 24px;
             display: flex; flex-direction: column; flex-shrink: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
         }
@@ -30,11 +30,9 @@
             border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; 
         }
 
-        /* CHANGE MADE HERE: Icons are now visible when expanded */
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; } 
         .sidebar a span { display: block; }
 
-        /* Logic: COLLAPSED = Icons Only (Margin-right removed to center icon) */
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
         .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; }
@@ -43,12 +41,12 @@
         
         .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
-        /* MAIN AREA & TOP BAR - Matched Placements */
+        /* MAIN AREA & TOP BAR */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
         
+        /* Updated: Admin Tag Name weight */
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
-        .admin-tag b { color: var(--sidebar); }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
@@ -87,7 +85,7 @@
 
     <div class="main">
         <div class="top-bar">
-            <div class="admin-tag">Admin: <b>Amr Loay</b></div>
+            <div class="admin-tag">Admin: Amr Loay</div>
         </div>
 
         <div class="content">

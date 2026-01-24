@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MeritHub | Forgot Password</title>
+    <title>MeritHub | Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,7 +25,7 @@
             overflow: hidden;
         }
 
-        .forgot-card {
+        .login-card {
             background: var(--white);
             padding: 50px 40px;
             border-radius: 16px;
@@ -41,7 +41,7 @@
             font-weight: 800;
             letter-spacing: 3px;
             color: var(--nav-dark);
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .form-group {
@@ -67,7 +67,7 @@
             font-family: 'Inter', sans-serif;
             font-size: 0.95rem;
             background-color: #FAFBFC;
-            box-sizing: border-box;
+            box-sizing: border-box; 
             transition: border-color 0.2s;
         }
 
@@ -76,7 +76,7 @@
             outline: none;
         }
 
-        .btn-reset {
+        .btn-login {
             background: var(--nav-dark);
             color: white;
             border: none;
@@ -90,52 +90,62 @@
             transition: opacity 0.2s;
         }
 
-        .btn-reset:hover {
+        .btn-login:hover {
             opacity: 0.9;
         }
 
-        .back-link {
-            margin-top: 25px;
-            display: block;
+        .footer-links {
+            margin-top: 30px;
             font-size: 0.9rem;
+            color: var(--slate);
+        }
+
+        .footer-links a {
             color: var(--emerald);
             text-decoration: none;
             font-weight: 700;
         }
-        
-        .error-msg {
-            color: red;
-            font-size: 0.8rem;
-            margin-bottom: 15px;
+
+        .forgot-link {
+            display: block;
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--emerald);
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
 
-    <div class="forgot-card">
+    <div class="login-card">
         <div class="brand">MERITHUB.</div>
 
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <p class="error-msg">{{ messages[0] }}</p>
+                <p style="color: red; font-size: 0.8rem; margin-bottom: 15px;">{{ messages[0] }}</p>
             {% endif %}
         {% endwith %}
 
-        <form action="/verify_identity" method="POST">
+        <form id="loginForm" action="/login_submit" method="POST">
             <div class="form-group">
                 <label>User ID</label>
-                <input type="text" name="userid" placeholder="e.g. std0001" required>            
+                <input type="text" name="userid" placeholder="Student or Staff ID" required autocomplete="off">
             </div>
 
             <div class="form-group">
-                <label>Registered Email</label>
-                <input type="email" name="email" placeholder="@student.merithub.edu.my" required>
+                <label>Password</label>
+                <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                <a href="{{ url_for('forgot_password_page') }}" class="forgot-link">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="btn-reset">Verify Account</button>
+            <button type="submit" class="btn-login">Log In</button>
         </form>
 
-        <a href="{{ url_for('index') }}" class="back-link">← Back to Login</a>
+        <div class="footer-links">
+            New student? <a href="{{ url_for('show_register_page') }}">Create an Account</a>
+        </div>
     </div>
 
 </body>

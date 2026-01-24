@@ -2,84 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Updated | Multimedia University</title>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <title>MeritHub | Password Reset Success</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* MMU Theme Styles */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: linear-gradient(rgba(0, 51, 102, 0.7), rgba(0, 51, 102, 0.7)), url('/static/mmu_picture.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        :root {
+            --bg: #F8FAFC; 
+            --nav-dark: #0F172A; /* MeritHub Navy */
+            --emerald: #064E3B;  /* MeritHub Emerald */
+            --slate: #475569;
+            --border: #E2E8F0;
+            --white: #FFFFFF;
         }
 
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-top: 6px solid #28a745; /* Green for Success */
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; /* */
+            background-color: var(--bg);
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .success-card {
+            background: var(--white);
+            padding: 50px 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
             width: 100%;
             max-width: 400px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
             text-align: center;
-            backdrop-filter: blur(5px);
+        }
+
+        .brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--nav-dark);
+            margin-bottom: 25px;
         }
 
         .success-icon {
-            font-size: 60px;
-            color: #28a745;
-            margin-bottom: 10px;
+            font-size: 50px;
+            color: var(--emerald); /* Updated to match theme */
+            margin-bottom: 20px;
             display: block;
         }
 
         h2 {
-            color: #003366;
-            margin-bottom: 10px;
+            color: var(--nav-dark);
+            font-size: 1.4rem;
             font-weight: 700;
+            margin-bottom: 10px;
         }
 
         p {
-            color: #555;
-            font-size: 16px;
+            color: var(--slate);
+            font-size: 0.95rem;
+            line-height: 1.5;
             margin-bottom: 30px;
         }
 
-        .login-btn {
-            display: inline-block;
-            width: 100%;
-            padding: 14px 0;
-            background-color: #003366;
+        .btn-login {
+            display: block;
+            background: var(--nav-dark);
             color: white;
+            padding: 16px;
+            border-radius: 10px;
             text-decoration: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 51, 102, 0.3);
-            transition: 0.3s ease;
-            box-sizing: border-box; /* Ensures padding doesn't mess up width */
+            font-weight: 700;
+            font-size: 1rem;
+            transition: opacity 0.2s;
         }
 
-        .login-btn:hover {
-            background-color: #002244;
-            transform: translateY(-2px);
+        .btn-login:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
+    <div class="success-card">
+        <div class="brand">MERITHUB.</div>
+        
         <span class="success-icon">✓</span>
         <h2>Password Updated!</h2>
         <p>Your password has been changed successfully. You can now login with your new credentials.</p>
         
-        <a href="/" class="login-btn">Back to Login</a>
+        <a href="{{ url_for('index') }}" class="btn-login">Back to Login</a>
     </div>
 
 </body>
