@@ -20,7 +20,6 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         
-        /* Brand Heading Shrink logic */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
 
@@ -30,10 +29,8 @@
             transition: 0.2s; white-space: nowrap;
         }
 
-        /* ICONS - Visible in both states */
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         
-        /* Shrunk State Logic */
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
 
@@ -49,6 +46,8 @@
         
         /* FIXED TOP BAR */
         .fixed-top-header { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; flex-shrink: 0; z-index: 10; }
+        
+        /* Reviewer Name - Removed bold formatting */
         .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .split-view { display: flex; flex: 1; overflow: hidden; }
@@ -85,7 +84,7 @@
     <div class="main-container">
         <div class="fixed-top-header">
             <a href="scoring_history.html" class="btn-back">← Back to History</a>
-            <div class="reviewer-badge">Reviewer: <b>Vicky Pong</b></div>
+            <div class="reviewer-badge">Reviewer: Vicky Pong</div>
         </div>
 
         <div class="split-view">

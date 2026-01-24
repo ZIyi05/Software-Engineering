@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub Reviewer | Assessment Summary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        /* MAIN AREA */
+        .main-container { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* TOP BAR */
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
+        .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+
+        .content-area { padding: 40px 60px; overflow-y: auto; flex: 1; }
+        .summary-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 40px; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        .report-header { border-bottom: 2px solid #F1F5F9; padding-bottom: 30px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .student-info h1 { font-size: 2.2rem; font-weight: 800; margin: 0; color: var(--nav-dark); }
+        .student-info p { color: var(--slate); margin: 5px 0 0 0; }
+
+        .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .info-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--slate); margin-bottom: 10px; display: block; letter-spacing: 0.5px; }
+        .data-box { background: #F8FAFC; border: 1px solid var(--border); padding: 15px; border-radius: 8px; font-weight: 600; color: var(--nav-dark); }
+        
+        .total-display { text-align: center; background: #F0FDF4; border: 1px solid #BBF7D0; padding: 25px; border-radius: 12px; margin-bottom: 30px; }
+        .big-score { font-size: 3rem; font-weight: 800; color: var(--emerald); display: block; }
+        
+        .feedback-box { background: #F8FAFC; border: 1px solid var(--border); padding: 20px; border-radius: 12px; color: var(--slate); line-height: 1.6; }
+        .status-tag { padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; background: #ECFDF5; color: #065F46; }
+
+        .btn-print { background: var(--nav-dark); color: white; border: none; padding: 16px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; margin-top: 30px; width: 100%; justify-content: center; }
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+
+        /* PRINT EXPORT LOGIC */
+        @media print {
+            .sidebar, .top-bar, .btn-print, .toggle-btn { display: none !important; }
+            body { background: white; }
+            .main-container, .content-area { padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+            .summary-card { border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. REVIEWER</h2>
+        <nav>
+            <a href="reviewer_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="reviewer_queue.html"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="reviewer_assessment.html"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            <a href="scoring_history.html" class="active"><i data-feather="clock"></i><span>Evaluation History</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+    </div>
+
+    <div class="main-container">
+        <div class="top-bar">
+            <div class="reviewer-badge">Reviewer: Vicky Pong</div>
+        </div>
+
+        <div class="content-area">
+            <div class="summary-card">
+                <div class="report-header">
+                    <div class="student-info">
+                        <h1>Bernice Gan</h1>
+                        <p>ID: 1234567890 | Computing Faculty</p>
+                    </div>
+                    <div class="status-tag">Approved for Interview Stage</div>
+                </div>
+
+                <div class="score-grid">
+                    <div>
+                        <span class="info-label">Academic Merit Score</span>
+                        <div class="data-box">10 / 10 (Outstanding)</div>
+                    </div>
+                    <div>
+                        <span class="info-label">Leadership Potential Score</span>
+                        <div class="data-box">8 / 10 (Excellent)</div>
+                    </div>
+                </div>
+
+                <div class="total-display">
+                    <span class="info-label">Final Weighted Total Score</span>
+                    <span class="big-score">18 / 20</span>
+                </div>
+
+                <div>
+                    <span class="info-label">Reviewer Feedback Summary</span>
+                    <div class="feedback-box">
+                        Applicant shows exceptional technical leadership as President of the Computing Society. Her academic transcript is flawless. Highly recommended for the scholarship interview stage.
+                    </div>
+                </div>
+
+                <button class="btn-print" onclick="window.print()">
+                    <i data-feather="printer"></i> Export Assessment Report (PDF)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+    </script>
+</body>
+</html>
