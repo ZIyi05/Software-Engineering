@@ -88,10 +88,10 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MeritHub.</h2>
         <nav>
-            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="discovery_listing.html"><i data-feather="search"></i><span>Find Scholarships</span></a>
-            <a href="tracking_hub.html" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
-            <a href="profile.html"><i data-feather="user"></i><span>Academic Profile</span></a>
+            <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="{{ url_for('scholarship_detail') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
         <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
@@ -108,7 +108,7 @@
                     <div class="notif-item"><b>Interview Update</b><br>Future Leaders Grant: Jan 25.</div>
                 </div>
             </div>
-            <div class="user-tag">ID: 243UC247 | <b>Bernice Gan</b></div>
+            <div class="user-tag" id="topUserTag">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="content">

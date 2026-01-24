@@ -57,7 +57,6 @@
             display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px;
         }
         
-        /* NOTIFICATION BELL & BADGE */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
         .notif-badge {
             position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
@@ -84,10 +83,10 @@
         
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; }
         .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--sidebar); margin-bottom: 8px; }
-        .field input, .field textarea { 
+        .field input { 
             width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; box-sizing: border-box; background: white;
         }
-        .field textarea { resize: none; }
+        .field input:disabled { background: #F1F5F9; cursor: not-allowed; }
 
         .btn-save { background: var(--sidebar); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 40px; transition: 0.2s; }
         .btn-save:active { transform: scale(0.98); }
@@ -99,6 +98,30 @@
         }
         .notif-dropdown.show { display: block; }
         .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; }
+        
+        /* Success Modal Styles */
+        #verifyPopup {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(15, 23, 42, 0.9); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10000;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        .popup-content {
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            text-align: center; 
+            border-top: 6px solid #064E3B; 
+            width: 350px;
+        }
     </style>
 </head>
 <body>
@@ -115,12 +138,12 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MeritHub.</h2>
         <nav>
-            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="discovery_listing.html"><i data-feather="search"></i><span>Find Scholarships</span></a>
-            <a href="tracking_hub.html"><i data-feather="file-text"></i><span>My Applications</span></a>
-            <a href="profile.html" class="active"><i data-feather="user"></i><span>Academic Profile</span></a>
+            <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="{{ url_for('scholarship_detail') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('profile') }}" class="active"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -136,120 +159,77 @@
                     </div>
                 </div>
             </div>
-            <div class="user-tag" id="topUserTag">ID: Loading...</div>
+            <div class="user-tag" id="topUserTag">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="workspace">
             <h1 style="font-size: 2.2rem; font-weight: 800; margin: 0;">Student Profile</h1>
             
-            <span class="section-title">Personal & Contact Details</span>
-            <div class="form-grid">
-                <div class="field">
-                    <label>Student ID</label>
-                    <input type="text" id="pID" placeholder="e.g. 12345678">
+            <form action="{{ url_for('update_profile') }}" method="POST">
+                <span class="section-title">Personal & Contact Details</span>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Student ID</label>
+                        <input type="text" value="{{ user_id }}" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input type="text" name="fullName" value="{{ student.fullName }}" required>
+                    </div>
+                    <div class="field">
+                        <label>Email Address</label>
+                        <input type="email" name="email" value="{{ student.email }}" required>
+                    </div>
+                    <div class="field">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone" value="{{ student.phone }}" required>
+                    </div>
                 </div>
-                <div class="field">
-                    <label>Full Name</label>
-                    <input type="text" id="pName" placeholder="Type your name...">
-                </div>
-                <div class="field">
-                    <label>Email Address</label>
-                    <input type="email" id="pEmail" placeholder="email@example.com">
-                </div>
-                <div class="field">
-                    <label>Phone Number</label>
-                    <input type="text" id="pPhone" placeholder="+60...">
-                </div>
-            </div>
 
-            <span class="section-title">Academic Records</span>
-            <div class="form-grid">
-                <div class="field">
-                    <label>Faculty</label>
-                    <input type="text" id="pFaculty" placeholder="e.g. Computing">
+                <span class="section-title">Academic Records</span>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Faculty</label>
+                        <input type="text" name="faculty" value="{{ student.faculty }}">
+                    </div>
+                    <div class="field">
+                        <label>Program (Course)</label>
+                        <input type="text" name="course" value="{{ student.course }}">
+                    </div>
+                    <div class="field">
+                        <label>Current CGPA</label>
+                        <input type="text" name="cgpa" value="{{ student.cgpa if student.cgpa else '0.00' }}">
+                    </div>
+                    <div class="field">
+                        <label>Total Credit Hours</label>
+                        <input type="number" name="credits" value="{{ student.total_credits if student.total_credits else 0 }}">
+                    </div>
                 </div>
-                <div class="field">
-                    <label>Program</label>
-                    <input type="text" id="pProgram" placeholder="e.g. Software Engineering">
-                </div>
-                <div class="field">
-                    <label>Current CGPA</label>
-                    <input type="text" id="pCGPA" placeholder="0.00">
-                </div>
-                <div class="field">
-                    <label>Total Credit Hours</label>
-                    <input type="number" id="pCredits" placeholder="0">
-                </div>
-            </div>
 
-            <button class="btn-save" id="saveBtn" onclick="saveProfile()">Save Profile Changes</button>
+                <div id="verifyPopup" style="display: none;">
+                    <div class="popup-content">
+                        <span style="font-size: 50px; color: #064E3B;">✓</span>
+                        <h2 style="color: #0F172A; margin: 15px 0 10px 0;">Profile Updated</h2>
+                        <p style="color: #64748B; font-size: 0.9rem;">Your changes have been saved.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-save" id="saveBtn">Save Profile Changes</button>
+            </form>
         </div>
     </div>
 
+    <!-- Create a hidden element to store flash message data -->
+    <div id="flashData" style="display: none;" data-flash-message="
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {{ messages[0] }}
+            {% endif %}
+        {% endwith %}
+    "></div>
+
     <script>
         feather.replace();
-
-        window.onload = function() {
-            const savedData = JSON.parse(localStorage.getItem('studentProfile'));
-            if (savedData) {
-                document.getElementById('pID').value = savedData.id || "12345678";
-                document.getElementById('pName').value = savedData.name || "";
-                document.getElementById('pEmail').value = savedData.email || "";
-                document.getElementById('pPhone').value = savedData.phone || "";
-                document.getElementById('pFaculty').value = savedData.faculty || "";
-                document.getElementById('pProgram').value = savedData.program || "";
-                document.getElementById('pCGPA').value = savedData.cgpa || "";
-                document.getElementById('pCredits').value = savedData.credits || "";
-                document.getElementById('topUserTag').innerText = "ID: " + (savedData.id || "12345678") + " | " + (savedData.name || "User");
-            } else {
-                document.getElementById('pID').value = "12345678";
-                document.getElementById('pName').value = "Bernice Gan";
-                document.getElementById('topUserTag').innerText = "ID: 12345678 | Bernice Gan";
-            }
-        };
-
-        function triggerNotification(msg) {
-            const toast = document.getElementById('toastAlert');
-            const badge = document.getElementById('notifBadge');
-            const msgEl = document.getElementById('toastMsg');
-            const list = document.getElementById('notifList');
-
-            msgEl.innerText = msg;
-            const newItem = document.createElement('div');
-            newItem.className = 'notif-item';
-            newItem.innerHTML = `<b>Update</b><br>${msg}`;
-            list.prepend(newItem);
-
-            toast.classList.add('show');
-            badge.classList.add('active');
-            badge.innerText = parseInt(badge.innerText) + 1;
-
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
-        }
-
-        function saveProfile() {
-            const profileData = {
-                id: document.getElementById('pID').value,
-                name: document.getElementById('pName').value,
-                email: document.getElementById('pEmail').value,
-                phone: document.getElementById('pPhone').value,
-                faculty: document.getElementById('pFaculty').value,
-                program: document.getElementById('pProgram').value,
-                cgpa: document.getElementById('pCGPA').value,
-                credits: document.getElementById('pCredits').value
-            };
-
-            localStorage.setItem('studentProfile', JSON.stringify(profileData));
-            document.getElementById('topUserTag').innerText = "ID: " + profileData.id + " | " + profileData.name;
-
-            const btn = document.getElementById('saveBtn');
-            btn.innerText = "Saving...";
-            
-            setTimeout(() => {
-                btn.innerText = "✓ Changes Saved";
-                triggerNotification("Your academic profile has been updated and synced.");
-            }, 600);
-        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -257,10 +237,37 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+
         function toggleNotifs() { 
             document.getElementById('notifDropdown').classList.toggle('show'); 
             document.getElementById('notifBadge').classList.remove('active');
         }
+
+        // Check if we should show the success popup (when profile was updated)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Get flash message from hidden element
+            const flashElement = document.getElementById('flashData');
+            const flashMessage = flashElement.getAttribute('data-flash-message') || '';
+            
+            // Clean up the message (remove extra whitespace)
+            const cleanMessage = flashMessage.trim();
+            
+            if (cleanMessage && 
+                (cleanMessage.includes("updated successfully") || 
+                 cleanMessage.includes("Profile updated"))) {
+                
+                const popup = document.getElementById('verifyPopup');
+                popup.style.display = 'flex';
+                
+                // Hide the popup after 2 seconds
+                setTimeout(function() {
+                    popup.style.opacity = '0';
+                    setTimeout(() => { 
+                        popup.style.display = 'none'; 
+                    }, 500);
+                }, 2000);
+            }
+        });
     </script>
 </body>
 </html>

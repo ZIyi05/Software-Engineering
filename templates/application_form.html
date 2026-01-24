@@ -125,7 +125,7 @@
                     </div>
                 </div>
             </div>
-            <div class="user-tag" id="userDisplay">Loading ID...</div>
+            <div class="user-tag">ID: {{ user_id }} | <b>{{ student.fullName }}</b></div>
         </div>
 
         <div class="workspace">
@@ -149,7 +149,7 @@
                 <div class="grid-row">
                     <div class="form-group">
                         <label>Current CGPA</label>
-                        <input type="text" id="appCGPA" placeholder="e.g. 3.00">
+                        <input type="text" value="{{ student.cgpa }}" readonly>
                     </div>
                     <div class="form-group">
                         <label>Current Semester/Year</label>
