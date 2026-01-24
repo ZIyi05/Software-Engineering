@@ -19,9 +19,16 @@
             --crimson: #991B1B;
         }
 
-        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+        body { 
+            margin: 0; 
+            display: flex; 
+            font-family: 'Inter', sans-serif; 
+            height: 100vh; 
+            background-color: var(--bg); 
+            overflow: hidden; 
+        }
 
-        /* SIDEBAR - Exactly matching Profile spec */
+        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--sidebar);
@@ -44,7 +51,13 @@
         .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
         .sidebar.collapsed a i { margin-right: 0; }
         .sidebar.collapsed a span { display: none; }
-        .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
+        
+        .sidebar a.active { 
+            color: #FFFFFF; 
+            background: rgba(255, 255, 255, 0.05); 
+            font-weight: 700; 
+            box-shadow: inset 3px 0 0 var(--emerald); 
+        }
 
         .toggle-btn {
             position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white;
@@ -52,14 +65,13 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* MAIN AREA & TOP BAR */
+        /* MAIN AREA */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar {
             height: 56px; background: var(--white); border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px;
         }
 
-        /* NOTIFICATION BELL */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
         .notif-badge {
             position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
@@ -93,15 +105,13 @@
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
         .section-label { font-size: 0.75rem; text-transform: uppercase; color: var(--sidebar); font-weight: 800; margin-bottom: 15px; display: block; letter-spacing: 1px; }
 
-        /* CHANGE: neat alignment and dynamic box */
         .content-box { 
             background: #F8FAFC; border: 1px solid var(--border); padding: 25px; 
             border-radius: 12px; font-size: 0.9rem; line-height: 1.7; color: var(--slate); 
-            height: auto; min-height: 250px; white-space: pre-line; word-wrap: break-word;
+            height: auto; min-height: 180px; white-space: pre-line; word-wrap: break-word;
             text-align: justify;
         }
 
-        /* STATUS BOXES */
         .scan-overlay { display: none; background: #F1F5F9; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid var(--border); }
         .progress-bg { width: 100%; background: #E2E8F0; height: 8px; border-radius: 4px; margin-top: 12px; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: var(--emerald); transition: width 2s linear; }
@@ -109,7 +119,6 @@
         .error-box { display: none; background: #FEF2F2; color: var(--crimson); padding: 15px; border-radius: 8px; border: 1px solid #FEE2E2; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; }
         .success-box { display: none; background: #F0FDF4; color: #166534; padding: 15px; border-radius: 8px; border: 1px solid #BBF7D0; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; }
 
-        /* CHANGE: Center and reduce button width */
         .action-footer { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px; align-items: center; }
         .btn-check, .btn-apply { background: var(--sidebar); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; width: 300px; }
         .btn-apply { background: var(--disabled); color: #94A3B8; cursor: not-allowed; transition: 0.3s; }
@@ -122,12 +131,14 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MeritHub.</h2>
         <nav>
-            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="discovery_listing.html" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
-            <a href="tracking_hub.html"><i data-feather="file-text"></i><span>My Applications</span></a>
-            <a href="profile.html"><i data-feather="user"></i><span>Academic Profile</span></a>
+            <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="{{ url_for('scholarship_detail') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;">
+            <i data-feather="log-out"></i><span>Log out</span>
+        </a>
     </div>
 
     <div class="main">
@@ -143,11 +154,11 @@
                     </div>
                 </div>
             </div>
-            <div class="user-tag" id="userDisplay">Loading...</div>
+            <div class="user-tag" id="userDisplay">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="workspace">
-            <a href="discovery_listing.html" class="btn-exit">← Return to Scholarship Discovery</a>
+            <a href="{{ url_for('student_dashboard') }}" class="btn-exit">← Return to Scholarship Discovery</a>
 
             <div class="detail-card">
                 <div class="header-meta">
@@ -169,24 +180,22 @@
                     <div class="info-col">
                         <span class="section-label">Criteria & Prerequisites</span>
                         <div class="content-box">
-                            <div style="margin-bottom: 10px;">Candidates must satisfy the following baseline standards to be considered for evaluation:</div>
-                            • <span id="reqFaculty"></span>
-                            • <span id="reqGPA"></span>
-                            • Must not be a recipient of any other internal major scholarship.
-                            • Successful completion of the automated eligibility verification scan.
-                            • Upload of a verified official academic transcript in PDF format.
+                            • <span id="reqFaculty"></span><br>
+                            • <span id="reqGPA"></span><br>
+                            • No other major internal scholarships.<br>
+                            • Official academic transcript (PDF).
                             <div id="displayInstructions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E2E8F0;"></div>
                         </div>
                     </div>
                 </div>
 
-                <div id="scanUI" class="scan-overlay" style="width: 300px;">
+                <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
                     <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">Validating Academic Profile...</span>
                     <div class="progress-bg"><div id="pBar" class="progress-fill"></div></div>
                 </div>
 
-                <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; align-self: center;"></div>
-                <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; align-self: center;">✓ Eligibility Verified: You meet the criteria for this award.</div>
+                <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
+                <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">✓ Eligibility Verified.</div>
 
                 <div class="action-footer">
                     <button id="checkBtn" class="btn-check" onclick="runCheck()">Check My Eligibility</button>
@@ -202,9 +211,9 @@
         const scholarshipDB = {
             'global': {
                 name: "Global Excellence Grant 2026", category: "Academic Merit", amount: "15,000",
-                deadline: "Jan 30, 2026", gpa: 3.80, faculty: "Computing", 
-                brief: "The Global Excellence Grant is MeritHub's flagship program designed to identify and support the most promising students within the technical disciplines. \n\nThis award is specifically curated for Computing students who demonstrate high leadership potential and a consistent track record of innovation. Recipients are expected to act as student ambassadors, fostering a culture of technological excellence across the campus community.",
-                instructions: "Upon successful verification of your CGPA and Faculty records, the application portal will unlock. You will be required to submit a 500-word personal statement detailing your contributions to the field."
+                deadline: "Jan 30, 2026", gpa: 3.80, faculty: "FCI", 
+                brief: "The Global Excellence Grant identifies and supports top students in technical disciplines who show leadership and innovation potential.",
+                instructions: "Upon verification, you must submit a personal statement."
             }
         };
 
@@ -222,15 +231,8 @@
                 document.getElementById('detDeadline').innerText = "Apply by: " + currentSch.deadline;
                 document.getElementById('displayBrief').innerText = currentSch.brief;
                 document.getElementById('displayInstructions').innerText = currentSch.instructions;
-                document.getElementById('reqFaculty').innerText = "Currently enrolled under the " + currentSch.faculty + " Faculty.";
-                document.getElementById('reqGPA').innerText = "Maintained a minimum CGPA of " + currentSch.gpa.toFixed(2) + ".";
-            }
-
-            const profile = JSON.parse(localStorage.getItem('studentProfile'));
-            if(profile) {
-                document.getElementById('userDisplay').innerHTML = `ID: ${profile.id} | <b>${profile.name}</b>`;
-            } else {
-                document.getElementById('userDisplay').innerText = "ID: 243UC247 | Bernice Gan";
+                document.getElementById('reqFaculty').innerText = "Enrolled under " + currentSch.faculty + ".";
+                document.getElementById('reqGPA').innerText = "Minimum CGPA: " + currentSch.gpa.toFixed(2) + ".";
             }
         };
 
@@ -256,27 +258,31 @@
             
             errorBox.style.display = 'none';
             successBox.style.display = 'none';
-            pBar.style.transition = 'none';
             pBar.style.width = '0%';
-            
             checkBtn.style.display = 'none';
             scanUI.style.display = 'block';
             
-            setTimeout(() => { 
-                pBar.style.transition = 'width 2s linear'; 
-                pBar.style.width = '100%'; 
-            }, 50);
+            setTimeout(() => { pBar.style.width = '100%'; }, 50);
 
             setTimeout(() => {
                 scanUI.style.display = 'none';
-                const profile = JSON.parse(localStorage.getItem('studentProfile'));
                 
-                if (!profile || parseFloat(profile.cgpa) < currentSch.gpa || !profile.faculty.toLowerCase().includes(currentSch.faculty.toLowerCase())) {
-                    errorBox.innerText = "Verification Failed: Your academic profile does not meet the minimum criteria for this specific grant.";
+                // Use real database values passed from Flask
+                const dbCGPA = parseFloat("{{ student.cgpa if student and student.cgpa else 0 }}");
+                const dbFaculty = "{{ student.faculty if student and student.faculty else '' }}".toLowerCase();
+                
+                // Comparative Logic
+                if (dbCGPA < currentSch.gpa) {
+                    errorBox.innerText = `Verification Failed: Your CGPA (${dbCGPA}) is below the required ${currentSch.gpa.toFixed(2)}.`;
                     errorBox.style.display = 'block';
                     checkBtn.style.display = 'block';
-                    checkBtn.innerText = "Re-check Eligibility";
-                } else {
+                } 
+                else if (!dbFaculty.includes(currentSch.faculty.toLowerCase())) {
+                    errorBox.innerText = `Verification Failed: Only students from ${currentSch.faculty} are eligible. Your Faculty: ${dbFaculty.toUpperCase()}.`;
+                    errorBox.style.display = 'block';
+                    checkBtn.style.display = 'block';
+                } 
+                else {
                     checkBtn.remove();
                     successBox.style.display = 'block';
                     document.getElementById('applyBtn').classList.add('unlocked');
@@ -288,7 +294,8 @@
         function proceed() { 
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id') || 'global';
-            window.location.href = `application_form.html?id=${id}`; 
+            // Link to the new Python route instead of a static file
+            window.location.href = `{{ url_for('application_form') }}?id=${id}`; 
         }
     </script>
 </body>
