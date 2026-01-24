@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MeritHub Reviewer | History</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root { 
+            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+
+        /* SIDEBAR - Standardized logic */
+        .sidebar { 
+            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
+            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
+        /* Brand Heading Shrink logic */
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
+        /* ICONS - Visible in both states */
+        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        
+        /* Shrunk State Logic */
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
+        .toggle-btn { 
+            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
+            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
+        }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
+        .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+
+        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
+
+        /* Table Styling */
+        .history-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th { text-align: left; padding: 15px 20px; background: #F8FAFC; font-size: 0.75rem; color: var(--slate); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
+        .history-table td { padding: 20px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .badge-Approved { background: #ECFDF5; color: #065F46; }
+        .badge-Waitlist { background: #FFFBEB; color: #92400E; }
+        .badge-Rejected { background: #FEF2F2; color: #991B1B; }
+
+        .btn-view { background: white; color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .btn-view:hover { background: var(--nav-dark); color: white; border-color: var(--nav-dark); }
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+        <h2>MERITHUB. REVIEWER</h2>
+        <nav>
+            <a href="reviewer_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="reviewer_queue.html"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="reviewer_assessment.html"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            <a href="scoring_history.html" class="active"><i data-feather="clock"></i><span>Evaluation History</span></a>
+        </nav>
+        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+    </div>
+
+    <div class="main">
+        <div class="top-bar">
+            <div class="reviewer-badge">Reviewer: <b>Vicky Pong</b></div>
+        </div>
+
+        <div class="content">
+            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Scoring History</h1>
+            <p style="color: var(--slate); margin-top: 10px; margin-bottom: 30px;">A record of all finalized assessments. These records are now locked for committee review.</p>
+
+            <div class="history-card">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Student Details</th>
+                            <th style="width: 15%;">Total Score</th>
+                            <th style="width: 20%;">Recommendation</th>
+                            <th style="width: 20%;">Date Finalized</th>
+                            <th style="width: 15%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Bernice Gan</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC247</span></td>
+                            <td style="font-weight: 800; color: var(--emerald);">18 / 20</td>
+                            <td><span class="badge badge-Approved">Approved</span></td>
+                            <td>Jan 18, 2026</td>
+                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                        </tr>
+                        
+                        <tr>
+                            <td><b>John Doe</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC999</span></td>
+                            <td style="font-weight: 800; color: var(--slate);">12 / 20</td>
+                            <td><span class="badge badge-Waitlist">Waitlist</span></td>
+                            <td>Jan 17, 2026</td>
+                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                        </tr>
+
+                        <tr>
+                            <td><b>Alice Smith</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC111</span></td>
+                            <td style="font-weight: 800; color: #ef4444;">05 / 20</td>
+                            <td><span class="badge badge-Rejected">Rejected</span></td>
+                            <td>Jan 16, 2026</td>
+                            <td><button class="btn-view" onclick="location.href='reviewer_summary.html'">View Summary</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+    </script>
+</body>
+</html>
