@@ -167,10 +167,10 @@
         feather.replace();
 
         const scholarships = [
-            { id: 'global', name: 'Global Excellence Grant', cgpa: 3.80, faculty: 'Computing', theme: 'Academic Merit', slots: 50 },
-            { id: 'future', name: 'Future Leaders Fund', cgpa: 3.50, faculty: 'All', theme: 'Social Impact', slots: 15 },
-            { id: 'stem', name: 'STEM Innovation Award', cgpa: 3.90, faculty: 'Engineering', theme: 'Technology', slots: 8 },
-            { id: 'biz', name: 'Business Venture Grant', cgpa: 3.30, faculty: 'Business', theme: 'Entrepreneurship', slots: 25 }
+            { id: 'global', name: 'Global Excellence Grant', cgpa: 3.80, faculty: 'Computing', theme: 'Academic Merit' },
+            { id: 'future', name: 'Future Leaders Fund', cgpa: 3.50, faculty: 'All', theme: 'Social Impact' },
+            { id: 'stem', name: 'STEM Innovation Award', cgpa: 3.90, faculty: 'Engineering', theme: 'Technology' },
+            { id: 'biz', name: 'Business Venture Grant', cgpa: 3.30, faculty: 'Business', theme: 'Entrepreneurship' }
         ];
 
         window.onload = function() {
@@ -190,7 +190,6 @@
 
         function toggleNotifs() { 
             document.getElementById('notifDropdown').classList.toggle('show'); 
-            // FIXED: This line hides the badge once the menu is opened
             document.getElementById('notifBadge').style.display = 'none';
         }
 
@@ -214,12 +213,13 @@
 
         function renderCards(data) {
             const container = document.getElementById('scholarshipList');
+            // MODIFIED: Removed the slots display part entirely
             container.innerHTML = data.map(s => `
                 <div class="sch-card" onclick="location.href='scholarship_detail.html?id=${s.id}'">
                     <div class="sch-info">
                         <span class="theme-badge">${s.theme}</span>
                         <h4>${s.name}</h4>
-                        <p>Faculty: ${s.faculty} • <span style="color:var(--emerald); font-weight:600;">${s.slots} slots available</span></p>
+                        <p>Faculty Eligibility: ${s.faculty}</p>
                     </div>
                     <div class="view-details-arrow"><i data-feather="chevron-right" style="width: 18px;"></i></div>
                 </div>
