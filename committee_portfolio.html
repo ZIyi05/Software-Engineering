@@ -110,7 +110,7 @@
                         <tr>
                             <td><b>Global Excellence 2026</b><br><small style="color: var(--slate);">RM 5,000 Award</small></td>
                             <td><span class="status-pill status-published">Published</span></td>
-                            <td><b style="color: var(--emerald);">1 / 50</b></td>
+                            <td><b style="color: var(--emerald);" id="global-excellence-display">1 / 50</b></td>
                             <td>Jan 18, 2026</td>
                             <td>
                                 <button class="btn-action" onclick="alert('Opening Live Student View...')">View Live</button>
@@ -120,7 +120,7 @@
                         <tr>
                             <td><b>STEM Female Leadership Grant</b><br><small style="color: var(--slate);">RM 10,000 Award</small></td>
                             <td><span class="status-pill status-draft">Draft</span></td>
-                            <td><b>0 / 20</b></td>
+                            <td><b id="stem-grant-display">0 / 20</b></td>
                             <td>Jan 14, 2026</td>
                             <td>
                                 <button class="btn-action" onclick="location.href='committee_manager.html'">Continue Draft</button>
@@ -140,6 +140,17 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+
+        // MODIFIED HERE: Added Logic to fetch slot count from localStorage
+        window.onload = function() {
+            // Retrieve count for Global Excellence (defaults to 1 if nothing is stored)
+            const usedGlobal = localStorage.getItem('global_excellence_slots') || 1;
+            document.getElementById('global-excellence-display').innerText = usedGlobal + " / 50";
+
+            // Retrieve count for STEM (defaults to 0 if nothing is stored)
+            const usedStem = localStorage.getItem('stem_grant_slots') || 0;
+            document.getElementById('stem-grant-display').innerText = usedStem + " / 20";
+        };
     </script>
 </body>
 </html>
