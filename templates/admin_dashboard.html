@@ -75,17 +75,17 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
         <nav>
-            <a href="admin_dashboard.html" class="active"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="scholarship_manager.html"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="user_management.html"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+            <a href="{{ url_for('admin_dashboard')}}" class="active"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('scholarship_manager')}}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="admin-tag">Admin: Amr Loay</div>
+            <div class="admin-tag">Admin: {{ admin_name }}</div>
         </div>
 
         <div class="content">

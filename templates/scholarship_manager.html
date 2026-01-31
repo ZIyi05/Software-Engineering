@@ -70,17 +70,17 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
         <nav>
-            <a href="admin_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="scholarship_manager.html" class="active"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="user_management.html"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+            <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="admin-tag">Admin: Amr Loay</div>
+            <div class="admin-tag">Admin: {{ admin_name }}</div>
         </div>
 
         <div class="content">
@@ -112,18 +112,37 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for prog in scholarships %}
                         <tr>
-                            <td><b>Global Excellence 2026</b></td>
-                            <td>50 Slots Available</td>
-                            <td><span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #ECFDF5; color: #065F46;">OPEN</span></td>
+                            <td>
+                                <b>{{ prog.scholarshipName }}</b><br>
+                                <small style="color: var(--slate);">Target: {{ prog.faculty }}</small>
+                            </td>
+                            <td>{{ prog.totalSlots }} Slots Available</td>
+                            <td>
+                                {% if prog.status == 'Published' %}
+                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #ECFDF5; color: #065F46;">OPEN</span>
+                                {% elif prog.status == 'Closed' %}
+                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E;">CLOSED</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
                                     <button class="page-btn">View</button>
-                                    <button class="page-btn" style="color: var(--amber); border-color: #FED7AA; background: #FFFBEB;">Close</button>
-                                    <button class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
+
+                                    {% if prog.status == 'Published' %}
+                                    <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="page-btn" style="color: var(--amber); border-color: #FED7AA; background: #FFFBEB;">Close</button>
+                                    </form>
+                                    {% endif %}
+
+                                    <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}" method="POST" style="display:inline;" onsubmit="return confirm('Archive this scholarship? It will be hidden from all users.');">
+                                        <button type="submit" class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
 

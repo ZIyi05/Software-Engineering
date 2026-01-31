@@ -80,17 +80,17 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. REVIEWER</h2>
         <nav>
-            <a href="reviewer_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="reviewer_queue.html" class="active"><i data-feather="layers"></i><span>Queue Overview</span></a>
-            <a href="reviewer_assessment.html"><i data-feather="file-text"></i><span>Current Assessment</span></a>
-            <a href="scoring_history.html"><i data-feather="clock"></i><span>Evaluation History</span></a>
+            <a href="{{url_for ('reviewer_dashboard') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{url_for ('reviewer_queue') }}" class="active"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="{{url_for ('reviewer_assessment') }}"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            <a href="{{url_for ('scoring_history') }}"><i data-feather="clock"></i><span>Evaluation History</span></a>
         </nav>
-        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="reviewer-badge">Reviewer: Vicky Pong</div>
+            <div class="reviewer-badge">Reviewer: {{ reviewer_name }}</div>
         </div>
 
         <div class="content">

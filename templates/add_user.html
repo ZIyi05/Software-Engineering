@@ -8,32 +8,27 @@
     <style>
         :root { 
             --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
-            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+            --sidebar-width: 250px; --sidebar-collapsed: 75px;
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Standardized Admin logic */
+        /* SIDEBAR - Same as User Management for Consistency */
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; height: 100vh;
+            box-sizing: border-box;
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
-        
-        /* Brand Heading Shrink logic */
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+        .sidebar.collapsed h2 { display: none; }
 
         .sidebar a { 
             color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
             border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
             transition: 0.2s; white-space: nowrap;
         }
-
-        /* ICONS - Visible in both states */
-        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
-        
-        /* Shrunk State Logic */
+        .sidebar a i { width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
 
@@ -45,11 +40,20 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .content { padding: 40px 60px; max-width: 700px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .logout-link { margin-top: auto !important; color: #94A3B8; text-decoration: none; padding: 14px 16px; display: flex; align-items: center; }
 
+        /* MAIN CONTENT AREA */
+        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; align-items: center; }
+        .header-section { width: 100%; max-width: 600px; margin-top: 60px; margin-bottom: 30px; }
+        
         /* FORM CARD */
-        .form-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 40px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .form-card { 
+            background: white; border-radius: 12px; border: 1px solid var(--border); 
+            padding: 40px; width: 100%; max-width: 600px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+            box-sizing: border-box;
+            margin-bottom: 60px;
+        }
         .field { margin-bottom: 25px; }
         .field label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
         .field input, .field select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; box-sizing: border-box; background: #FDFDFD; }
@@ -57,57 +61,38 @@
         .btn-group { display: flex; gap: 15px; margin-top: 10px; }
         .btn-main { flex: 2; background: var(--nav-dark); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
         .btn-cancel { flex: 1; background: white; color: var(--slate); border: 1px solid var(--border); padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; }
-        
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
-        <nav>
-            <a href="admin_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="scholarship_manager.html"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="user_management.html" class="active"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+        <nav style="display: flex; flex-direction: column;">
+            <a href="{{ url_for('admin_dashboard') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('scholarship_manager') }}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('user_management') }}" class="active"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment') }}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        
+        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
-    <div class="main">
-        <div class="content">
-            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0 0 10px 0;">Add Internal Staff</h1>
-            <p style="color: var(--slate); margin-bottom: 30px;">Create new accounts for Reviewers or Committee members.</p>
-            
-            <div class="form-card">
-                <div class="field">
-                    <label>Staff Full Name</label>
-                    <input type="text" placeholder="e.g. Dr. Sarah Connor">
+    <div class="main" style="align-items: center; overflow-y: auto; display: flex; flex-direction: column;">
+        <div style="width: 100%; max-width: 600px; margin-top: 60px; margin-bottom: 30px;">
+            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Add Internal Staff</h1>
+            <p style="color: var(--slate); margin-top: 10px;">Create new accounts for Reviewers or Committee members.</p>
+        </div>
+        <div style="background: white; border-radius: 12px; border: 1px solid var(--border); padding: 40px; width: 100%; max-width: 600px; box-sizing: border-box;">
+            <form action="{{ url_for('add_user_submit') }}" method="POST">
+                <div style="margin-bottom: 25px;"><label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px;">Staff Full Name</label><input type="text" name="fullname" placeholder="e.g. Dr. Sarah Connor" required style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;"></div>
+                <div style="margin-bottom: 25px;"><label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px;">Employee ID</label><input type="text" name="userid" placeholder="e.g. STF-9920" required style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;"></div>
+                <div style="margin-bottom: 25px;"><label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px;">Email Address</label><input type="email" name="email" placeholder="staff.name@merithub.edu" required style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;"></div>
+                <div style="margin-bottom: 25px;"><label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase; margin-bottom: 8px;">Internal Role</label><select name="role" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;"><option value="reviewer">Reviewer</option><option value="committee">Committee</option></select></div>
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button type="button" onclick="window.location.href='{{ url_for('user_management') }}';" style="flex: 1; padding: 16px; border-radius: 8px; border: 1px solid var(--border); font-weight: 700;">Cancel</button>
+                    <button type="submit" style="flex: 2; background: var(--nav-dark); color: white; padding: 16px; border-radius: 8px; font-weight: 700;">Create Account</button>
                 </div>
-                <div class="field">
-                    <label>Employee ID</label>
-                    <input type="text" placeholder="e.g. STF-9920">
-                </div>
-                <div class="field">
-                    <label>Email Address</label>
-                    <input type="email" placeholder="staff.name@merithub.edu">
-                </div>
-                <div class="field">
-                    <label>Temporary Password</label>
-                    <input type="password" name="password" placeholder="••••••••" required>
-                </div>
-                <div class="field">
-                    <label>Internal Role</label>
-                    <select>
-                        <option>Reviewer</option>
-                        <option>Committee</option>
-                    </select>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-cancel" onclick="location.href='user_management.html'">Cancel</button>
-                    <button class="btn-main" onclick="alert('Staff account created successfully.')">Create Account</button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 

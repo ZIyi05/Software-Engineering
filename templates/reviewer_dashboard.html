@@ -9,7 +9,7 @@
         :root { 
             --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; 
             --slate: #475569; --border: #E2E8F0; 
-            --sidebar-width: 250px; --sidebar-collapsed: 70px;
+            --sidebar-width: 260px; --sidebar-collapsed: 75px;
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
@@ -17,11 +17,11 @@
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; height: 100vh; box-sizing: border-box;
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+        .sidebar.collapsed h2 { display: none; }
 
         .sidebar a { 
             color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
@@ -39,19 +39,15 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* MAIN AREA - Constrained to 100vh */
-        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
-        
-        /* TOP BAR - Locked at the top */
+        /* MAIN AREA */
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; min-width: 0; }
         .top-bar { 
             height: 60px; background: white; border-bottom: 1px solid var(--border); 
             display: flex; align-items: center; justify-content: flex-end; 
-            padding: 0 40px; flex-shrink: 0; position: sticky; top: 0; z-index: 1000;
+            padding: 0 40px; flex-shrink: 0;
         }
-        
         .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
-        /* CONTENT - This part will scroll */
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
         /* STATISTICS GRID */
@@ -73,7 +69,8 @@
         .dist-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--slate); margin-bottom: 10px; text-transform: uppercase; }
         .progress-bg { height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden; }
         
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; }
+        .logout-link i { margin-right: 12px; width: 18px; }
     </style>
 </head>
 <body>
@@ -81,17 +78,17 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. REVIEWER</h2>
         <nav>
-            <a href="reviewer_dashboard.html" class="active"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="reviewer_queue.html"><i data-feather="layers"></i><span>Queue Overview</span></a>
-            <a href="reviewer_assessment.html"><i data-feather="file-text"></i><span>Current Assessment</span></a>
-            <a href="scoring_history.html"><i data-feather="clock"></i><span>Evaluation History</span></a>
+            <a href="{{ url_for('reviewer_dashboard') }}" class="active"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('reviewer_queue') }}"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="{{ url_for('reviewer_assessment') }}"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            <a href="{{ url_for('scoring_history') }}"><i data-feather="clock"></i><span>Evaluation History</span></a>
         </nav>
-        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="reviewer-badge">Reviewer: Vicky Pong</div>
+            <div class="reviewer-badge">Reviewer: {{ reviewer_name }}</div>
         </div>
 
         <div class="content">

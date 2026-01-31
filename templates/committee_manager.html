@@ -81,91 +81,80 @@
     </style>
 </head>
 <body>
-
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. COMMITTEE</h2>
         <nav>
-            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="committee_dashboard.html"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
-            <a href="committee_portfolio.html" class="active"><i data-feather="award"></i><span>Scholarship Manager</span></a>
-            <a href="committee_calendar.html"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+            <a href="{{ url_for('committee_overview') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('committee_dashboard') }}"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="{{ url_for('committee_portfolio') }}" class="active"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('committee_calendar') }}"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
         </nav>
-        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="user-badge">Committee: Zi Yi</div>
+            <div class="user-badge">Committee: {{ committee_name }}</div>
         </div>
 
         <div class="content">
-            <div class="header-row">
-                <div>
-                    <h1 id="pageHeading" style="font-weight: 800; font-size: 2rem; margin: 0; display: inline-block;">Define Scholarship</h1>
-                    <span id="pageBadge" class="draft-badge">Draft Mode</span>
-                </div>
-                <button class="btn-discard" onclick="window.location.href='committee_portfolio.html'">Cancel & Discard</button>
-            </div>
+            <form action="{{ url_for('add_scholarship_submit') }}" method="POST">
+                {% if sch %}
+                <input type="hidden" name="scholarshipID" value="{{ sch.scholarshipID }}">
+                {% endif %}
 
-            <div class="form-card">
-                <h2 class="step-title">1. Core Information</h2>
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Scholarship Name</label>
-                        <input type="text" id="schName" placeholder="e.g. STEM Innovation Award 2026">
+                <div class="form-card">
+                    <h2 class="step-title">1. Core Information</h2>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Scholarship Name</label>
+                            <input type="text" name="scholarshipName" value="{{ sch.scholarshipName if sch else '' }}" required>
+                        </div>
+                        <div class="field">
+                            <label>Award Amount (RM)</label>
+                            <input type="number" name="scholarshipAmount" value="{{ sch.scholarshipAmount if sch else '' }}" required>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Award Amount (RM)</label>
-                        <input type="number" id="schAmount" placeholder="e.g. 15000" min="1" oninput="validatePos(this)">
-                    </div>
-                </div>
 
-                <h2 class="step-title">2. Eligibility Configuration</h2>
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Min. CGPA Requirement</label>
-                        <input type="text" id="schGPA" placeholder="e.g. 3.80">
+                    <h2 class="step-title">2. Eligibility & Capacity</h2>
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Minimum Criteria (GPA)</label>
+                            <input type="text" name="scholarshipCriteria" value="{{ sch.scholarshipCriteria if sch else '' }}" required>
+                        </div>
+                        <div class="field">
+                            <label>Target Faculty</label>
+                            <input type="text" name="faculty" value="{{ sch.faculty if sch else '' }}" required>
+                        </div>
+                        <div class="field">
+                            <label>Total Slots</label>
+                            <input type="number" name="totalSlots" value="{{ sch.totalSlots if sch else '' }}" required>
+                        </div>
+                        <div class="field">
+                            <label>Deadline</label>
+                            <input type="date" name="deadline" value="{{ sch.deadline if sch else '' }}" required>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label>Target Faculty</label>
-                        <select id="schFaculty">
-                            <option>All Faculties</option>
-                            <option>Computing Faculty</option>
-                            <option>Engineering Faculty</option>
-                            <option>Business Faculty</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>Deadline</label>
-                        <input type="date" id="schDate">
-                    </div>
-                    <div class="field">
-                        <label>Total Award Slots</label>
-                        <input type="number" id="schSlots" placeholder="e.g. 20" min="1" oninput="validatePos(this)">
-                    </div>
-                </div>
 
-                <h2 class="step-title">3. Content & Instructions</h2>
-                <div class="form-grid">
+                    <h2 class="step-title">3. Content & Instructions</h2>
                     <div class="field">
-                        <label>Program Brief (Description)</label>
-                        <textarea id="schDesc" placeholder="Describe what this scholarship is about and who it is for..."></textarea>
+                        <label>Brief Description</label>
+                        <textarea name="description" style="min-height: 80px;">{{ sch.description if sch else '' }}</textarea>
                     </div>
                     <div class="field">
-                        <label>Application Instructions</label>
-                        <textarea id="schInstructions" placeholder="List the steps students need to take..."></textarea>
+                        <label>Full Terms & Conditions</label>
+                        <textarea name="termAndCondition">{{ sch.termAndCondition if sch else '' }}</textarea>
                     </div>
-                </div>
 
-                <div class="button-footer">
-                    <button class="btn-save-draft" onclick="saveAsDraft()">Save as Draft</button>
-                    <button class="btn-publish" id="publishBtn" onclick="publishNow()">Publish to Portal</button>
+                    <div class="button-footer">
+                        <button type="submit" name="action" value="draft" class="btn-save-draft">Save as Draft</button>
+                        <button type="submit" name="action" value="publish" class="btn-publish">Publish to Portal</button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
-
     <script>
         feather.replace();
         function toggleSidebar() {
@@ -173,24 +162,6 @@
             const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
-        }
-
-        function validatePos(input) {
-            if (input.value !== "" && input.value < 1) { input.value = 1; }
-        }
-
-        function saveAsDraft() {
-            alert("Scholarship draft saved successfully.");
-            window.location.href = 'committee_portfolio.html';
-        }
-
-        function publishNow() {
-            if(!document.getElementById('schName').value) {
-                alert("Please provide at least a scholarship name.");
-                return;
-            }
-            alert("Scholarship is now live on the student discovery portal.");
-            window.location.href = 'committee_portfolio.html';
         }
     </script>
 </body>

@@ -7,118 +7,55 @@
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --bg: #F8FAFC;
-            --sidebar: #0F172A;
-            --emerald: #064E3B;
-            --slate: #475569;
-            --border: #E2E8F0;
-            --white: #FFFFFF;
-            --sidebar-width: 240px;
-            --sidebar-collapsed: 70px;
-            --disabled: #CBD5E1; 
-            --crimson: #991B1B;
+            --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B;
+            --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
+            --sidebar-width: 240px; --sidebar-collapsed: 70px;
+            --disabled: #CBD5E1; --crimson: #991B1B;
         }
-
-        body { 
-            margin: 0; 
-            display: flex; 
-            font-family: 'Inter', sans-serif; 
-            height: 100vh; 
-            background-color: var(--bg); 
-            overflow: hidden; 
-        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
         /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--sidebar);
-            color: white;
-            padding: 30px 15px;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            width: var(--sidebar-width); background-color: var(--sidebar); color: white;
+            padding: 30px 15px; display: flex; flex-direction: column; flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
         .sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; color: #FFFFFF; padding-left: 10px; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
-
-        .sidebar a {
-            color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px;
-            display: flex; align-items: center; overflow: hidden; font-size: 0.85rem; transition: 0.2s;
-        }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px; display: flex; align-items: center; overflow: hidden; font-size: 0.85rem; transition: 0.2s; }
         .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
-        .sidebar.collapsed a i { margin-right: 0; }
-        .sidebar.collapsed a span { display: none; }
-        
-        .sidebar a.active { 
-            color: #FFFFFF; 
-            background: rgba(255, 255, 255, 0.05); 
-            font-weight: 700; 
-            box-shadow: inset 3px 0 0 var(--emerald); 
-        }
-
-        .toggle-btn {
-            position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white;
-            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100;
-            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
-        }
+        .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
+        .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
         /* MAIN AREA */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .top-bar {
-            height: 56px; background: var(--white); border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px;
-        }
-
+        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge {
-            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
-            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;
-            display: none; border: 2px solid white;
-        }
+        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; display: none; border: 2px solid white; }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        .notif-dropdown {
-            position: absolute; top: 45px; right: 0; width: 280px; background: white; 
-            border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
-            display: none; z-index: 1000; overflow: hidden;
-        }
+        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
         .notif-dropdown.show { display: block; }
         .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; }
-
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
         /* WORKSPACE CONTENT */
         .workspace { padding: 20px 60px 40px 60px; overflow-y: auto; flex: 1; }
         .btn-exit { display: inline-flex; align-items: center; color: var(--slate); text-decoration: none; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; }
-
         .detail-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 40px; max-width: 950px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .header-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .deadline-tag { background: #FEF2F2; color: var(--crimson); padding: 6px 16px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; border: 1px solid #FEE2E2; }
-
         .header-section h1 { margin: 0; font-weight: 800; font-size: 2rem; color: var(--sidebar); }
         .award-val { color: var(--slate); font-size: 1.1rem; font-weight: 600; margin-top: 5px; margin-bottom: 30px; }
-
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
         .section-label { font-size: 0.75rem; text-transform: uppercase; color: var(--sidebar); font-weight: 800; margin-bottom: 15px; display: block; letter-spacing: 1px; }
-
-        .content-box { 
-            background: #F8FAFC; border: 1px solid var(--border); padding: 25px; 
-            border-radius: 12px; font-size: 0.9rem; line-height: 1.7; color: var(--slate); 
-            height: auto; min-height: 180px; white-space: pre-line; word-wrap: break-word;
-            text-align: justify;
-        }
-
+        .content-box { background: #F8FAFC; border: 1px solid var(--border); padding: 25px; border-radius: 12px; font-size: 0.9rem; line-height: 1.7; color: var(--slate); height: auto; min-height: 180px; white-space: pre-line; word-wrap: break-word; text-align: justify; }
         .scan-overlay { display: none; background: #F1F5F9; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 15px; border: 1px solid var(--border); }
         .progress-bg { width: 100%; background: #E2E8F0; height: 8px; border-radius: 4px; margin-top: 12px; overflow: hidden; }
         .progress-fill { width: 0%; height: 100%; background: var(--emerald); transition: width 2s linear; }
-        
         .error-box { display: none; background: #FEF2F2; color: var(--crimson); padding: 15px; border-radius: 8px; border: 1px solid #FEE2E2; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; }
         .success-box { display: none; background: #F0FDF4; color: #166534; padding: 15px; border-radius: 8px; border: 1px solid #BBF7D0; margin-bottom: 15px; font-size: 0.9rem; font-weight: 600; text-align: center; }
-
         .action-footer { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 30px; align-items: center; }
         .btn-check, .btn-apply { background: var(--sidebar); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.95rem; width: 300px; }
         .btn-apply { background: var(--disabled); color: #94A3B8; cursor: not-allowed; transition: 0.3s; }
@@ -132,13 +69,11 @@
         <h2>MeritHub.</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="{{ url_for('scholarship_detail') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
             <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;">
-            <i data-feather="log-out"></i><span>Log out</span>
-        </a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -158,33 +93,38 @@
         </div>
 
         <div class="workspace">
-            <a href="{{ url_for('student_dashboard') }}" class="btn-exit">← Return to Scholarship Discovery</a>
+            <a href="{{ url_for('scholarship_discovery') }}" class="btn-exit">← Return to Scholarship Discovery</a>
 
             <div class="detail-card">
                 <div class="header-meta">
-                    <span id="detThemeBadge" style="background: #F1F5F9; color: var(--emerald); padding: 6px 12px; border-radius: 4px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;"></span>
-                    <div class="deadline-tag" id="detDeadline"></div>
+                    <span id="detThemeBadge" style="background: #F1F5F9; color: var(--emerald); padding: 6px 12px; border-radius: 4px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase;">
+                        {{ sch.faculty if sch else 'General' }}
+                    </span>
+                    <div class="deadline-tag" id="detDeadline">
+                        Apply by: {{ sch.deadline.strftime('%b %d, %Y') if sch and sch.deadline else 'N/A' }}
+                    </div>
                 </div>
 
                 <div class="header-section">
-                    <h1 id="detName"></h1>
-                    <div class="award-val" id="detValue"></div>
+                    <h1 id="detName">{{ sch.scholarshipName if sch else 'Scholarship Name' }}</h1>
+                    <div class="award-val" id="detValue">RM {{ sch.scholarshipAmount if sch else '0.00' }} Total Award Value</div>
                 </div>
 
                 <div class="info-grid">
                     <div class="info-col">
                         <span class="section-label">Grant Description</span>
-                        <div class="content-box" id="displayBrief"></div>
+                        <div class="content-box" id="displayBrief">{{ sch.description if sch else 'No description available.' }}</div>
                     </div>
-
                     <div class="info-col">
                         <span class="section-label">Criteria & Prerequisites</span>
                         <div class="content-box">
-                            • <span id="reqFaculty"></span><br>
-                            • <span id="reqGPA"></span><br>
+                            • Enrolled under {{ sch.faculty if sch else 'Any Faculty' }}.<br>
+                            • Minimum Criteria: {{ sch.scholarshipCriteria if sch else 'N/A' }}.<br>
                             • No other major internal scholarships.<br>
                             • Official academic transcript (PDF).
-                            <div id="displayInstructions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E2E8F0;"></div>
+                            <div id="displayInstructions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E2E8F0;">
+                                {{ sch.termAndCondition if sch else '' }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -207,95 +147,48 @@
 
     <script>
         feather.replace();
-
-        const scholarshipDB = {
-            'global': {
-                name: "Global Excellence Grant 2026", category: "Academic Merit", amount: "15,000",
-                deadline: "Jan 30, 2026", gpa: 3.80, faculty: "FCI", 
-                brief: "The Global Excellence Grant identifies and supports top students in technical disciplines who show leadership and innovation potential.",
-                instructions: "Upon verification, you must submit a personal statement."
-            }
-        };
-
-        let currentSch = null;
-
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id') || 'global';
-            currentSch = scholarshipDB[id];
-
-            if (currentSch) {
-                document.getElementById('detName').innerText = currentSch.name;
-                document.getElementById('detThemeBadge').innerText = currentSch.category;
-                document.getElementById('detValue').innerText = "RM " + currentSch.amount + " Total Award Value";
-                document.getElementById('detDeadline').innerText = "Apply by: " + currentSch.deadline;
-                document.getElementById('displayBrief').innerText = currentSch.brief;
-                document.getElementById('displayInstructions').innerText = currentSch.instructions;
-                document.getElementById('reqFaculty').innerText = "Enrolled under " + currentSch.faculty + ".";
-                document.getElementById('reqGPA').innerText = "Minimum CGPA: " + currentSch.gpa.toFixed(2) + ".";
-            }
-        };
-
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
-
         function toggleNotifs() { 
             document.getElementById('notifDropdown').classList.toggle('show'); 
             document.getElementById('notifBadge').classList.remove('active');
             document.getElementById('notifBadge').style.display = 'none';
         }
-
         function runCheck() {
             const checkBtn = document.getElementById('checkBtn');
             const scanUI = document.getElementById('scanUI');
             const pBar = document.getElementById('pBar');
             const errorBox = document.getElementById('errorMsg');
             const successBox = document.getElementById('successMsg');
-            
-            errorBox.style.display = 'none';
-            successBox.style.display = 'none';
-            pBar.style.width = '0%';
-            checkBtn.style.display = 'none';
-            scanUI.style.display = 'block';
-            
+            const studentCGPA = parseFloat("{{ student.cgpa if student and student.cgpa else 0 }}");
+            const studentFaculty = "{{ student.faculty if student and student.faculty else '' }}".toLowerCase();
+            const criteriaMatch = "{{ sch.scholarshipCriteria }}".match(/(\d+\.\d+)/);
+            const requiredGPA = criteriaMatch ? parseFloat(criteriaMatch[0]) : 0;
+            const requiredFaculty = "{{ sch.faculty if sch else '' }}".toLowerCase();
+            errorBox.style.display = 'none'; successBox.style.display = 'none';
+            pBar.style.width = '0%'; checkBtn.style.display = 'none'; scanUI.style.display = 'block';
             setTimeout(() => { pBar.style.width = '100%'; }, 50);
-
             setTimeout(() => {
                 scanUI.style.display = 'none';
-                
-                // Use real database values passed from Flask
-                const dbCGPA = parseFloat("{{ student.cgpa if student and student.cgpa else 0 }}");
-                const dbFaculty = "{{ student.faculty if student and student.faculty else '' }}".toLowerCase();
-                
-                // Comparative Logic
-                if (dbCGPA < currentSch.gpa) {
-                    errorBox.innerText = `Verification Failed: Your CGPA (${dbCGPA}) is below the required ${currentSch.gpa.toFixed(2)}.`;
-                    errorBox.style.display = 'block';
-                    checkBtn.style.display = 'block';
-                } 
-                else if (!dbFaculty.includes(currentSch.faculty.toLowerCase())) {
-                    errorBox.innerText = `Verification Failed: Only students from ${currentSch.faculty} are eligible. Your Faculty: ${dbFaculty.toUpperCase()}.`;
-                    errorBox.style.display = 'block';
-                    checkBtn.style.display = 'block';
-                } 
-                else {
-                    checkBtn.remove();
-                    successBox.style.display = 'block';
+                if (studentCGPA < requiredGPA) {
+                    errorBox.innerText = `Verification Failed: Your CGPA (${studentCGPA}) is below the required ${requiredGPA}.`;
+                    errorBox.style.display = 'block'; checkBtn.style.display = 'block';
+                } else if (requiredFaculty !== 'all faculties' && !studentFaculty.includes(requiredFaculty)) {
+                    errorBox.innerText = `Verification Failed: Only students from ${requiredFaculty.toUpperCase()} are eligible.`;
+                    errorBox.style.display = 'block'; checkBtn.style.display = 'block';
+                } else {
+                    checkBtn.remove(); successBox.style.display = 'block';
                     document.getElementById('applyBtn').classList.add('unlocked');
                     document.getElementById('applyBtn').disabled = false;
                 }
             }, 2100);
         }
-
         function proceed() { 
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id') || 'global';
-            // Link to the new Python route instead of a static file
-            window.location.href = `{{ url_for('application_form') }}?id=${id}`; 
+            window.location.href = "{{ url_for('application_form') }}?id={{ sch.scholarshipID }}"; 
         }
     </script>
 </body>

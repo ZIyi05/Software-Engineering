@@ -240,14 +240,12 @@
         <h2>MeritHub.</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}" class="active"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="{{ url_for('scholarship_detail') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
             <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
         
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;">
-            <i data-feather="log-out"></i><span>Log out</span>
-        </a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -270,30 +268,28 @@
             <div class="hero">
                 <h1 id="welcomeHeading">Welcome back, {{ name }}.</h1>
                 <p>You have <b>2</b> active applications. Check your status below.</p>
-                <a href="{{ url_for('scholarship_detail') }}" class="btn-browse">Browse Scholarships</a>                
-                <a href="{{ url_for('tracking_hub') }}" style="font-size: 0.8rem; color: var(--emerald); text-decoration: none; font-weight: 600;">View History →</a>
+                {% if scholarships %}
+                    <a href="{{ url_for('scholarship_discovery', sch_id=scholarships[0].scholarshipID) }}" class="btn-browse">Browse Scholarships</a>
+                {% else %}
+                    <a href="#" class="btn-browse" style="opacity: 0.5; cursor: not-allowed;">No Scholarships Available</a>
+                {% endif %}
             </div>
             
             <div class="scroll-area">
-                <div class="card">
+                {% for sch in scholarships %}
+                <div class="card" onclick="window.location.href='{{ url_for('scholarship_detail', sch_id=sch.scholarshipID) }}'">
                     <div>
-                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">Global Excellence Grant</h4>
-                        <p style="margin:0; font-size: 0.8rem;">Stage: <b>Interview Scheduling</b></p>
-                    </div>
-                    <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #F1F5F9;">In Review</span>
-                </div>
-
-                <div class="card">
-                    <div>
-                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">Future Leaders Fund</h4>
-                        <p style="margin:0; font-size: 0.8rem;">Eligibility: <b>Criteria Matched</b></p>
+                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">{{ sch.scholarshipName }}</h4>
+                        <p style="margin:0; font-size: 0.8rem;">Eligibility: <b>{{ sch.scholarshipCriteria }}</b></p>
                     </div>
                     <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #ECFDF5; color: var(--emerald);">Eligible</span>
                 </div>
+                {% else %}
+                <p style="text-align: center; color: var(--slate); margin-top: 20px;">No active scholarships available at this time.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
-
     <script>
         feather.replace();
 

@@ -139,7 +139,7 @@
         <h2>MeritHub.</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="{{ url_for('scholarship_detail') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
             <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}" class="active"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
@@ -165,36 +165,36 @@
         <div class="workspace">
             <h1 style="font-size: 2.2rem; font-weight: 800; margin: 0;">Student Profile</h1>
             
-            <form action="{{ url_for('update_profile') }}" method="POST">
+            <form action="{{ url_for('profile') }}" method="POST">
                 <span class="section-title">Personal & Contact Details</span>
                 <div class="form-grid">
                     <div class="field">
                         <label>Student ID</label>
-                        <input type="text" value="{{ user_id }}" disabled>
+                        <input type="text" value="{{ user_id }}" readonly disabled>
                     </div>
                     <div class="field">
                         <label>Full Name</label>
-                        <input type="text" name="fullName" value="{{ student.fullName }}" required>
+                        <input type="text" value="{{ student.fullName }}" readonly disabled>
                     </div>
                     <div class="field">
                         <label>Email Address</label>
-                        <input type="email" name="email" value="{{ student.email }}" required>
+                        <input type="email" value="{{ student.email }}" readonly disabled>
                     </div>
                     <div class="field">
                         <label>Phone Number</label>
-                        <input type="text" name="phone" value="{{ student.phone }}" required>
+                        <input type="text" value="{{ student.phone }}" readonly disabled>
                     </div>
                 </div>
 
-                <span class="section-title">Academic Records</span>
+                <span class="section-title">Academic Records (Manual Update)</span>
                 <div class="form-grid">
                     <div class="field">
                         <label>Faculty</label>
-                        <input type="text" name="faculty" value="{{ student.faculty }}">
+                        <input type="text" value="{{ student.faculty }}" readonly disabled>
                     </div>
                     <div class="field">
                         <label>Program (Course)</label>
-                        <input type="text" name="course" value="{{ student.course }}">
+                        <input type="text" value="{{ student.course }}" readonly disabled>
                     </div>
                     <div class="field">
                         <label>Current CGPA</label>
@@ -205,16 +205,8 @@
                         <input type="number" name="credits" value="{{ student.total_credits if student.total_credits else 0 }}">
                     </div>
                 </div>
-
-                <div id="verifyPopup" style="display: none;">
-                    <div class="popup-content">
-                        <span style="font-size: 50px; color: #064E3B;">✓</span>
-                        <h2 style="color: #0F172A; margin: 15px 0 10px 0;">Profile Updated</h2>
-                        <p style="color: #64748B; font-size: 0.9rem;">Your changes have been saved.</p>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-save" id="saveBtn">Save Profile Changes</button>
+                
+                <button type="submit" class="btn-save">Save Academic Changes</button>
             </form>
         </div>
     </div>

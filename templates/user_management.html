@@ -6,153 +6,104 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        :root { 
-            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
-            --sidebar-width: 250px; --sidebar-collapsed: 70px;
-        }
+        :root { --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --sidebar-width: 260px; --sidebar-collapsed: 75px; }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
-
-        /* SIDEBAR - Standardized logic */
-        .sidebar { 
-            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
-            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-        }
+        .sidebar { width: var(--sidebar-width); background-color: var(--nav-dark); color: white; padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; transition: 0.3s; position: relative; height: 100vh; box-sizing: border-box; }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
-        
-        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
-
-        .sidebar a { 
-            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
-            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
-            transition: 0.2s; white-space: nowrap;
-        }
-
-        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; }
+        .sidebar.collapsed h2 { display: none; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; transition: 0.2s; white-space: nowrap; }
+        .sidebar a i { width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
-
-        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
-
-        .toggle-btn { 
-            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
-            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
-            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
-        }
-
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; box-shadow: inset 4px 0 0 var(--emerald); }
+        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+        .logout-link { margin-top: auto !important; }
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* TOP BAR - Positioning name at the end */
-        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
-        
-        /* Admin Tag Name weight updated */
+        .top-bar { height: 60px; display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; margin-top: 20px;}
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
-
-        .content { padding: 40px 60px; overflow-y: auto; }
-
-        /* SEARCHBAR & ROLE FILTER */
+        .content { padding: 0 60px 40px 60px; overflow-y: auto; }
         .search-row { display: flex; gap: 15px; margin: 30px 0; align-items: center; }
-        .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; font-family: 'Inter'; }
-        .select-role { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; font-weight: 500; font-size: 0.9rem; }
-        .btn-add { background: var(--nav-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
-
+        .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+        .btn-add { background: var(--nav-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
         .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; }
-        .user-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .user-table { width: 100%; border-collapse: collapse; }
         .user-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        .user-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
-
-        /* EMAIL HOVER Tooltip logic */
-        .email-container { position: relative; width: 100%; cursor: help; }
-        .email-text { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--slate); }
-        .email-container:hover .email-text { 
-            overflow: visible; white-space: normal; word-break: break-all;
-            background: #1e293b; color: white; position: absolute; z-index: 100;
-            padding: 10px; border-radius: 6px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            width: 280px; top: -15px; left: 0;
-        }
-
+        .user-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        
+        /* ROLE COLOR SEPARATION */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        
+        /* Emerald theme for Students */
         .badge-student { background: #ECFDF5; color: #065F46; }
-        .badge-committee { background: #E0F2FE; color: #0369A1; }
+        
+        /* Slate theme for Admins */
+        .badge-admin { background: #F1F5F9; color: #475569; }
+        
+        /* Indigo theme for Committee */
+        .badge-committee { background: #E0E7FF; color: #3730A3; }
+        
+        /* Grey theme for Reviewers */
+        .badge-reviewer { background: #F3F4F6; color: #374151; }
 
-        .btn-edit { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; color: var(--slate); font-size: 0.85rem; }
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+        .btn-edit { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; color: var(--slate); }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
-        <nav>
-            <a href="admin_dashboard.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="scholarship_manager.html"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="user_management.html" class="active"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="reviewer_assignment.html"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+        <nav style="display: flex; flex-direction: column;">
+            <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('user_management')}}" class="active"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="login.html" style="margin-top: auto;" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
-
     <div class="main">
-        <div class="top-bar">
-            <div class="admin-tag">Admin: Amr Loay</div>
-        </div>
-
+        <div class="top-bar"><div class="admin-tag">Admin: {{ admin_name }}</div></div>
         <div class="content">
             <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">User Management</h1>
             <div class="search-row">
                 <input type="text" class="input-search" placeholder="Search by name, ID, or email...">
-                <select class="select-role">
-                    <option>All Roles</option>
-                    <option>Student</option>
-                    <option>Committee</option>
-                    <option>Reviewer</option>
-                </select>
-                <button class="btn-add" onclick="location.href='add_user.html'">+ Add New Staff</button>
+                <button class="btn-add" onclick="window.location.href='{{ url_for('add_user') }}'">+ Add New Staff</button>
             </div>
-
             <div class="card">
                 <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">User Details</th>
-                            <th style="width: 15%;">Role</th>
-                            <th style="width: 40%;">Email Address</th>
-                            <th style="width: 20%;">Action</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>User Details</th><th>Role</th><th>Email Address</th><th>Action</th></tr></thead>
                     <tbody>
+                        {% for user in users %}
                         <tr>
-                            <td><b>Bernice Gan</b><br><span style="font-size: 0.8rem; color: var(--slate);">ID: 243UC247</span></td>
-                            <td><span class="badge badge-student">Student</span></td>
+                            <td><b>{{ user.fullName }}</b><br><span style="font-size: 0.8rem; color: var(--slate);">ID: {{ user.userID }}</span></td>
                             <td>
-                                <div class="email-container">
-                                    <span class="email-text">bernice.gan.university@merithub.edu</span>
-                                </div>
+                                <span class="badge 
+                                    {% if user.role == 'student' %}badge-student
+                                    {% elif user.role == 'admin' %}badge-admin
+                                    {% elif user.role == 'committee' %}badge-committee
+                                    {% elif user.role == 'reviewer' %}badge-reviewer
+                                    {% endif %}">
+                                    {{ user.role }}
+                                </span>
                             </td>
-                            <td><button class="btn-edit" onclick="location.href='edit_user.html'">Edit Account</button></td>
-                        </tr>
-                        <tr>
-                            <td><b>ZI Yi</b><br><span style="font-size: 0.8rem; color: var(--slate);">ID: CM-881</span></td>
-                            <td><span class="badge badge-committee">Committee</span></td>
+                            <td>{{ user.email }}</td>
                             <td>
-                                <div class="email-container">
-                                    <span class="email-text">ziyi.academic.office@merithub.edu</span>
-                                </div>
+                                <button class="btn-edit" 
+                                        onclick="window.location.href='{{ url_for('edit_user', userid=user.userID) }}';">
+                                    Edit Account
+                                </button>
                             </td>
-                            <td><button class="btn-edit" onclick="location.href='edit_user.html'">Edit Account</button></td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
     <script>
         feather.replace();
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
+            const sidebar = document.getElementById('sidebar'), btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
