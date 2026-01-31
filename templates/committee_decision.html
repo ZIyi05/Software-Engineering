@@ -157,6 +157,21 @@
                 return;
             }
             if(confirm("Are you sure you want to mark this applicant as " + status + "? This action will officially update the student's portal.")) {
+                
+                // UPDATE HERE: SLOT LOGIC FOR PORTFOLIO
+                if(status === 'Awarded') {
+                    // Logic: Get current count, add 1, save back to memory
+                    let currentUsed = localStorage.getItem('global_excellence_slots') || 1;
+                    let nextCount = parseInt(currentUsed) + 1;
+                    
+                    if(nextCount <= 50) {
+                        localStorage.setItem('global_excellence_slots', nextCount);
+                    } else {
+                        alert("Capacity reached! Cannot award more students.");
+                        return;
+                    }
+                }
+
                 alert("Decision recorded. Bernice Gan has been " + status + ".");
                 window.location.href = 'committee_dashboard.html';
             }
