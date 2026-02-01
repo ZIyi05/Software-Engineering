@@ -2,9 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import pymysql.cursors
 import uuid
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.secret_key = 'super_secret_key_123'
+
+import os
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # --- 1. DATABASE & SECURITY HELPERS ---
 
@@ -84,20 +92,24 @@ def register():
     connection = get_db_connection()
     try:
         with connection.cursor() as cur:
-            cur.execute("INSERT INTO user (userID, fullName, password, email, role) VALUES (%s, %s, %s, %s, 'student')", 
+            # 1. Insert into USER table
+            cur.execute("INSERT INTO user (userID, fullName, password, email, role, status) VALUES (%s, %s, %s, %s, 'student', 'Active')", 
                         (data['studentID'], data['fullName'], data['password'], data['email']))
-            cur.execute("INSERT INTO student (studentID, faculty, course) VALUES (%s, %s, %s)", 
-                        (data['studentID'], data['faculty'], data['course']))
+            
+            # 2. Insert into STUDENT table including Address and DOB
+            cur.execute("INSERT INTO student (studentID, faculty, course, address, dob) VALUES (%s, %s, %s, %s, %s)", 
+                        (data['studentID'], data['faculty'], data['course'], data['address'], data['dob']))
+            
+            
         connection.commit()
-        log_security_event(data['studentID'], "New student account registered.")
-        flash("Registration successful! Please log in.")
+        flash("Registration successful!")
         return redirect(url_for('index'))
     except Exception as e:
         connection.rollback()
         return f"Database Error: {e}"
     finally:
         connection.close()
-
+        
 # --- 3. PASSWORD RECOVERY SYSTEM ---
 
 @app.route('/forgot_password')
@@ -453,111 +465,432 @@ def add_scholarship_submit():
 
 @app.route('/student_dashboard')
 def student_dashboard():
-    if 'user_id' in session and session.get('role') == 'student':
+    if 'user_id' in session:
+        uID = session['user_id']
         connection = get_db_connection()
         try:
-            with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                # Fetch all published scholarships for the student list
-                cur.execute("SELECT scholarshipID, scholarshipName, scholarshipCriteria FROM scholarship WHERE status = 'Published'")
-                published_scholarships = cur.fetchall()
+            with connection.cursor() as cur:
+                # Keep your existing dashboard query...
+                sql = """SELECT a.*, s.scholarshipName 
+                         FROM application a 
+                         JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                         WHERE a.studentID = %s AND a.applicationStatus != 'Draft'
+                         ORDER BY a.submissionDate DESC"""
+                cur.execute(sql, (uID,))
+                active_apps = cur.fetchall()
+                
+                # --- ADD THIS FOR THE BELL ---
+                sql_notif = """SELECT a.*, s.scholarshipName 
+                               FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE a.studentID = %s"""
+                cur.execute(sql_notif, (uID,))
+                user_apps = cur.fetchall()
+                
             return render_template('student_dashboard.html', 
-                                   user_id=session['user_id'], 
-                                   name=session['full_name'], 
-                                   scholarships=published_scholarships)
+                                   user_id=uID, 
+                                   name=session.get('full_name'),
+                                   applications=user_apps, # Used by the bell
+                                   dashboard_apps=active_apps, # Used by the cards
+                                   app_count=len(active_apps))
         finally:
             connection.close()
     return redirect(url_for('index'))
 
-@app.route('/profile', methods=['GET', 'POST'])
-def profile():
-    if 'user_id' not in session or session.get('role') != 'student':
-        return redirect(url_for('index'))
-
-    connection = get_db_connection()
-    try:
-        with connection.cursor() as cur:
-            if request.method == 'POST':
-                # Capture manual academic updates
-                cgpa = request.form.get('cgpa')
-                credits = request.form.get('credits')
-
-                # FIX: Update the 'student' table where these columns actually exist
-                sql = "UPDATE student SET cgpa=%s, total_credits=%s WHERE studentID=%s"
-                cur.execute(sql, (cgpa, credits, session['user_id']))
-                connection.commit()
-                
-                flash("Academic records updated successfully!")
-                return redirect(url_for('profile'))
-
-            # JOIN logic to pull personal info (user table) and academic info (student table)
-            sql = """
-                SELECT u.fullName, u.email, s.* FROM user u 
-                LEFT JOIN student s ON u.userID = s.studentID 
-                WHERE u.userID = %s
-            """
-            cur.execute(sql, (session['user_id'],))
-            student_data = cur.fetchone()
-            
-    finally:
-        connection.close()
-
-    return render_template('profile.html', 
-                           student=student_data, 
-                           user_id=session['user_id'], 
-                           name=session['full_name'])
-
 @app.route('/scholarship_detail/<sch_id>')
 def scholarship_detail(sch_id):
-    if 'user_id' in session and session.get('role') == 'student':
+    if 'user_id' in session:
+        uID = session['user_id']
         connection = get_db_connection()
         try:
-            with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                # Fetch details for the specific scholarship
+            with connection.cursor() as cur:
+                # 1. Fetch scholarship data
                 cur.execute("SELECT * FROM scholarship WHERE scholarshipID = %s", (sch_id,))
-                scholarship = cur.fetchone()
+                scholarship_data = cur.fetchone()
                 
-                # Fetch student profile for eligibility checking
-                cur.execute("SELECT * FROM student WHERE studentID = %s", (session['user_id'],))
+                # 2. Fetch student profile data for the eligibility checker
+                cur.execute("SELECT * FROM student WHERE studentID = %s", (uID,))
                 student_data = cur.fetchone()
+
+                # 3. Check for any existing application record for this student and scholarship
+                # We fetch the status to determine if they should be allowed to apply again
+                cur.execute("SELECT applicationStatus FROM application WHERE studentID = %s AND scholarshipID = %s", (uID, sch_id))
+                app_check = cur.fetchone()
                 
-            return render_template('scholarship_detail.html', 
-                                   sch=scholarship, 
-                                   student=student_data,
-                                   user_id=session['user_id'], 
-                                   name=session['full_name'])
+                if not scholarship_data:
+                    flash("Error: Scholarship not found.") 
+                    return redirect(url_for('scholarship_discovery'))
+
+                return render_template('scholarship_detail.html', 
+                                       user_id=uID, 
+                                       name=session.get('full_name'),
+                                       student=student_data,
+                                       sch=scholarship_data,
+                                       # Pass the status to the template
+                                       existing_status=app_check['applicationStatus'] if app_check else None)
         finally:
             connection.close()
     return redirect(url_for('index'))
 
 @app.route('/tracking_hub')
-def tracking_hub(): # Removed _view
-    if 'user_id' in session and session.get('role') == 'student':
-        return render_template('tracking_hub.html', user_id=session['user_id'], name=session['full_name'])
+def tracking_hub():
+    if 'user_id' in session:
+        uID = session['user_id']
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # 1. Fetch all applications for this student
+                sql = """SELECT a.*, s.scholarshipName 
+                         FROM application a 
+                         JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                         WHERE a.studentID = %s 
+                         ORDER BY a.submissionDate DESC"""
+                cur.execute(sql, (uID,))
+                user_apps = cur.fetchall()
+
+                # 2. Dynamic Counters
+                # Count 'Active' (Submitted/In Review)
+                active_count = sum(1 for a in user_apps if a['applicationStatus'] in ['Submitted', 'In Review'])
+                # Count 'Drafts'
+                draft_count = sum(1 for a in user_apps if a['applicationStatus'] == 'Draft')
+                # Count 'Completed' (Awarded/Rejected)
+                completed_count = sum(1 for a in user_apps if a['applicationStatus'] in ['Awarded', 'Rejected'])
+
+            return render_template('tracking_hub.html', 
+                                   user_id=uID, 
+                                   name=session.get('full_name'), 
+                                   applications=user_apps,
+                                   active_c=active_count,
+                                   draft_c=draft_count,
+                                   completed_c=completed_count)
+        finally:
+            connection.close()
     return redirect(url_for('index'))
 
-@app.route('/apply')
-def application_form():  # This name MUST match your url_for()
+@app.route('/profile') 
+def profile():
+    if 'user_id' in session:
+        uID = session['user_id']
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                sql = "SELECT * FROM user JOIN student ON user.userID = student.studentID WHERE user.userID = %s"
+                cur.execute(sql, (uID,))
+                student_data = cur.fetchone()
+
+                # --- ADD THIS FOR THE BELL ---
+                sql_notif = """SELECT a.*, s.scholarshipName 
+                               FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE a.studentID = %s"""
+                cur.execute(sql_notif, (uID,))
+                user_apps = cur.fetchall()
+                
+                return render_template('profile.html', 
+                                       user_id=uID, 
+                                       name=session.get('full_name'),
+                                       student=student_data,
+                                       applications=user_apps) # Pass to sync bell
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
+
+# New Route to save changes to the database
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+
+    # Collect data from the form
+    uID = session['user_id']
+    fullName = request.form.get('fullName')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    faculty = request.form.get('faculty')
+    course = request.form.get('course')
+    cgpa = request.form.get('cgpa')
+    credits = request.form.get('credits')
+
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cur:
+            # Update user table
+            cur.execute("UPDATE user SET fullName=%s, email=%s, phone=%s WHERE userID=%s", 
+                        (fullName, email, phone, uID))
+            # Update student table
+            cur.execute("UPDATE student SET faculty=%s, course=%s, cgpa=%s, total_credits=%s WHERE studentID=%s", 
+                        (faculty, course, cgpa, credits, uID))
+        
+        connection.commit()
+        session['full_name'] = fullName # Sync session with new name
+        flash("Profile updated successfully!")
+        return redirect(url_for('profile'))
+    except Exception as e:
+        connection.rollback()
+        return f"Database Error: {e}"
+    finally:
+        connection.close()
+
+@app.route('/application_form')
+def application_form():
     if 'user_id' in session and session.get('role') == 'student':
-        return render_template('application_form.html')
-    return redirect(url_for('login'))
+        uID = session['user_id']
+        schID = request.args.get('id')
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # 1. SECURITY CHECK: Does an application (that isn't rejected) already exist?
+                # This prevents duplicate 'Submitted' or 'In Review' applications.
+                cur.execute("""SELECT applicationStatus FROM application 
+                               WHERE studentID = %s AND scholarshipID = %s 
+                               AND applicationStatus != 'Rejected'""", (uID, schID))
+                existing_app = cur.fetchone()
+
+                # If they have an active application that IS NOT a draft, block access
+                if existing_app and existing_app['applicationStatus'] != 'Draft':
+                    flash("Access Denied: You already have an active application for this scholarship.")
+                    return redirect(url_for('tracking_hub'))
+
+                # 2. Load standard student profile data
+                cur.execute("SELECT u.fullName, s.cgpa, s.faculty FROM user u JOIN student s ON u.userID = s.studentID WHERE u.userID = %s", (uID,))
+                student_data = cur.fetchone()
+
+                # 3. Check for a saved Draft to pre-fill the form
+                cur.execute("SELECT * FROM application WHERE studentID = %s AND scholarshipID = %s AND applicationStatus = 'Draft'", (uID, schID))
+                existing_draft = cur.fetchone()
+                
+                # 4. Get scholarship name for the form header
+                cur.execute("SELECT scholarshipName FROM scholarship WHERE scholarshipID = %s", (schID,))
+                sch_info = cur.fetchone()
+
+                return render_template('application_form.html', 
+                                       student=student_data, 
+                                       user_id=uID, 
+                                       draft=existing_draft, 
+                                       sch=sch_info) 
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
 
 @app.route('/scholarship_discovery')
 def scholarship_discovery():
     if 'user_id' in session and session.get('role') == 'student':
+        # 1. Get ALL filters from URL
+        selected_faculty = request.args.get('faculty', 'All')
+        selected_cgpa = request.args.get('cgpa', '0.0')
+        selected_category = request.args.get('category', 'All')
+
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                # Fetches all published scholarships for the list
-                cur.execute("SELECT * FROM scholarship WHERE status = 'Published'")
+                # 2. Base query
+                sql = "SELECT * FROM scholarship WHERE status = 'Published'"
+                params = []
+
+                # 3. Apply Category Filter
+                if selected_category != 'All':
+                    sql += " AND (scholarshipCriteria LIKE %s OR scholarshipName LIKE %s)"
+                    params.extend([f"%{selected_category}%", f"%{selected_category}%"])
+
+                # 4. Apply Advanced Faculty Keyword Matching
+                if selected_faculty != 'All':
+                    faculty_map = {
+                        'FCI': ['Computing', 'Information', 'Technology','FCI', 'All'],
+                        'FCM': ['Multimedia', 'Creative', 'Media', 'FCM', 'All'], # Added 'FCM' as a keyword
+                        'FOB': ['Business', 'Accounting', 'Finance', 'Management', 'FOB', 'All'],
+                        'FIST': ['Information', 'Science', 'Artificial Intelligence', 'FIST', 'All'],
+                        'FOE': ['Engineering', 'Electrical', 'Mechanical', 'Civil', 'FOE', 'All'],
+                        'FCA': ['Cinematic', 'Art', 'Animation', 'FCA', 'All']
+                    }
+                    keywords = faculty_map.get(selected_faculty, [selected_faculty])
+                    
+                    # This logic searches for any of the keywords OR "All Faculties"
+                    keyword_placeholders = " OR ".join(["faculty LIKE %s"] * len(keywords))
+                    sql += f" AND ({keyword_placeholders} OR faculty LIKE %s)"
+                    
+                    for k in keywords:
+                        params.append(f"%{k}%")
+                    params.append("%All%")
+                    
+                
+                # 5. Execute with the correct parameter count
+                cur.execute(sql, tuple(params))
                 published_list = cur.fetchall()
+
+                sql_notif = """SELECT a.*, s.scholarshipName 
+                               FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE a.studentID = %s"""
+                cur.execute(sql_notif, (session['user_id'],))
+                user_apps = cur.fetchall()
                 
             return render_template('scholarship_discovery.html', 
                                    scholarships=published_list,
-                                   user_id=session['user_id'], 
-                                   name=session['full_name'])
+                                   user_id=session.get('user_id'), 
+                                   name=session.get('full_name'),
+                                   sel_faculty=selected_faculty,
+                                   sel_cgpa=selected_cgpa,
+                                   sel_category=selected_category) 
+        
+        finally:
+            connection.close()
+            
+    return redirect(url_for('index'))
+
+@app.route('/submit_application', methods=['POST'])
+def submit_application():
+    # ... code to save form data to MySQL 'application' table ...
+    flash("Application submitted successfully!")
+    # Redirect to Tracking Hub after success
+    return redirect(url_for('tracking_hub'))
+
+@app.route('/submit_application_data', methods=['POST'])
+def submit_application_data():
+    if 'user_id' in session:
+        uID = session['user_id']
+        data = request.form
+        schID = data.get('scholarshipID')
+        
+        # Determine Bank Name
+        bank_choice = data.get('bank')
+        other_name = data.get('other_bank_name')
+        final_bank_name = other_name if bank_choice == 'Others' else bank_choice
+
+        # Collect fields
+        phone, semester = data.get('phone'), data.get('semester')
+        activities, income = data.get('activities'), data.get('income')
+        guardian_job, statement, bank_acc = data.get('guardianJob'), data.get('statement'), data.get('accNo')
+        
+        # File handling
+        file = request.files.get('transcript')
+        filename = ""
+        if file and file.filename != '':
+            filename = secure_filename(f"{uID}_{schID}_transcript.pdf")
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT applicationID FROM application WHERE studentID=%s AND scholarshipID=%s", (uID, schID))
+                existing = cur.fetchone()
+
+                if existing:
+                    sql = """UPDATE application SET 
+                             submissionDate=%s, applicationStatus='Submitted', phone=%s, 
+                             semester=%s, leadershipActivities=%s, householdIncome=%s, 
+                             guardianOccupation=%s, statementOfPurpose=%s, bankAccNo=%s, 
+                             bank=%s, documentUploaded=%s WHERE applicationID=%s"""
+                    cur.execute(sql, (datetime.now(), phone, semester, activities, income, 
+                                      guardian_job, statement, bank_acc, final_bank_name, filename, existing['applicationID']))
+                else:
+                    app_id = str(uuid.uuid4())[:8]
+                    sql = """INSERT INTO application 
+                             (applicationID, submissionDate, applicationStatus, studentID, scholarshipID, 
+                              phone, semester, leadershipActivities, householdIncome, 
+                              guardianOccupation, statementOfPurpose, bankAccNo, bank, documentUploaded) 
+                             VALUES (%s, %s, 'Submitted', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, 
+                                      activities, income, guardian_job, statement, bank_acc, final_bank_name, filename))
+            connection.commit()
+            return redirect(url_for('tracking_hub'))
         finally:
             connection.close()
     return redirect(url_for('index'))
+
+@app.route('/save_draft', methods=['POST'])
+def save_draft():
+    if 'user_id' in session:
+        # Collect whatever data the student has filled so far
+        data = request.form
+        uID = session['user_id']
+        schID = data.get('scholarshipID')
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # Check if a draft already exists to update it, or insert new
+                app_id = str(uuid.uuid4())[:8]
+                sql = """INSERT INTO application 
+                         (applicationID, studentID, scholarshipID, applicationStatus, submissionDate) 
+                         VALUES (%s, %s, %s, 'Draft', %s) 
+                         ON DUPLICATE KEY UPDATE submissionDate=%s"""
+                cur.execute(sql, (app_id, uID, schID, datetime.now(), datetime.now()))
+            connection.commit()
+            return redirect(url_for('tracking_hub'))
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
+
+@app.route('/save_application_draft', methods=['POST'])
+def save_application_draft():
+    if 'user_id' in session:
+        uID = session['user_id']
+        data = request.form
+        schID = data.get('scholarshipID')
+        
+        # Determine Bank Name: Dropdown or Specify Box?
+        bank_choice = request.form.get('bank')
+        other_name = request.form.get('other_bank_name')
+        final_bank_name = other_name if bank_choice == 'Others' else bank_choice
+
+        # Capture other fields
+        phone = data.get('phone')
+        semester = data.get('semester')
+        activities = data.get('activities')
+        statement = data.get('statement')
+        income = data.get('income') or 0
+        guardian_job = data.get('guardianJob')
+        bank_acc = data.get('accNo')
+        
+
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                cur.execute("SELECT applicationID FROM application WHERE studentID=%s AND scholarshipID=%s AND applicationStatus='Draft'", (uID, schID))
+                existing = cur.fetchone()
+
+                if existing:
+                    sql = """UPDATE application SET 
+                             submissionDate=%s, phone=%s, semester=%s, leadershipActivities=%s, 
+                             statementOfPurpose=%s, householdIncome=%s, guardianOccupation=%s, 
+                             bankAccNo=%s, bank=%s WHERE applicationID=%s"""
+                    cur.execute(sql, (datetime.now(), phone, semester, activities, statement, income, guardian_job, bank_acc, final_bank_name, existing['applicationID']))
+                else:
+                    app_id = str(uuid.uuid4())[:8]
+                    sql = """INSERT INTO application 
+                             (applicationID, submissionDate, applicationStatus, studentID, scholarshipID, 
+                              phone, semester, leadershipActivities, statementOfPurpose, householdIncome, 
+                              guardianOccupation, bankAccNo, bank) 
+                             VALUES (%s, %s, 'Draft', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, activities, statement, income, guardian_job, bank_acc, final_bank_name))
+            
+            connection.commit()
+            return redirect(url_for('tracking_hub'))
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
+
+
+@app.route('/delete_draft/<app_id>', methods=['POST'])
+def delete_draft(app_id):
+    if 'user_id' in session:
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # Security: Only delete if it belongs to this student and is a Draft
+                sql = "DELETE FROM application WHERE applicationID = %s AND studentID = %s AND applicationStatus = 'Draft'"
+                cur.execute(sql, (app_id, session['user_id']))
+            connection.commit()
+            
+            # Use Flask flash instead of sessionStorage
+            flash("Draft removed successfully.") 
+            
+        except Exception as e:
+            return f"Error: {e}"
+        finally:
+            connection.close()
+    return redirect(url_for('tracking_hub'))
 
 if __name__ == '__main__':
     app.run(debug=True)

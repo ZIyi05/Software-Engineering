@@ -150,6 +150,9 @@
                 <div class="form-group">
                     <label>Date of Birth</label>
                     <input type="date" name="dob" required>
+                    <script>
+                        document.getElementById('dobField').max = new Date().toISOString().split("T")[0];
+                    </script>
                 </div>
 
                 <div class="form-group">
@@ -174,10 +177,10 @@
                         <option value="FCI">FCI</option>
                         <option value="FOE">FOE</option>
                         <option value="FOB">FOB</option>
-                        <option value="FOB">FCM</option>
-                        <option value="FOB">FCA</option>
-                        <option value="FOB">FIST</option>
-                        <option value="FOB">FOM</option>
+                        <option value="FCM">FCM</option>
+                        <option value="FCA">FCA</option>
+                        <option value="FIST">FIST</option>
+                        <option value="FOM">FOM</option>
                     </select>
                 </div>
 
@@ -188,7 +191,7 @@
 
                 <div class="form-group">
                     <label>Create Password</label>
-                    <input type="password" name="password" placeholder="Min. 8 characters" required>
+                    <input type="password" name="password" placeholder="Min. 8 characters" minlength="8" required>
                 </div>
             </div>
 
