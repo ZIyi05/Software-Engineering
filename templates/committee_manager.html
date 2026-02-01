@@ -69,6 +69,44 @@
             width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.85rem; box-sizing: border-box; 
         }
 
+        .sticky-footer { 
+            display: flex; 
+            gap: 20px; 
+            width: 100%; 
+            margin-top: 30px; 
+            padding-top: 30px; 
+            border-top: 1px solid var(--border); 
+        }
+
+        /* Style for the "Save as Draft" button */
+        .btn-draft { 
+            flex: 1; 
+            background: white; 
+            color: var(--nav-dark); 
+            border: 2px solid var(--nav-dark); 
+            padding: 16px; 
+            border-radius: 10px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 0.95rem;
+        }
+
+        /* Style for the "Publish" button */
+        .btn-submit { 
+            flex: 1.5; 
+            background: var(--emerald); 
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 10px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 1rem; 
+        }
+
+    .btn-submit:hover { filter: brightness(1.1); }
+    .btn-draft:hover { background: #f8fafc; }
+
         .field textarea { resize: none; min-height: 250px; line-height: 1.5; }
 
         input[type=number]::-webkit-inner-spin-button, 
@@ -147,9 +185,14 @@
                         <textarea name="termAndCondition">{{ sch.termAndCondition if sch else '' }}</textarea>
                     </div>
 
-                    <div class="button-footer">
-                        <button type="submit" name="action" value="draft" class="btn-save-draft">Save as Draft</button>
-                        <button type="submit" name="action" value="publish" class="btn-publish">Publish to Portal</button>
+                    <div class="sticky-footer">
+                        <button type="submit" name="action" value="draft" class="btn-draft" onclick="handleAdminDraft()">
+                            Save as Draft
+                        </button>
+                        
+                        <button type="submit" name="action" value="publish" class="btn-submit" onclick="handleAdminPublish()">
+                            Publish to Portal
+                        </button>
                     </div>
                 </div>
             </form>
@@ -162,6 +205,18 @@
             const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        function handleAdminDraft() {
+            const schName = document.querySelector('input[name="scholarshipName"]').value || "Scholarship";
+            sessionStorage.setItem('flashMessage', `Draft Saved: ${schName} progress is safe.`);
+            return true; 
+        }
+
+        function handleAdminPublish() {
+            const schName = document.querySelector('input[name="scholarshipName"]').value || "Scholarship";
+            sessionStorage.setItem('flashMessage', `System Update: ${schName} is now live on the portal.`);
+            return true;
         }
     </script>
 </body>

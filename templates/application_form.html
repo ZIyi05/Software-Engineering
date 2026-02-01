@@ -142,7 +142,8 @@
             <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
             <a href="{{ url_for('tracking_hub') }}" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
-        </nav> <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        </nav>         
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -282,6 +283,29 @@
     </form>
 </div>
 
+    <div id="submitModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:380px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar-nav);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:10px; font-weight:600;">Confirm final submission?</p>
+            <p style="color:var(--slate); font-size:0.8rem; margin-bottom:25px;">Details cannot be changed after this.</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeSubmitModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <button id="confirmSubmitBtn" style="flex:1; padding:12px; border-radius:8px; border:none; background:var(--emerald); color:white; cursor:pointer; font-weight:600;">Submit Now</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
+            </div>
+        </div>
+    </div>
+
 <script>
         feather.replace();
 
@@ -329,16 +353,18 @@
 
         // BROWSER VALIDATION TRIGGERED HERE
         document.getElementById('mainAppForm').onsubmit = function(e) {
-            const schName = document.getElementById('targetSchName').innerText;
-
-            if(confirm("Confirm final submission? Details cannot be changed after this.")) {
-                sessionStorage.setItem('flashMessage', `Submitted Successfully: Application received for ${schName}`);
-                return true; // Submits to the 'submit_application_data' route
-            }
+            e.preventDefault();
             
-            e.preventDefault(); 
-            return false;
-        }
+            document.getElementById('submitModal').style.display = 'flex';
+            
+            document.getElementById('confirmSubmitBtn').onclick = function() {
+                const schName = document.getElementById('targetSchName').innerText;
+                
+                sessionStorage.setItem('flashMessage', `Submitted Successfully: Application received for ${schName}`);
+                
+                document.getElementById('mainAppForm').submit();
+            };
+        };
 
         function handleDraft() {
             const form = document.getElementById('mainAppForm');
@@ -352,6 +378,25 @@
             
             // Submit the form manually
             form.submit();
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('submitModal');
+            if (event.target == modal) {
+                closeSubmitModal();
+            }
+        };
+
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+                    const logoutModal = document.getElementById('logoutModal');
+                    if (event.target == logoutModal) { closeLogoutModal(); }
         };
 
     </script>

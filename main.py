@@ -244,30 +244,37 @@ def delete_user(userid):
 
 @app.route('/scholarship_manager')
 def scholarship_manager():
+    # 1. Security check: Only Admins can access
     if 'user_id' in session and session.get('role') == 'admin':
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                # Filter out 'Archived' status
-                cur.execute("SELECT * FROM scholarship WHERE status != 'Archived'")
+                # 2. Modified SQL: Sort by deadline descending to see latest updates first
+                # Filter out 'Archived' status as requested
+                cur.execute("SELECT * FROM scholarship WHERE status != 'Archived' ORDER BY deadline DESC")
                 programs = cur.fetchall()
                 
-                today = datetime.now().date() # Get only the date
+                # 3. Expiry Logic: Compare current date with database deadline
+                today = datetime.now().date()
                 
                 for prog in programs:
                     if prog['deadline']:
-                        # Ensure we compare date to date
+                        # Ensure we compare date objects to date objects
                         deadline = prog['deadline']
                         if isinstance(deadline, datetime):
                             deadline = deadline.date()
                         
+                        # Adds a flag to the program dict for frontend warning labels
                         prog['is_expired'] = today > deadline
                         
+            # 4. Render with admin_name for the top bar
             return render_template('scholarship_manager.html', 
                                    admin_name=session['full_name'], 
                                    scholarships=programs)
         finally:
             connection.close()
+            
+    # If not logged in as admin, redirect to login page
     return redirect(url_for('index'))
 
 @app.route('/admin_manage_status/<sch_id>/<action>', methods=['POST'])
@@ -300,18 +307,62 @@ def reviewer_assignment():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                sql = """
+                # Modified SQL: Added "AND a.reviewerID IS NULL"
+                sql_apps = """
                     SELECT a.applicationID, u.fullName, u.userID, s.scholarshipName 
                     FROM application a
                     JOIN user u ON a.studentID = u.userID
                     JOIN scholarship s ON a.scholarshipID = s.scholarshipID
-                    WHERE s.status != 'Archived'
+                    WHERE s.status != 'Archived' 
+                    AND a.applicationStatus = 'Submitted'
+                    AND a.reviewerID IS NULL
                 """
-                cur.execute(sql)
+                cur.execute(sql_apps)
                 assignments = cur.fetchall()
-            return render_template('reviewer_assignment.html', admin_name=session['full_name'], pending_tasks=assignments)
+
+                # Fetch real Reviewers and calculate their workload
+                sql_revs = """
+                    SELECT u.userID, u.fullName, 
+                    (SELECT COUNT(*) FROM application WHERE reviewerID = u.userID) as current_load
+                    FROM user u 
+                    WHERE u.role = 'reviewer' AND u.status != 'Inactive'
+                """
+                cur.execute(sql_revs)
+                reviewers_list = cur.fetchall()
+
+            return render_template('reviewer_assignment.html', 
+                                   admin_name=session['full_name'], 
+                                   pending_tasks=assignments,
+                                   reviewers=reviewers_list)
         finally:
             connection.close()
+    return redirect(url_for('index'))
+
+@app.route('/assign_reviewers_submit', methods=['POST'])
+def assign_reviewers_submit():
+    if 'user_id' in session and session.get('role') == 'admin':
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # Loop through all form data to find reviewer selections
+                for key, reviewer_id in request.form.items():
+                    if key.startswith('reviewer_') and reviewer_id:
+                        # Extract the applicationID from the input name
+                        app_id = key.replace('reviewer_', '')
+                        
+                        # Update the database with the assigned reviewer
+                        sql = "UPDATE application SET reviewerID = %s WHERE applicationID = %s"
+                        cur.execute(sql, (reviewer_id, app_id))
+            
+            connection.commit()
+            # Storing message for the Toast Alert
+            flash("Reviewer assignments confirmed and workloads updated.")
+            return redirect(url_for('reviewer_assignment'))
+        except Exception as e:
+            if connection: connection.rollback()
+            return f"Error: {e}"
+        finally:
+            if connection: connection.close()
     return redirect(url_for('index'))
 
 # --- 5. REVIEWER ROUTES ---
@@ -325,19 +376,122 @@ def reviewer_dashboard():
 @app.route('/reviewer_queue')
 def reviewer_queue():
     if 'user_id' in session and session.get('role') == 'reviewer':
-        return render_template('reviewer_queue.html', reviewer_name=session['full_name'])
+        uID = session['user_id']
+        connection = get_db_connection()
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                # Fetch applications assigned to THIS reviewer that haven't been scored yet
+                sql = """SELECT a.applicationID, u.fullName, u.userID, s.faculty, a.applicationStatus 
+                         FROM application a
+                         JOIN user u ON a.studentID = u.userID
+                         JOIN scholarship s ON a.scholarshipID = s.scholarshipID
+                         WHERE a.reviewerID = %s AND a.score IS NULL"""
+                cur.execute(sql, (uID,))
+                pending_list = cur.fetchall()
+                
+                # Fetch counts for the dashboard cards
+                cur.execute("SELECT COUNT(*) as total FROM application WHERE reviewerID = %s", (uID,))
+                total_assigned = cur.fetchone()['total']
+                
+                cur.execute("SELECT COUNT(*) as completed FROM application WHERE reviewerID = %s AND score IS NOT NULL", (uID,))
+                completed_count = cur.fetchone()['completed']
+
+            return render_template('reviewer_queue.html', 
+                                   reviewer_name=session['full_name'], 
+                                   pending_tasks=pending_list,
+                                   total=total_assigned,
+                                   done=completed_count,
+                                   remain=len(pending_list))
+        finally:
+            connection.close()
     return redirect(url_for('index'))
 
-@app.route('/reviewer_assessment')
-def reviewer_assessment():
+@app.route('/reviewer/assessment/<app_id>')
+def reviewer_assessment(app_id):
     if 'user_id' in session and session.get('role') == 'reviewer':
-        return render_template('reviewer_assessment.html', reviewer_name=session['full_name'])
+        # Store ID in session so the sidebar link works across pages
+        session['current_assessment_id'] = app_id
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                sql = """SELECT a.*, u.fullName, u.userID, s.faculty, s.cgpa
+                         FROM application a
+                         JOIN user u ON a.studentID = u.userID
+                         JOIN student s ON a.studentID = s.studentID
+                         WHERE a.applicationID = %s"""
+                cur.execute(sql, (app_id,))
+                application_data = cur.fetchone()
+
+            if not application_data:
+                session.pop('current_assessment_id', None)
+                return redirect(url_for('reviewer_queue'))
+
+            return render_template('reviewer_assessment.html', 
+                                   reviewer_name=session['full_name'], 
+                                   app=application_data)
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
+
+# --- Unified Submit Assessment Route ---
+@app.route('/submit_assessment', methods=['POST'])
+def submit_assessment():
+    if 'user_id' in session and session.get('role') == 'reviewer':
+        app_id = request.form.get('applicationID')
+        score = request.form.get('totalScore')
+        feedback = request.form.get('feedback')
+        recommendation = request.form.get('recommendation')
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cur:
+                # 1. Update the application with scores and recommendation
+                sql = """UPDATE application 
+                         SET score = %s, 
+                             applicationStatus = %s, 
+                             reviewDate = %s 
+                         WHERE applicationID = %s"""
+                cur.execute(sql, (score, recommendation, datetime.now(), app_id))
+            
+            connection.commit()
+            
+            # 2. Cleanup session memory for sidebar logic
+            session.pop('current_assessment_id', None)
+            
+            # 3. Flash message for the redirect page
+            flash("Assessment Finalized Successfully")
+            return redirect(url_for('reviewer_queue'))
+        except Exception as e:
+            if connection: connection.rollback()
+            return f"Error: {e}"
+        finally:
+            if connection: connection.close()
+            
     return redirect(url_for('index'))
 
 @app.route('/scoring_history')
 def scoring_history():
     if 'user_id' in session and session.get('role') == 'reviewer':
-        return render_template('scoring_history.html', reviewer_name=session['full_name'])
+        uID = session['user_id']
+        connection = get_db_connection()
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                # Fetch only COMPLETED assessments for this reviewer
+                sql = """SELECT a.applicationID, u.fullName, u.userID, a.score, 
+                                a.applicationStatus, a.reviewDate 
+                         FROM application a
+                         JOIN user u ON a.studentID = u.userID
+                         WHERE a.reviewerID = %s AND a.score IS NOT NULL
+                         ORDER BY a.reviewDate DESC"""
+                cur.execute(sql, (uID,))
+                history_list = cur.fetchall()
+
+            return render_template('scoring_history.html', 
+                                   reviewer_name=session['full_name'], 
+                                   history=history_list)
+        finally:
+            connection.close()
     return redirect(url_for('index'))
 
 # --- 6. COMMITTEE ROUTES ---
@@ -390,7 +544,8 @@ def committee_calendar():
 @app.route('/committee/manager')
 @app.route('/edit_scholarship/<sch_id>')
 def committee_manager(sch_id=None):
-    if 'user_id' in session and session.get('role') == 'committee':
+    # CHANGE THIS LINE: Add 'admin' to the allowed roles
+    if 'user_id' in session and session.get('role') in ['admin', 'committee']:
         scholarship_data = None
         if sch_id:
             connection = get_db_connection()
@@ -402,23 +557,27 @@ def committee_manager(sch_id=None):
             finally:
                 connection.close()
         
-        # Passes 'sch' as None for Create New, or as a dict for Edit
+        # Pass the correct name variable based on the role
+        display_name = session.get('full_name')
         return render_template('committee_manager.html', 
-                               committee_name=session['full_name'], 
+                               admin_name=display_name, 
+                               committee_name=display_name, 
                                sch=scholarship_data)
+                               
+    # If role is not admin or committee, redirect to login
     return redirect(url_for('index'))
 
 @app.route('/add_scholarship_submit', methods=['POST'])
 def add_scholarship_submit():
-    if 'user_id' in session and session.get('role') == 'committee':
-        # Determine status based on which button was clicked
+    if 'user_id' in session and session.get('role') in ['admin', 'committee']:
+        user_role = session.get('role')
         form_action = request.form.get('action')
         status = 'Published' if form_action == 'publish' else 'Draft'
         
         # Check if we are updating an existing record
         existing_id = request.form.get('scholarshipID')
 
-        # Capture form data
+        # FIX: Define the variables by capturing them from the form
         name = request.form.get('scholarshipName')
         amount = request.form.get('scholarshipAmount')
         criteria = request.form.get('scholarshipCriteria')
@@ -441,8 +600,8 @@ def add_scholarship_submit():
                     cur.execute(sql, (name, criteria, deadline, amount, terms, 
                                       faculty, slots, description, status, existing_id))
                 else:
-                    # INSERT new record
-                    sch_id = str(uuid.uuid4())[:8]
+                    # INSERT new record with sequential ID
+                    sch_id = generate_sequential_id('SCH', 'scholarship', 'scholarshipID')
                     sql = """INSERT INTO scholarship 
                              (scholarshipID, scholarshipName, scholarshipCriteria, 
                               deadline, scholarshipAmount, termAndCondition, 
@@ -452,13 +611,20 @@ def add_scholarship_submit():
                                       terms, faculty, slots, description, status))
                 
             connection.commit()
-            flash(f"Scholarship '{name}' {status.lower()} successfully.")
-            return redirect(url_for('committee_portfolio'))
+            flash(f"Scholarship '{name}' saved successfully.")
+
+            # Redirect based on role
+            if user_role == 'admin':
+                return redirect(url_for('scholarship_manager'))
+            else:
+                return redirect(url_for('committee_portfolio'))
+
         except Exception as e:
             if connection: connection.rollback()
             return f"Error: {e}"
         finally:
             if connection: connection.close()
+            
     return redirect(url_for('index'))
 
 # --- 7. STUDENT ROUTES ---
@@ -499,37 +665,56 @@ def student_dashboard():
 
 @app.route('/scholarship_detail/<sch_id>')
 def scholarship_detail(sch_id):
-    if 'user_id' in session:
+    # 1. Permission Check: Allow both Students and Admins
+    if 'user_id' in session and session.get('role') in ['student', 'admin']:
         uID = session['user_id']
+        role = session.get('role')
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
-                # 1. Fetch scholarship data
+                # 2. Fetch scholarship data (Common for both roles)
                 cur.execute("SELECT * FROM scholarship WHERE scholarshipID = %s", (sch_id,))
                 scholarship_data = cur.fetchone()
                 
-                # 2. Fetch student profile data for the eligibility checker
-                cur.execute("SELECT * FROM student WHERE studentID = %s", (uID,))
-                student_data = cur.fetchone()
-
-                # 3. Check for any existing application record for this student and scholarship
-                # We fetch the status to determine if they should be allowed to apply again
-                cur.execute("SELECT applicationStatus FROM application WHERE studentID = %s AND scholarshipID = %s", (uID, sch_id))
-                app_check = cur.fetchone()
-                
                 if not scholarship_data:
-                    flash("Error: Scholarship not found.") 
                     return redirect(url_for('scholarship_discovery'))
 
+                # 3. Role-Specific Logic
+                student_data = None
+                app_check = None
+                user_apps = []
+
+                if role == 'student':
+                    # Fetch student profile data
+                    cur.execute("SELECT * FROM student WHERE studentID = %s", (uID,))
+                    student_data = cur.fetchone()
+
+                    # Check for existing application
+                    cur.execute("SELECT applicationStatus FROM application WHERE studentID = %s AND scholarshipID = %s", (uID, sch_id))
+                    app_check = cur.fetchone()
+                    
+                    # Fetch data for the student's notification bell
+                    sql_notif = """SELECT a.*, s.scholarshipName 
+                                   FROM application a 
+                                   JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                                   WHERE a.studentID = %s"""
+                    cur.execute(sql_notif, (uID,))
+                    user_apps = cur.fetchall()
+
+                # 4. Render Template
+                # Pass admin_name or committee_name for sidebar compatibility if needed
                 return render_template('scholarship_detail.html', 
                                        user_id=uID, 
+                                       role=role,
                                        name=session.get('full_name'),
+                                       admin_name=session.get('full_name'), # For Admin Sidebar
                                        student=student_data,
                                        sch=scholarship_data,
-                                       # Pass the status to the template
+                                       applications=user_apps,
                                        existing_status=app_check['applicationStatus'] if app_check else None)
         finally:
             connection.close()
+            
     return redirect(url_for('index'))
 
 @app.route('/tracking_hub')
@@ -580,10 +765,10 @@ def profile():
 
                 # --- ADD THIS FOR THE BELL ---
                 sql_notif = """SELECT a.*, s.scholarshipName 
-                               FROM application a 
-                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
-                               WHERE a.studentID = %s"""
-                cur.execute(sql_notif, (uID,))
+                            FROM application a 
+                            JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                            WHERE a.studentID = %s"""
+                cur.execute(sql_notif, (session['user_id'],))
                 user_apps = cur.fetchall()
                 
                 return render_template('profile.html', 
@@ -623,7 +808,6 @@ def update_profile():
         
         connection.commit()
         session['full_name'] = fullName # Sync session with new name
-        flash("Profile updated successfully!")
         return redirect(url_for('profile'))
     except Exception as e:
         connection.rollback()
@@ -668,7 +852,8 @@ def application_form():
                                        student=student_data, 
                                        user_id=uID, 
                                        draft=existing_draft, 
-                                       sch=sch_info) 
+                                       sch=sch_info)
+
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -719,9 +904,9 @@ def scholarship_discovery():
                 published_list = cur.fetchall()
 
                 sql_notif = """SELECT a.*, s.scholarshipName 
-                               FROM application a 
-                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
-                               WHERE a.studentID = %s"""
+                            FROM application a 
+                            JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                            WHERE a.studentID = %s"""
                 cur.execute(sql_notif, (session['user_id'],))
                 user_apps = cur.fetchall()
                 
@@ -731,7 +916,8 @@ def scholarship_discovery():
                                    name=session.get('full_name'),
                                    sel_faculty=selected_faculty,
                                    sel_cgpa=selected_cgpa,
-                                   sel_category=selected_category) 
+                                   sel_category=selected_category,
+                                   applications=user_apps)
         
         finally:
             connection.close()
@@ -763,11 +949,17 @@ def submit_application_data():
         guardian_job, statement, bank_acc = data.get('guardianJob'), data.get('statement'), data.get('accNo')
         
         # File handling
-        file = request.files.get('transcript')
-        filename = ""
-        if file and file.filename != '':
-            filename = secure_filename(f"{uID}_{schID}_transcript.pdf")
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file1 = request.files.get('transcript')
+        filename1 = ""
+        if file1 and file1.filename != '':
+            filename1 = secure_filename(f"{uID}_{schID}_transcript.pdf")
+            file1.save(os.path.join(app.config['UPLOAD_FOLDER'], filename1))
+
+        file2 = request.files.get('income_proof')
+        filename2 = ""
+        if file2 and file2.filename != '':
+            filename2 = secure_filename(f"{uID}_{schID}_income_proof.pdf")
+            file2.save(os.path.join(app.config['UPLOAD_FOLDER'], filename2))
 
         connection = get_db_connection()
         try:
@@ -780,18 +972,18 @@ def submit_application_data():
                              submissionDate=%s, applicationStatus='Submitted', phone=%s, 
                              semester=%s, leadershipActivities=%s, householdIncome=%s, 
                              guardianOccupation=%s, statementOfPurpose=%s, bankAccNo=%s, 
-                             bank=%s, documentUploaded=%s WHERE applicationID=%s"""
+                             bank=%s, documentUploaded=%s, incomeProof=%s WHERE applicationID=%s"""
                     cur.execute(sql, (datetime.now(), phone, semester, activities, income, 
-                                      guardian_job, statement, bank_acc, final_bank_name, filename, existing['applicationID']))
+                                      guardian_job, statement, bank_acc, final_bank_name, filename1, filename2, existing['applicationID']))
                 else:
                     app_id = str(uuid.uuid4())[:8]
                     sql = """INSERT INTO application 
                              (applicationID, submissionDate, applicationStatus, studentID, scholarshipID, 
                               phone, semester, leadershipActivities, householdIncome, 
-                              guardianOccupation, statementOfPurpose, bankAccNo, bank, documentUploaded) 
-                             VALUES (%s, %s, 'Submitted', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                              guardianOccupation, statementOfPurpose, bankAccNo, bank, documentUploaded, incomeProof)
+                             VALUES,  (%s, %s, 'Submitted', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, 
-                                      activities, income, guardian_job, statement, bank_acc, final_bank_name, filename))
+                                      activities, income, guardian_job, statement, bank_acc, final_bank_name, filename1, filename2, existing['applicationID']))
             connection.commit()
             return redirect(url_for('tracking_hub'))
         finally:
@@ -852,10 +1044,11 @@ def save_application_draft():
 
                 if existing:
                     sql = """UPDATE application SET 
-                             submissionDate=%s, phone=%s, semester=%s, leadershipActivities=%s, 
-                             statementOfPurpose=%s, householdIncome=%s, guardianOccupation=%s, 
-                             bankAccNo=%s, bank=%s WHERE applicationID=%s"""
-                    cur.execute(sql, (datetime.now(), phone, semester, activities, statement, income, guardian_job, bank_acc, final_bank_name, existing['applicationID']))
+                                submissionDate=%s, phone=%s, semester=%s, leadershipActivities=%s, 
+                                statementOfPurpose=%s, householdIncome=%s, guardianOccupation=%s, 
+                                bankAccNo=%s, bank=%s WHERE applicationID=%s"""
+                    cur.execute(sql, (datetime.now(), phone, semester, activities, statement, 
+                      income, guardian_job, bank_acc, final_bank_name, existing['applicationID']))
                 else:
                     app_id = str(uuid.uuid4())[:8]
                     sql = """INSERT INTO application 
@@ -881,16 +1074,30 @@ def delete_draft(app_id):
                 # Security: Only delete if it belongs to this student and is a Draft
                 sql = "DELETE FROM application WHERE applicationID = %s AND studentID = %s AND applicationStatus = 'Draft'"
                 cur.execute(sql, (app_id, session['user_id']))
-            connection.commit()
-            
-            # Use Flask flash instead of sessionStorage
-            flash("Draft removed successfully.") 
+            connection.commit()            
             
         except Exception as e:
             return f"Error: {e}"
         finally:
             connection.close()
     return redirect(url_for('tracking_hub'))
+
+def generate_sequential_id(prefix, table_name, column_name):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cur:
+            cur.execute(f"SELECT {column_name} FROM {table_name} ORDER BY {column_name} DESC LIMIT 1")
+            last_record = cur.fetchone()
+            
+            if not last_record:
+                return f"{prefix}0001"
+            
+            last_id = last_record[column_name]
+            last_num = int(last_id.replace(prefix, ""))
+            new_num = last_num + 1
+            return f"{prefix}{new_num:04d}" 
+    finally:
+        connection.close()
 
 if __name__ == '__main__':
     app.run(debug=True)

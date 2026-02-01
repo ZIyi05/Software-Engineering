@@ -63,6 +63,12 @@
 
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 25px; align-items: center; }
         .page-btn { padding: 8px 12px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+    
+        .toast-alert { position: fixed; top: 20px; right: -350px; width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; z-index: 9999;transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast-alert.show { right: 20px; }
+        .toast-submitted { border-left: 5px solid var(--emerald); } 
+        .toast-draft { border-left: 5px solid var(--amber); }      
+        .toast-danger { border-left: 5px solid #991B1B; }
     </style>
 </head>
 <body>
@@ -71,13 +77,12 @@
         <h2>MERITHUB. ADMIN</h2>
         <nav>
             <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="{{ url_for('scholarship_discovery') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('scholarship_manager')}}" class="active"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
             <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
             <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
-
     <div class="main">
         <div class="top-bar">
             <div class="admin-tag">Admin: {{ admin_name }}</div>
@@ -116,19 +121,30 @@
                         <tr>
                             <td>
                                 <b>{{ prog.scholarshipName }}</b><br>
-                                <small style="color: var(--slate);">Target: {{ prog.faculty }}</small>
+                                <small style="color: var(--slate);">
+                                    Last modified: {{ prog.updated_at.strftime('%d/%m/%Y %H:%M') if prog.updated_at else 'N/A' }}
+                                </small>
                             </td>
                             <td>{{ prog.totalSlots }} Slots Available</td>
                             <td>
-                                {% if prog.status == 'Published' %}
+                                {% if prog.is_expired %}
+                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #454545; color: #FFFFFF;">EXPIRED</span>
+                                {% elif prog.status == 'Published' %}
                                     <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #ECFDF5; color: #065F46;">OPEN</span>
                                 {% elif prog.status == 'Closed' %}
-                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E;">CLOSED</span>
+                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF2F2; color: #991B1B;">CLOSED</span>
+                                {% elif prog.status == 'Draft' %}
+                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E;">DRAFT</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
-                                    <button class="page-btn">View</button>
+                                    <a href="{{ url_for('scholarship_detail', sch_id=prog.scholarshipID) }}" 
+                                        class="page-btn" 
+                                        style="text-decoration: none; color: var(--nav-dark); border-color: var(--border); display: inline-flex; align-items: center; justify-content: center;">
+                                        View
+                                    </a>
+
 
                                     {% if prog.status == 'Published' %}
                                     <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}" method="POST" style="display:inline;">
@@ -136,9 +152,11 @@
                                     </form>
                                     {% endif %}
 
-                                    <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}" method="POST" style="display:inline;" onsubmit="return confirm('Archive this scholarship? It will be hidden from all users.');">
-                                        <button type="submit" class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
-                                    </form>
+                                <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}" 
+                                    method="POST" 
+                                    onsubmit="sessionStorage.setItem('flashMessage', 'Program Archived Successfully'); return confirm('Archive this scholarship?');">
+                                    <button type="submit" class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
+                                </form>
                                 </div>
                             </td>
                         </tr>
@@ -154,6 +172,24 @@
             </div>
         </div>
     </div>
+    <div id="toastAlert" class="toast-alert">
+        <i data-feather="check-circle" id="toastIcon"></i>
+        <div>
+            <b style="font-size: 0.85rem; display: block; color: var(--nav-dark);">System Update</b>
+            <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Action completed.</span>
+        </div>
+    </div>
+
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
+            </div>
+        </div>
+    </div>
 
     <script>
         feather.replace();
@@ -163,6 +199,42 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+                    const logoutModal = document.getElementById('logoutModal');
+                    if (event.target == logoutModal) { closeLogoutModal(); }
+        };
+
+        window.onload = function() {
+            const msg = sessionStorage.getItem('flashMessage');
+            if (msg) {
+                const toast = document.getElementById('toastAlert');
+                const msgEl = document.getElementById('toastMsg');
+                
+                if (toast && msgEl) {
+                    msgEl.innerText = msg;
+                    toast.classList.remove('toast-submitted', 'toast-draft', 'toast-danger');
+
+                    // Toggle colors based on keywords
+                    if (msg.toLowerCase().includes("draft")) {
+                        toast.classList.add('toast-draft'); // Yellow
+                    } else if (msg.toLowerCase().includes("archived") || msg.toLowerCase().includes("closed") || msg.toLowerCase().includes("deleted")) {
+                        toast.classList.add('toast-danger'); // Red
+                    } else {
+                        toast.classList.add('toast-submitted'); // Green (Published/Saved)
+                    }
+
+                    toast.classList.add('show');
+                    setTimeout(() => { 
+                        toast.classList.remove('show'); 
+                        sessionStorage.removeItem('flashMessage'); 
+                    }, 4000);
+                }
+            }
+        };
     </script>
 </body>
 </html>

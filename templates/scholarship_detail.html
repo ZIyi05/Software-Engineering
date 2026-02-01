@@ -31,13 +31,21 @@
         /* MAIN AREA */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
+
+        /* IDE-Safe Notification Border Colors */
+        .notif-submitted { border-left: 4px solid var(--emerald); }
+        .notif-draft { border-left: 4px solid var(--amber); }
+
+        /* Notification Bell and Badge Styling */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; display: none; border: 2px solid white; }
+        .notif-badge {position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;border: 2px solid white; display: none; }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* Dropdown Alignment */
         .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
         .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; }
+        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); text-align: left; }
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
         /* WORKSPACE CONTENT */
@@ -64,51 +72,77 @@
 </head>
 <body>
 
-    <div class="sidebar" id="sidebar">
-        <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub.</h2>
-        <nav>
-            <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="{{ url_for('scholarship_discovery') }}" class="btn-browse">Browse Scholarships</a>
-            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
-            <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
-        </nav>
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
-    </div>
+    {% if session.get('role') == 'admin' %}
+        <div class="sidebar" id="sidebar">
+            <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+            <h2>MERITHUB. ADMIN</h2>
+            <nav>
+                <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+                <a href="{{ url_for('scholarship_manager')}}" class="active"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+                <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
+                <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+            </nav>
+            <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+        </div>
+    {% else %}
+        <div class="sidebar" id="sidebar">
+            <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
+            <h2>MeritHub.</h2>
+            <nav>
+                <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
+                <a href="{{ url_for('scholarship_discovery') }}" class="active"><i data-feather="search"></i><span>Browse Scholarships</span></a>
+                <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
+                <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
+            </nav>
+            <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        </div>
+    {% endif %}
 
     <div class="main">
         <div class="top-bar">
             <div style="position: relative;">
-                <div class="notification-bell" onclick="toggleNotifs()">
-                    <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    <div class="notif-badge" id="notifBadge">{{ applications|length }}</div>
-                </div>
-                
-                <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList">
-                        {% for app in applications %}
-                            {% if app.applicationStatus == 'Submitted' %}
-                                <div class="notif-item" style="border-left: 4px solid var(--emerald);">
-                                    <b>System Update</b><br>
-                                    Application received for <b>{{ app.scholarshipName }}</b>.
-                                </div>
-                            {% elif app.applicationStatus == 'Draft' %}
-                                <div class="notif-item" style="border-left: 4px solid var(--amber);">
-                                    <b>Application Updated</b><br>
-                                    Check your <b>{{ app.scholarshipName }}</b> draft progress.
-                                </div>
-                            {% endif %}
-                        {% else %}
-                            <div class="notif-item">No recent updates.</div>
-                        {% endfor %}
+                {% if session.get('role') == 'student' %}
+                    <div class="notification-bell" onclick="toggleNotifs()">
+                        <i data-feather="bell" style="width: 18px; height: 18px;"></i>
+                        {% set total_notifs = applications|length if applications else 0 %}
+                        <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
+                            {{ total_notifs }}
+                        </div>
                     </div>
-                </div>
+                    
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div id="notifList">
+                            {% if applications %}
+                                {% for app in applications %}
+                                    {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
+                                    <div class="notif-item {{ status_class }}">
+                                        <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
+                                        {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="notif-item">No recent updates.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-            <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
+            
+            <div class="user-tag">
+                {% if session.get('role') == 'admin' %}
+                    Admin: {{ admin_name }}
+                {% else %}
+                    ID: {{ user_id }} | {{ name }}
+                {% endif %}
+            </div>
         </div>
 
         <div class="workspace">
-            <a href="{{ url_for('scholarship_discovery') }}" class="btn-exit">← Return to Scholarship Discovery</a>
+            {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('scholarship_manager') }}" class="btn-exit">← Return to Scholarship Manager</a>
+            {% else %}
+                <a href="{{ url_for('scholarship_discovery') }}" class="btn-exit">← Return to Scholarship Discovery</a>
+            {% endif %}
 
             <div class="detail-card">
                 <div class="header-meta">
@@ -144,26 +178,44 @@
                     </div>
                 </div>
 
-                <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
-                    <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">Validating Academic Profile...</span>
-                    <div class="progress-bg"><div id="pBar" class="progress-fill"></div></div>
-                </div>
-
-                <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
-                <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">✓ Eligibility Verified.</div>
-
                 <div class="action-footer">
-                    {% if existing_status == 'Submitted' or existing_status == 'In Review' or existing_status == 'Awarded' %}
-                        <p style="color: var(--emerald); font-weight: 700;">You have already applied for this scholarship.</p>
-                        <button class="btn-apply unlocked" onclick="window.location.href='{{ url_for('tracking_hub') }}'">View My Application</button>
-                    {% elif existing_status == 'Draft' %}
-                        <p style="color: var(--amber); font-weight: 700;">You have a saved draft for this scholarship.</p>
-                        <button class="btn-apply unlocked" onclick="window.location.href='{{ url_for('tracking_hub') }}'">Continue from Draft</button>
+                    {% if session.get('role') == 'admin' %}
+                        <p style="color: var(--slate); font-weight: 700;">Preview Mode: Admin Access Only</p>
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn-apply unlocked" onclick="window.location.href='{{ url_for('scholarship_manager') }}'">Back to Manager</button>
+                            <button class="btn-apply unlocked" style="background: var(--sidebar);" onclick="window.location.href='{{ url_for('committee_manager', sch_id=sch.scholarshipID) }}'">Edit Program</button>
+                        </div>
                     {% else %}
-                        <button id="checkBtn" class="btn-check" onclick="runCheck()">Check My Eligibility</button>
-                        <button id="applyBtn" class="btn-apply" disabled onclick="proceed()">Apply Now</button>
+                        {% if existing_status == 'Submitted' or existing_status == 'In Review' or existing_status == 'Awarded' %}
+                            <p style="color: var(--emerald); font-weight: 700;">You have already applied for this scholarship.</p>
+                            <button class="btn-apply unlocked" onclick="window.location.href='{{ url_for('tracking_hub') }}'">View My Application</button>
+                        {% elif existing_status == 'Draft' %}
+                            <p style="color: var(--amber); font-weight: 700;">You have a saved draft for this scholarship.</p>
+                            <button class="btn-apply unlocked" onclick="window.location.href='{{ url_for('tracking_hub') }}'">Continue from Draft</button>
+                        {% else %}
+                            <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
+                                <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">Validating Academic Profile...</span>
+                                <div class="progress-bg"><div id="pBar" class="progress-fill"></div></div>
+                            </div>
+                            <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
+                            <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">✓ Eligibility Verified.</div>
+                            
+                            <button id="checkBtn" class="btn-check" onclick="runCheck()">Check My Eligibility</button>
+                            <button id="applyBtn" class="btn-apply" disabled onclick="proceed()">Apply Now</button>
+                        {% endif %}
                     {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
             </div>
         </div>
     </div>
@@ -176,25 +228,35 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+        
         function toggleNotifs() { 
-            document.getElementById('notifDropdown').classList.toggle('show'); 
-            document.getElementById('notifBadge').classList.remove('active');
-            document.getElementById('notifBadge').style.display = 'none';
+            const dropdown = document.getElementById('notifDropdown');
+            const badge = document.getElementById('notifBadge');
+            dropdown.classList.toggle('show'); 
+            if (badge) {
+                badge.style.display = 'none'; 
+                badge.classList.remove('active');
+            }
         }
+        
         function runCheck() {
             const checkBtn = document.getElementById('checkBtn');
             const scanUI = document.getElementById('scanUI');
             const pBar = document.getElementById('pBar');
             const errorBox = document.getElementById('errorMsg');
             const successBox = document.getElementById('successMsg');
+            
+            // Student-only check logic
             const studentCGPA = parseFloat("{{ student.cgpa if student and student.cgpa else 0 }}");
             const studentFaculty = "{{ student.faculty if student and student.faculty else '' }}".toLowerCase();
             const criteriaRaw = "{{ sch.scholarshipCriteria if sch else '' }}";
             const criteriaMatch = criteriaRaw.match(/(\d+\.\d+)/);
             const requiredGPA = criteriaMatch ? parseFloat(criteriaMatch[0]) : 0.00;
             const requiredFaculty = "{{ sch.faculty if sch else '' }}".toLowerCase();
+            
             errorBox.style.display = 'none'; successBox.style.display = 'none';
             pBar.style.width = '0%'; checkBtn.style.display = 'none'; scanUI.style.display = 'block';
+            
             setTimeout(() => { pBar.style.width = '100%'; }, 50);
             setTimeout(() => {
                 scanUI.style.display = 'none';
@@ -211,9 +273,18 @@
                 }
             }, 2100);
         }
+        
         function proceed() { 
             window.location.href = "{{ url_for('application_form') }}?id={{ sch.scholarshipID }}"; 
         }
+        
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
+        };
     </script>
 </body>
 </html>
