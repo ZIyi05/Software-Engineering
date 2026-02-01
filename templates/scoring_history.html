@@ -73,12 +73,20 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. REVIEWER</h2>
         <nav>
-            <a href="{{url_for ('reviewer_dashboard') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="{{url_for ('reviewer_queue') }}"><i data-feather="layers"></i><span>Queue Overview</span></a>
-            <a href="{{url_for ('reviewer_assessment') }}"><i data-feather="file-text"></i><span>Current Assessment</span></a>
-            <a href="{{url_for ('scoring_history') }}" class="active"><i data-feather="clock"></i><span>Evaluation History</span></a>
+            <a href="{{ url_for('reviewer_dashboard') }}" class="{{ 'active' if request.endpoint == 'reviewer_dashboard' }}">
+                <i data-feather="grid"></i><span>Dashboard Overview</span>
+            </a>
+            <a href="{{ url_for('reviewer_queue') }}" class="{{ 'active' if request.endpoint == 'reviewer_queue' }}">
+                <i data-feather="layers"></i><span>Queue Overview</span>
+            </a>
+            <a href="{{ url_for('reviewer_queue') }}">
+                <i data-feather="file-text"></i><span>Current Assessment</span>
+            </a>
+            <a href="{{ url_for('scoring_history') }}" class="{{ 'active' if request.endpoint == 'scoring_history' }}">
+                <i data-feather="clock"></i><span>Evaluation History</span>
+            </a>
         </nav>
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -102,31 +110,49 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><b>Bernice Gan</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 123456789</span></td>
-                            <td style="font-weight: 800; color: var(--emerald);">18 / 20</td>
-                            <td><span class="badge badge-Approved">Approved</span></td>
-                            <td>Jan 18, 2026</td>
-                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
-                        </tr>
-                        
-                        <tr>
-                            <td><b>John Doe</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC999</span></td>
-                            <td style="font-weight: 800; color: var(--slate);">12 / 20</td>
-                            <td><span class="badge badge-Waitlist">Waitlist</span></td>
-                            <td>Jan 17, 2026</td>
-                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
-                        </tr>
-
-                        <tr>
-                            <td><b>Alice Smith</b><br><span style="font-size: 0.75rem; color: var(--slate);">ID: 243UC111</span></td>
-                            <td style="font-weight: 800; color: #ef4444;">05 / 20</td>
-                            <td><span class="badge badge-Rejected">Rejected</span></td>
-                            <td>Jan 16, 2026</td>
-                            <td><a href="evaluation_summary.html" class="btn-view">View Summary</a></td>
-                        </tr>
+                        {% if history %}
+                            {% for record in history %}
+                            <tr>
+                                <td>
+                                    <b>{{ record.fullName }}</b><br>
+                                    <span style="font-size: 0.75rem; color: var(--slate);">ID: {{ record.userID }}</span>
+                                </td>
+                                <td style="font-weight: 800; color: var(--emerald);">
+                                    {{ record.score }} / 20
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ record.applicationStatus }}">
+                                        {{ record.applicationStatus }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ record.reviewDate.strftime('%b %d, %Y') if record.reviewDate else 'N/A' }}
+                                </td>
+                                <td>
+                                    <a href="#" class="btn-view">View Summary</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--slate); padding: 40px;">
+                                    No completed assessments found in your history.
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
             </div>
         </div>
     </div>
@@ -139,6 +165,14 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+                    const logoutModal = document.getElementById('logoutModal');
+                    if (event.target == logoutModal) { closeLogoutModal(); }
+        };
     </script>
 </body>
 </html>

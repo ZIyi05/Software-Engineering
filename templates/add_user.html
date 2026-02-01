@@ -67,14 +67,13 @@
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
-        <nav style="display: flex; flex-direction: column;">
-            <a href="{{ url_for('admin_dashboard') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="{{ url_for('scholarship_manager') }}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="{{ url_for('user_management') }}" class="active"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="{{ url_for('reviewer_assignment') }}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+        <nav>
+            <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('scholarship_manager')}}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
         </nav>
-        
-        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Logout</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main" style="align-items: center; overflow-y: auto; display: flex; flex-direction: column;">
@@ -96,6 +95,17 @@
         </div>
     </div>
 
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
+            </div>
+        </div>
+    </div>
+
     <script>
         feather.replace();
         function toggleSidebar() {
@@ -104,6 +114,14 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
+
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+                    const logoutModal = document.getElementById('logoutModal');
+                    if (event.target == logoutModal) { closeLogoutModal(); }
+        };
     </script>
 </body>
 </html>
