@@ -234,8 +234,7 @@
     </style>
 </head>
 <body>
-
-<div class="sidebar" id="sidebar">
+    <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MeritHub.</h2>
         <nav>
@@ -245,52 +244,73 @@
             <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
         
-        <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="{{ url_for('logout') }}" style="margin-top: auto;">
+            <i data-feather="log-out"></i><span>Log out</span>
+        </a>
     </div>
 
     <div class="main">
         <div class="top-bar">
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
-                    <i data-feather="bell"></i>
+                    <i data-feather="bell" style="width: 18px; height: 18px;"></i>
+                    {% set total_notifs = applications|length if applications else 0 %}
+                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
+                        {{ total_notifs }}
+                    </div>
                 </div>
+                
                 <div class="notif-dropdown" id="notifDropdown">
-                    <div class="notif-item">
-                        <small style="color: var(--emerald); font-weight: 800;">INTERVIEW SET</small>
-                        <b>Global Excellence Grant</b> Scheduled for Jan 21, 2:30 PM.
+                    <div id="notifList">
+                        {% if applications %}
+                            {% for app in applications %}
+                                {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
+                                
+                                <div class="notif-item {{ status_class }}">
+                                    <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
+                                    {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notif-item">No recent updates.</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            <div class="user-tag" id="topUserTag">ID: {{ user_id }} | {{ name }}</div>
+            <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="workspace">
             <div class="hero">
                 <h1 id="welcomeHeading">Welcome back, {{ name }}.</h1>
-                <p>You have <b>2</b> active applications. Check your status below.</p>
-                {% if scholarships %}
-                    <a href="{{ url_for('scholarship_discovery', sch_id=scholarships[0].scholarshipID) }}" class="btn-browse">Browse Scholarships</a>
-                {% else %}
-                    <a href="#" class="btn-browse" style="opacity: 0.5; cursor: not-allowed;">No Scholarships Available</a>
-                {% endif %}
+                <p>You have <b>{{ app_count }}</b> active applications. Check your status below.</p>
+                <a href="{{ url_for('scholarship_discovery') }}" class="btn-browse">Browse Scholarships</a> 
+                <a href="{{ url_for('tracking_hub') }}" style="font-size: 0.8rem; color: var(--emerald); text-decoration: none; font-weight: 600;">View History →</a>
             </div>
             
             <div class="scroll-area">
-                {% for sch in scholarships %}
-                <div class="card" onclick="window.location.href='{{ url_for('scholarship_detail', sch_id=sch.scholarshipID) }}'">
+                {% for app in applications %}
+                <div class="card" onclick="window.location.href='{{ url_for('tracking_hub') }}'">
                     <div>
-                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">{{ sch.scholarshipName }}</h4>
-                        <p style="margin:0; font-size: 0.8rem;">Eligibility: <b>{{ sch.scholarshipCriteria }}</b></p>
+                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">{{ app.scholarshipName }}</h4>
+                        <p style="margin:0; font-size: 0.8rem;">Submitted on: <b>{{ app.submissionDate.strftime('%b %d, %Y') if app.submissionDate else 'N/A' }}</b></p>
                     </div>
-                    <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #ECFDF5; color: var(--emerald);">Eligible</span>
+                    
+                    {% if app.applicationStatus == 'Submitted' %}
+                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #F1F5F9; color: var(--slate);">{{ app.applicationStatus }}</span>
+                    {% elif app.applicationStatus == 'Awarded' %}
+                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #ECFDF5; color: var(--emerald);">{{ app.applicationStatus }}</span>
+                    {% else %}
+                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #FEF3C7; color: #92400E;">{{ app.applicationStatus }}</span>
+                    {% endif %}
                 </div>
                 {% else %}
-                <p style="text-align: center; color: var(--slate); margin-top: 20px;">No active scholarships available at this time.</p>
+                <p style="text-align:center; color:var(--slate); margin-top:40px;">No active applications found.</p>
                 {% endfor %}
             </div>
-        </div>
-    </div>
-    <script>
+        </div> 
+</div> ```
+ <script>
         feather.replace();
 
         function toggleSidebar() {
@@ -314,5 +334,3 @@
         }
     </script>
 </body>
-</html>
-

@@ -105,14 +105,30 @@
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    <div class="notif-badge" id="notifBadge">2</div>
+                    <div class="notif-badge" id="notifBadge">{{ applications|length }}</div>
                 </div>
+                
                 <div class="notif-dropdown" id="notifDropdown">
-                    <div class="notif-item"><b>Application Approved</b><br>Your STEM Grant documents are verified.</div>
-                    <div class="notif-item"><b>Interview Scheduled</b><br>Interview set for Jan 25.</div>
+                    <div id="notifList">
+                        {% for app in applications %}
+                            {% if app.applicationStatus == 'Submitted' %}
+                                <div class="notif-item" style="border-left: 4px solid var(--emerald);">
+                                    <b>System Update</b><br>
+                                    Application received for <b>{{ app.scholarshipName }}</b>.
+                                </div>
+                            {% elif app.applicationStatus == 'Draft' %}
+                                <div class="notif-item" style="border-left: 4px solid var(--amber);">
+                                    <b>Application Updated</b><br>
+                                    Check your <b>{{ app.scholarshipName }}</b> draft progress.
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="notif-item">No recent updates.</div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-            <div class="user-tag" id="topUserTag">ID: {{ user_id }} | {{ name }}</div>
+            <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
         </div>
 
         <div class="layout-body">
@@ -124,31 +140,37 @@
                 <div>
                     <label class="filter-label">Category</label>
                     <select id="themeFilter" class="filter-select">
-                        <option value="All">All Themes</option>
-                        <option value="Academic Merit">Academic Merit</option>
-                        <option value="Social Impact">Social Impact</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Entrepreneurship">Entrepreneurship</option>
+                        <option value="All" {% if sel_category == 'All' %}selected{% endif %}>All Themes</option>
+                        <option value="Academic Merit" {% if sel_category == 'Academic Merit' %}selected{% endif %}>Academic Merit</option>
+                        <option value="Social Impact" {% if sel_category == 'Social Impact' %}selected{% endif %}>Social Impact</option>
+                        <option value="Technology" {% if sel_category == 'Technology' %}selected{% endif %}>Technology</option>
+                        <option value="Entrepreneurship" {% if sel_category == 'Entrepreneurship' %}selected{% endif %}>Entrepreneurship</option>
                     </select>
                 </div>
                 <div>
-                    <label class="filter-label">Minimum CGPA: <b id="cgpaVal">2.50</b></label>
-                    <input type="range" id="cgpaFilter" min="2.0" max="4.0" step="0.1" value="2.5" oninput="document.getElementById('cgpaVal').innerText = parseFloat(this.value).toFixed(2)">
+                    <label class="filter-label">Minimum CGPA: <b id="cgpaVal">{{ sel_cgpa }}</b></label>
+                    
+                    <input type="range" id="cgpaFilter" min="2.0" max="4.0" step="0.1" 
+                        value="{{ sel_cgpa }}" 
+                        oninput="document.getElementById('cgpaVal').innerText = parseFloat(this.value).toFixed(2)">
                 </div>
                 <div>
                     <label class="filter-label">Faculty</label>
                     <select id="facultyFilter" class="filter-select">
                         <option value="All">All Faculties</option>
-                        <option value="Computing">FCI</option>
-                        <option value="Engineering">FOE</option>
-                        <option value="Business">FOB</option>
-                        <option value="Business">FCM</option>
-                        <option value="Business">FIST</option>
-                        <option value="Business">FCA</option>
-                        <option value="Business">FOM</option>
+                        <option value="FCI" {% if sel_faculty == 'FCI' %}selected{% endif %}>Computing & Tech (FCI)</option>
+                        <option value="FCM" {% if sel_faculty == 'FCM' %}selected{% endif %}>Multimedia & Creative (FCM)</option>
+                        <option value="FOB" {% if sel_faculty == 'FOB' %}selected{% endif %}>Business & Management (FOB/FOM)</option>
+                        <option value="FIST" {% if sel_faculty == 'FIST' %}selected{% endif %}>Information Science (FIST)</option>
+                        <option value="FOE" {% if sel_faculty == 'FOE' %}selected{% endif %}>Engineering (FOE)</option>
+                        <option value="FCA" {% if sel_faculty == 'FCA' %}selected{% endif %}>Cinematic Arts (FCA)</option>
                     </select>
                 </div>
                 <button class="btn-apply-filter" onclick="applyFilters()">Apply Filters</button>
+                <button type="button" onclick="window.location.href='{{ url_for('scholarship_discovery') }}'" 
+                        style="background:none; border:1px solid var(--slate); color:var(--slate); padding:10px; width:100%; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:700;">
+                    Reset All
+                </button>
             </div>
 
             <div class="workspace">
@@ -168,6 +190,8 @@
                                 <span class="theme-badge">{{ sch.faculty }}</span>
                                 <h4>{{ sch.scholarshipName }}</h4>
                                 <p>Faculty Eligibility: {{ sch.faculty }}</p>
+                                
+                                <div class="hidden-criteria" style="display: none;">{{ sch.scholarshipCriteria }}</div>
                             </div>
                             <div class="view-details-arrow"><i data-feather="chevron-right" style="width: 18px;"></i></div>
                         </div>
@@ -207,9 +231,39 @@
         
         // Apply Filters logic can be expanded here to handle the filter pane selects
         function applyFilters() {
-            toggleFilters();
-            // Implement additional filtering logic if needed
+            const category = document.getElementById('themeFilter').value;
+            const faculty = document.getElementById('facultyFilter').value;
+            const cgpa = document.getElementById('cgpaFilter').value;
+            
+            // Construct URL with all 3 parameters to ensure persistence
+            window.location.href = "{{ url_for('scholarship_discovery') }}?category=" + category + "&faculty=" + faculty + "&cgpa=" + cgpa;
         }
+
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // 1. Get the CGPA from URL, or use the value from the slider if URL is empty
+            const filterCGPA = params.has('cgpa') ? parseFloat(params.get('cgpa')) : 0.0;
+            
+            const cards = document.querySelectorAll('.sch-card');
+
+            cards.forEach(card => {
+                const criteriaEl = card.querySelector('.hidden-criteria');
+                if (!criteriaEl) return;
+
+                // 2. Extract number from string like "CGPA 3.0"
+                const match = criteriaEl.innerText.match(/(\d+\.\d+)/);
+                const cardReqCGPA = match ? parseFloat(match[0]) : 0.0;
+
+                // 3. FIX: Only hide if the scholarship requirement is HIGHER than what the user filtered
+                // If filter is 3.10 and scholarship needs 3.00, it stays visible.
+                if (cardReqCGPA > filterCGPA && filterCGPA > 0) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'flex';
+                }
+            });
+        };
     </script>
 </body>
 </html>

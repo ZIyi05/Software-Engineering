@@ -70,6 +70,38 @@
         }
         .toast-alert.show { right: 20px; }
 
+        /* Container for the phone input group */
+        .phone-input-group {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: white;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        /* The fixed +60 prefix */
+        .country-prefix {
+            padding: 12px 0 12px 14px; /* Left padding for spacing */
+            color: var(--slate);
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: white;
+            user-select: none; /* User cannot click/highlight it */
+        }
+
+        /* The actual input field */
+        .phone-input-group input {
+            border: none !important; /* Remove individual border */
+            flex: 1;
+            padding-left: 5px !important; /* Move text close to the prefix */
+        }
+
+        .phone-input-group:focus-within {
+            border-color: var(--emerald); /* Highlight whole box on focus */
+        }
+
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         /* WORKSPACE & FORM (Unchanged) */
@@ -106,12 +138,11 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB.</h2>
         <nav>
-            <a href="student_dashboard.html"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="discovery_listing.html"><i data-feather="search"></i><span>Find Scholarships</span></a>
-            <a href="tracking_hub.html" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
-            <a href="profile.html"><i data-feather="user"></i><span>Academic Profile</span></a>
-        </nav>
-        <a href="login.html" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+            <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}" class="active"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
+        </nav> <a href="{{ url_for('logout') }}" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -120,195 +151,209 @@
                 <i data-feather="bell" style="width: 20px; height: 20px; color: var(--slate);"></i>
                 <div class="notif-badge" id="notifBadge">1</div>
                 <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList">
-                        <div class="notif-item"><b>System Update</b><br>Application draft initialized.</div>
-                    </div>
+                    <div id="notifList"><div class="notif-item"><b>System Update</b><br>Draft session started.</div></div>
                 </div>
             </div>
             <div class="user-tag">ID: {{ user_id }} | <b>{{ student.fullName }}</b></div>
         </div>
 
-        <div class="workspace">
-            <div class="form-card">
-                <h1 style="margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 800;">Official Application</h1>
-                <p style="color: var(--slate); font-size: 0.85rem; margin-bottom: 35px;" id="targetSchName">Loading Scholarship Title...</p>
+<div class="workspace">
+    <form id="mainAppForm" action="{{ url_for('submit_application_data') }}" method="POST" enctype="multipart/form-data">
+        
+        <div class="form-card">
+            <input type="hidden" name="scholarshipID" value="{{ request.args.get('id') }}">            
+            
+            <h1 style="margin: 0 0 10px 0; font-size: 1.6rem; font-weight: 800;">Official Application</h1>
+            <p id="targetSchName" style="color: var(--slate); font-size: 0.85rem; margin-bottom: 35px;">
+                {{ sch.scholarshipName if sch else 'Scholarship Application' }}
+            </p>
 
-                <div class="section-header">Applicant Details</div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="appFullName" placeholder="As per Identity Card">
-                    </div>
-                    <div class="form-group">
-                        <label>Contact Number</label>
-                        <input type="tel" id="appPhone" placeholder="+60">
+            <div class="section-header">Applicant Details</div>
+            <div class="grid-row">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="fullName" value="{{ student.fullName }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Contact Number</label>
+                    <div class="phone-input-group">
+                        <span class="country-prefix">+60</span>
+                        <input type="tel" name="phone" value="{{ draft.phone if draft else '' }}" placeholder="123456789" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                     </div>
                 </div>
+            </div>
 
-                <div class="section-header">Academic & Position Info</div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label>Current CGPA</label>
-                        <input type="text" value="{{ student.cgpa }}" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>Current Semester/Year</label>
-                        <select id="appSem">
+            <div class="section-header">Academic & Position Info</div>
+            <div class="grid-row">
+                <div class="form-group">
+                    <label>Current CGPA</label>
+                    <input type="text" value="{{ student.cgpa }}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Current Semester/Year</label>
+                    <select name="semester" required>
+                        <option value="{{ draft.semester if draft else '' }}">
+                            {{ draft.semester if draft else 'Select Semester' }}
+                        </option>
                             <option>Year 1, Semester 1</option><option>Year 1, Semester 2</option><option>Year 1, Semester 3</option>
                             <option>Year 2, Semester 1</option><option>Year 2, Semester 2</option><option>Year 2, Semester 3</option>
                             <option>Year 3, Semester 1</option><option>Year 3, Semester 2</option><option>Year 3, Semester 3</option>
                             <option>Year 4, Semester 1</option><option>Year 4, Semester 2</option><option>Year 4, Semester 3</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Leadership Positions & Extra-Curriculars</label>
-                    <textarea id="appActivities" placeholder="List your roles, clubs, and achievements..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Statement of Purpose</label>
-                    <textarea id="appStatement" placeholder="Why do you deserve this scholarship?"></textarea>
-                </div>
-
-                <div class="section-header">Financial Background</div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label>Total Household Monthly Income (RM)</label>
-                        <input type="number" id="appIncome" placeholder="eg RM 5000">
-                    </div>
-                    <div class="form-group">
-                        <label>Parent/Guardian Occupation</label>
-                        <input type="text" id="appGuardianJob">
-                    </div>
-                </div>
-
-                <div class="section-header">Supporting Evidence</div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label>Academic Transcript (PDF)</label>
-                        <div class="upload-wrapper">
-                            <input type="file" class="upload-input" onchange="handleFile(this)">
-                            <div class="upload-box">Click to upload</div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Income Proof / EA Form (PDF/IMG)</label>
-                        <div class="upload-wrapper">
-                            <input type="file" class="upload-input" onchange="handleFile(this)">
-                            <div class="upload-box">Click to upload</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section-header">Disbursement Bank Info</div>
-                <div class="grid-row">
-                    <div class="form-group">
-                        <label>Bank Name</label>
-                        <select id="appBank" onchange="toggleOtherBank(this.value)">
-                            <option>Maybank</option>
-                            <option>CIMB Bank</option>
-                            <option>Public Bank</option>
-                            <option>RHB Bank</option>
-                            <option>Others</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Account Number</label>
-                        <input type="text" id="appAccNo">
-                    </div>
-                </div>
-                <div class="form-group" id="otherBankDiv" style="display: none;">
-                    <label>Please Specify Bank Name</label>
-                    <input type="text" id="appOtherBank">
+                    </select>
                 </div>
             </div>
 
-            <div class="sticky-footer">
-                <button class="btn-draft" onclick="saveDraft()">Save Draft</button>
-                <button class="btn-submit" onclick="submitApp()">Submit Application</button>
+            <div class="form-group">
+                <label>Leadership Positions & Extra-Curriculars</label>
+                <textarea name="activities" placeholder="List your achievements..." required>{{ draft.leadershipActivities if draft else '' }}</textarea>
             </div>
+
+            <div class="form-group">
+                <label>Statement of Purpose</label>
+                <textarea id="appStatement" name="statement" placeholder="Why do you deserve this scholarship?" required>{{ draft.statementOfPurpose if draft else '' }}</textarea>
+            </div>
+
+            <div class="section-header">Financial Background</div>
+            <div class="grid-row">
+                <div class="form-group">
+                    <label>Total Household Monthly Income (RM)</label>
+                    <input type="number" id="appIncome" name="income" value="{{ draft.householdIncome if draft else '' }}" placeholder="eg 5000" min="0" oninput="if(this.value < 0) this.value = 0;" required>
+                </div>
+                <div class="form-group">
+                    <label>Parent/Guardian Occupation</label>
+                    <input type="text" name="guardianJob" value="{{ draft.guardianOccupation if draft else '' }}" placeholder="e.g. Accountant, Retired" required>
+                </div>
+            </div>
+
+            <div class="section-header">Supporting Evidence</div>
+            <div class="grid-row">
+                <div class="form-group">
+                    <label>Academic Transcript (PDF File ONLY)</label>
+                    <div class="upload-wrapper">
+                        <input type="file" name="transcript" class="upload-input" accept=".pdf" onchange="handleFile(this)" {{ 'required' if not draft or not draft.documentUploaded else '' }}>
+                        <div class="upload-box">{{ '✓ Transcript Saved' if draft and draft.documentUploaded else 'Click to upload' }}</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Income Proof (PDF File ONLY)</label>
+                    <div class="upload-wrapper">
+                        <input type="file" name="income_proof" class="upload-input" accept=".pdf" onchange="handleFile(this)" {{ 'required' if not draft or not draft.incomeProof else '' }}>
+                        <div class="upload-box">{{ '✓ Proof Saved' if draft and draft.incomeProof else 'Click to upload' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">Bank Info</div>
+            <div class="grid-row">
+                <div class="form-group">
+                    <label>Bank Name</label>
+                    <select id="appBank" name="bank" onchange="toggleOtherBank(this.value)" required>
+                        <option value="CIMB Bank" {% if draft and draft.bank == 'CIMB Bank' %}selected{% endif %}>CIMB Bank</option>
+                        <option value="Maybank" {% if draft and draft.bank == 'Maybank' %}selected{% endif %}>Maybank</option>
+                        <option value="Public Bank" {% if draft and draft.bank == 'Public Bank' %}selected{% endif %}>Public Bank</option>
+                        <option value="RHB Bank" {% if draft and draft.bank == 'RHB Bank' %}selected{% endif %}>RHB Bank</option>
+                        <option value="Hong Leong Bank" {% if draft and draft.bank == 'Hong Leong Bank' %}selected{% endif %}>Hong Leong Bank</option>
+                        <option value="Others" {% if draft and draft.bank not in ['CIMB Bank','Maybank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'] and draft.bank != None %}selected{% endif %}>Others</option>
+                    </select>
+                    
+                    {% set is_hidden = true %}
+                    {% if draft and draft.bank not in ['CIMB Bank','Maybank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank'] and draft.bank != None %}
+                        {% set is_hidden = false %}
+                    {% endif %}
+
+                    <div id="otherBankDiv" style="margin-top: 10px;" {{ 'hidden' if is_hidden }}>
+                        <label style="font-size: 0.65rem; color: var(--slate); font-weight: 700;">Please Specify Bank Name</label>
+                        <input type="text" id="appOtherBank" name="other_bank_name" 
+                            value="{{ draft.bank if not is_hidden else '' }}" 
+                            placeholder="e.g., Bank Islam">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" name="accNo" value="{{ draft.bankAccNo if draft else '' }}" minlength="9" maxlength="17" pattern="[0-9]*" placeholder="9-17 digits" required>
+                </div>
+            </div>
+
+        <div class="sticky-footer">
+            <button type="button" class="btn-draft" onclick="handleDraft()">Save Draft</button>
+            <button type="submit" class="btn-submit">Submit Application</button>
         </div>
-    </div>
+    </form>
+</div>
 
-    <script>
+<script>
         feather.replace();
-
-        const scholarshipNames = {
-            'global': 'Global Excellence Grant 2026',
-            'stem': 'STEM Innovation Award 2026',
-            'impact': 'Social Impact Leadership Fund'
-        };
 
         window.onload = function() {
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id') || 'global';
-            document.getElementById('targetSchName').innerText = scholarshipNames[id];
-
-            const profile = JSON.parse(localStorage.getItem('studentProfile'));
-            if(profile) {
-                document.getElementById('userDisplay').innerHTML = `ID: ${profile.id} | <b>${profile.name}</b>`;
-                document.getElementById('appCGPA').value = profile.cgpa;
-            }
+            const scholarshipNames = {'global': 'Global Excellence Grant 2026', 'stem': 'STEM Innovation Award 2026'};
+            document.getElementById('targetSchName').innerText = scholarshipNames[id] || "Scholarship Application";
         };
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
-            sidebar.classList.toggle('collapsed');
-            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+            document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
         function toggleNotifs() { 
             document.getElementById('notifDropdown').classList.toggle('show'); 
-            document.getElementById('notifBadge').classList.remove('active');
         }
 
-        function triggerNotification(msg) {
-            const toast = document.getElementById('toastAlert');
-            const badge = document.getElementById('notifBadge');
-            const msgEl = document.getElementById('toastMsg');
-            const list = document.getElementById('notifList');
-
-            msgEl.innerText = msg;
-            const newItem = document.createElement('div');
-            newItem.className = 'notif-item';
-            newItem.innerHTML = `<b>Update</b><br>${msg}`;
-            list.prepend(newItem);
-
-            toast.classList.add('show');
-            badge.classList.add('active');
-            badge.innerText = parseInt(badge.innerText || 0) + 1;
-
-            setTimeout(() => { toast.classList.remove('show'); }, 3000);
+        function toggleOtherBank(val) {
+            const otherDiv = document.getElementById('otherBankDiv');
+            const otherInput = document.getElementById('appOtherBank');
+            
+            if (val === "Others") {
+                otherDiv.hidden = false; // Show the input box
+                otherInput.required = true;
+            } else {
+                otherDiv.hidden = true;  // Hide the input box
+                otherInput.required = false;
+                otherInput.value = "";   // Clear the field if they change back to a standard bank
+            }
         }
 
         function handleFile(input) {
             if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("File too large! Max 10MB allowed.");
+                    input.value = ""; return;
+                }
                 const box = input.nextElementSibling;
-                box.innerText = "✓ " + input.files[0].name;
-                box.style.borderColor = "#059669";
-                box.style.color = "#059669";
-                box.style.background = "#ECFDF5";
+                box.innerText = "✓ " + file.name;
+                box.style.color = "#059669"; box.style.borderColor = "#059669";
             }
         }
 
-        function toggleOtherBank(val) {
-            document.getElementById('otherBankDiv').style.display = (val === "Others") ? 'block' : 'none';
-        }
+        // BROWSER VALIDATION TRIGGERED HERE
+        document.getElementById('mainAppForm').onsubmit = function(e) {
+            const schName = document.getElementById('targetSchName').innerText;
 
-        function saveDraft() {
-            triggerNotification("Progress Saved: Your draft for " + document.getElementById('targetSchName').innerText + " is safe.");
-            setTimeout(() => { window.location.href = 'tracking_hub.html'; }, 2000);
-        }
-
-        function submitApp() {
             if(confirm("Confirm final submission? Details cannot be changed after this.")) {
-                triggerNotification("Application Received: Successfully submitted for " + document.getElementById('targetSchName').innerText);
-                setTimeout(() => { window.location.href = 'tracking_hub.html'; }, 2000);
+                sessionStorage.setItem('flashMessage', `Submitted Successfully: Application received for ${schName}`);
+                return true; // Submits to the 'submit_application_data' route
             }
+            
+            e.preventDefault(); 
+            return false;
         }
+
+        function handleDraft() {
+            const form = document.getElementById('mainAppForm');
+            const schName = document.getElementById('targetSchName').innerText;
+
+            // Change the action to the draft-saving route
+            form.action = "{{ url_for('save_application_draft') }}";
+            
+            // Save the success message for the next page
+            sessionStorage.setItem('flashMessage', `Draft Saved: Your progress for ${schName} is safe.`);
+            
+            // Submit the form manually
+            form.submit();
+        };
+
     </script>
 </body>
 </html>
