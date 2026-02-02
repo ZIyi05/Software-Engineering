@@ -2,73 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MeritHub Admin | Reviewer Assignment</title>
+    <title>MeritHub Admin | Assign Reviewers</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        :root { 
-            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --amber: #D97706; 
-            --sidebar-width: 250px; --sidebar-collapsed: 70px;
-        }
+        :root { --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --sidebar-width: 260px; --sidebar-collapsed: 75px; }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
-
-        /* SIDEBAR - Standardized logic */
-        .sidebar { 
-            width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
-            padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
-        }
-        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         
-        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
-
-        .sidebar a { 
-            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
-            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
-            transition: 0.2s; white-space: nowrap;
-        }
-        .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background-color: var(--nav-dark); color: white; padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; transition: 0.3s; position: relative; height: 100vh; box-sizing: border-box; }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; }
+        .sidebar.collapsed h2 { display: none; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; transition: 0.2s; white-space: nowrap; }
+        .sidebar a i { width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
-        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
-
-        .toggle-btn { 
-            position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; 
-            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; 
-            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
-        }
-
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; box-shadow: inset 4px 0 0 var(--emerald); }
+        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+        
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* TOP BAR - Correct placement */
-        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
-        
-        /* Admin Tag - Removed bold from Amr Loay */
+        .top-bar { height: 60px; display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; margin-top: 20px;}
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+        .content { padding: 0 60px 40px 60px; overflow-y: auto; }
+        
+        /* SEARCH ROW */
+        .search-row { display: flex; gap: 15px; margin: 30px 0; align-items: center; }
+        .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; }
+        
+        /* TABLE CARD */
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; margin-bottom: 30px; }
+        .assignment-table { width: 100%; border-collapse: collapse; }
+        .assignment-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .assignment-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
 
-        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
-
-        /* HEADER & FILTERS */
-        .header-section { margin-bottom: 30px; }
-        .header-section h1 { font-weight: 800; font-size: 2.2rem; margin: 0; }
-        .filter-row { display: flex; gap: 15px; margin-bottom: 25px; }
-        .search-input { flex: 1; padding: 12px 18px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: 'Inter'; }
-        .select-faculty { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; font-weight: 600; cursor: pointer; font-family: 'Inter'; }
-
-        /* TABLE STYLING */
-        .card { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 40px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .assign-table { width: 100%; border-collapse: collapse; }
-        .assign-table th { text-align: left; padding: 15px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        .assign-table td { padding: 25px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-
-        .rev-select { padding: 12px; border: 1px solid var(--border); border-radius: 8px; width: 100%; font-family: 'Inter'; font-weight: 500; transition: all 0.2s; background: white; }
-        .warning-border { border: 2px solid var(--amber) !important; background-color: #FFFBEB; }
-
-        .btn-confirm { background: var(--emerald); color: white; border: none; padding: 18px 40px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; display: block; margin: 40px 0 0 auto; transition: 0.2s; }
-        .btn-confirm:hover { opacity: 0.9; transform: translateY(-1px); }
-
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+        /* ASSIGNMENT STYLES */
+        .select-reviewer { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-family: inherit; font-size: 0.9rem; }
+        .btn-confirm { background: var(--emerald); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; float: right; transition: 0.2s; }
+        .btn-confirm:hover { background: #047857; }
     </style>
 </head>
 <body>
@@ -85,64 +56,53 @@
     </div>
 
     <div class="main">
-        <div class="top-bar">
-            <div class="admin-tag">Admin: {{ admin_name }}</div>
-        </div>
-
+        <div class="top-bar"><div class="admin-tag">Admin: {{ admin_name }}</div></div>
         <div class="content">
-            <div class="header-section">
-                <h1>Reviewer Assignment</h1>
-                <p style="color: var(--slate);">Distribute applications. Logic updates in real-time based on selection.</p>
+            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Reviewer Assignment</h1>
+            <p style="color: var(--slate); font-size: 0.9rem; margin-top: 8px;">Distribute applications. Logic updates in real-time based on selection.</p>
+            
+            <div class="search-row">
+                <input type="text" id="reviewerSearch" class="input-search" placeholder="Search by Student ID or Name..." onkeyup="filterReviewerTable()">
             </div>
 
-            <div class="filter-row">
-                <input type="text" class="search-input" placeholder="Search by Student ID or Name...">
-                <select class="select-faculty">
-                    <option>All Faculties</option>
-                    <option>Faculty of Computing</option>
-                    <option>Faculty of Engineering</option>
-                    <option>Faculty of Business</option>
-                </select>
+            <div class="card">
+                <table class="assignment-table" id="assignmentTable">
+                    <thead>
+                        <tr>
+                            <th>Student Details</th>
+                            <th>Assign Reviewer (Reactive Workload)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr class="student-row">
+                            <td>
+                                <b>{{ app.student_name }}</b><br>
+                                <span style="font-size: 0.8rem; color: var(--slate);">ID: {{ app.studentID }}</span>
+                            </td>
+                            <td>
+                                <select class="select-reviewer">
+                                    <option value="" disabled selected>Select a Reviewer...</option>
+                                    {% for reviewer in reviewers %}
+                                    <option value="{{ reviewer.userID }}">
+                                        {{ reviewer.fullName }} (Current: {{ reviewer.workload }} cases)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <form action="{{ url_for('assign_reviewers_submit') }}" method="POST">
-                <div class="card">
-                    <table class="assign-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40%;">Student Details</th>
-                                <th style="width: 60%;">Assign Reviewer (Reactive Workload)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for task in pending_tasks %}
-                            <tr>
-                                <td>
-                                    <b>{{ task.userID }} ({{ task.fullName }})</b><br>
-                                    <span style="font-size: 0.8rem; color: var(--slate);">{{ task.scholarshipName }}</span>
-                                </td>
-                                <td>
-                                    <select name="reviewer_{{ task.applicationID }}" class="rev-select">
-                                        <option value="">Choose Reviewer...</option>
-                                        {% for rev in reviewers %}
-                                            <option value="{{ rev.userID }}">{{ rev.fullName }} (Load: {{ rev.current_load }}/10)</option>
-                                        {% endfor %}
-                                    </select>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <button type="submit" class="btn-confirm">Confirm Batch Assignment</button>
-            </form>
-
+            <button class="btn-confirm">Confirm Batch Assignment</button>
         </div>
     </div>
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -154,35 +114,34 @@
     <script>
         feather.replace();
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
-            sidebar.classList.toggle('collapsed');
-            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
-        }
+        function filterReviewerTable() {
+            const input = document.getElementById('reviewerSearch');
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById('assignmentTable');
+            const rows = table.getElementsByClassName('student-row');
 
-        function toggleWarning(selectElement, warningId) {
-            const warningDiv = document.getElementById(warningId);
-            if (selectElement.value === "full") {
-                warningDiv.style.display = "block";
-                selectElement.classList.add("warning-border");
-            } else {
-                warningDiv.style.display = "none";
-                selectElement.classList.remove("warning-border");
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].innerText.toLowerCase();
+                if (text.includes(filter)) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
             }
         }
 
-        function confirmAssignments() {
-            alert("Assignments successfully confirmed!\n\nDatabase updated and Reviewers notified.");
-            location.reload(); 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar'), btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
         };
     </script>
 </body>

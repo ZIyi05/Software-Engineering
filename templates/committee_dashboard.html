@@ -20,101 +20,105 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar.collapsed h2 { font-size: 0.5rem; text-align: center; opacity: 0.5; }
-
-        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; transition: 0.2s; white-space: nowrap; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
-        .sidebar.collapsed a i { margin: 0 auto; }
-        .sidebar.collapsed a span { display: none; }
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
-
         .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
-        /* MAIN CONTENT - Relative positioning keeps the toggle-btn aligned */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
+        /* MAIN CONTENT */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
         .user-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
-        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-
-        .decision-table { width: 100%; border-collapse: collapse; }
-        .decision-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        .decision-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-
-        .status-badge { padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-        .status-pending { background: #FEF3C7; color: #92400E; }
-        .status-interviewed { background: #E0F2FE; color: #0369A1; }
-
-        .btn-decide { background: var(--emerald); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        .btn-decide:hover { opacity: 0.9; }
+        .table-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-top: 30px; }
         
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 20px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+        input[type="date"], input[type="time"], input[type="text"] { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Inter'; font-size: 0.85rem; }
+        .btn-confirm { background: var(--emerald); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MERITHUB. COMMITTEE</h2>
+        <h2>MeritHub.</h2>
         <nav>
             <a href="{{ url_for('committee_overview') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
             <a href="{{ url_for('committee_dashboard') }}" class="active"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
             <a href="{{ url_for('committee_portfolio') }}"><i data-feather="award"></i><span>Scholarship Manager</span></a>
             <a href="{{ url_for('committee_calendar') }}"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
         </nav>
-        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
-        <div class="top-bar">
-            <div class="user-badge">Committee: {{ committee_name }}</div>
-        </div>
+        <div class="top-bar"><div class="user-badge">Committee: {{ committee_name }}</div></div>
 
         <div class="content">
-            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0 0 10px 0;">Decision Hub</h1>
-            <p style="color: var(--slate); margin-bottom: 30px;">Review successful candidates and manage interview slots.</p>
-            
-            <div class="card">
-                <table class="decision-table">
+            <h1 style="font-weight: 800; font-size: 2.5rem; margin: 0;">Decision Hub</h1>
+            <p style="color: var(--slate); margin-top: 10px;">Review successful candidates and manage interview slots.</p>
+
+            <div class="table-card">
+                <table>
                     <thead>
                         <tr>
                             <th>Applicant</th>
                             <th>Reviewer Score</th>
                             <th>Assign Date</th>
                             <th>Assign Time</th>
+                            <th>Venue / Platform</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for person in candidates %}
-                        <tr>
-                            <form action="{{ url_for('schedule_interview_submit') }}" method="POST">
-                                <input type="hidden" name="applicationID" value="{{ person.applicationID }}">
+                        {% for cand in candidates %}
+                        <form action="{{ url_for('schedule_interview_submit') }}" method="POST">
+                            <input type="hidden" name="applicationID" value="{{ cand.applicationID }}">
+                            <tr>
                                 <td>
-                                    <b>{{ person.applicantName }}</b><br>
-                                    <small style="color: var(--slate);">{{ person.faculty }}</small>
+                                    <b>{{ cand.applicantName }}</b><br>
+                                    <small style="color: var(--slate);">{{ cand.faculty }}</small>
                                 </td>
-                                <td><b style="color: var(--emerald);">{{ person.score }} / 20</b></td>
-                                <td><input type="date" name="assignDate" class="input-schedule" required></td>
-                                <td><input type="time" name="assignTime" class="input-schedule" required></td>
-                                <td><button type="submit" class="btn-decide">Confirm Slot</button></td>
-                            </form>
-                        </tr>
+                                <td style="font-weight: 800; color: var(--emerald);">{{ cand.score }} / 20</td>
+                                <td><input type="date" name="assignDate" required></td>
+                                <td><input type="time" name="assignTime" required></td>
+                                
+                                <td>
+                                    <input type="text" name="venue" placeholder="e.g. Zoom / Block A R101" required>
+                                </td>
+
+                                <td><button type="submit" class="btn-confirm">Confirm Slot</button></td>
+                            </tr>
+                        </form>
                         {% endfor %}
+                        {% if not candidates %}
+                        <tr><td colspan="6" style="text-align: center; color: var(--slate); padding: 40px;">No pending candidates for scheduling.</td></tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
+            </div>
+        </div>
+    </div>
+
     <script>
         feather.replace();
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
-            sidebar.classList.toggle('collapsed');
-            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
     </script>
 </body>
 </html>

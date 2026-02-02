@@ -8,6 +8,8 @@
     <style>
         :root { --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; --sidebar-width: 260px; --sidebar-collapsed: 75px; }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
+        
+        /* SIDEBAR */
         .sidebar { width: var(--sidebar-width); background-color: var(--nav-dark); color: white; padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; transition: 0.3s; position: relative; height: 100vh; box-sizing: border-box; }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; }
@@ -18,35 +20,39 @@
         .sidebar.collapsed a span { display: none; }
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; box-shadow: inset 4px 0 0 var(--emerald); }
         .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
-        .logout-link { margin-top: auto !important; }
+        
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .top-bar { height: 60px; display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; margin-top: 20px;}
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
         .content { padding: 0 60px 40px 60px; overflow-y: auto; }
+        
+        /* SEARCH & FILTER ROW */
         .search-row { display: flex; gap: 15px; margin: 30px 0; align-items: center; }
-        .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
-        .btn-add { background: var(--nav-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; }
+        .select-filter { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; color: var(--slate); font-weight: 600; cursor: pointer; }
+        .btn-add { background: var(--nav-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        
         .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; }
         .user-table { width: 100%; border-collapse: collapse; }
         .user-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
         .user-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
 
-        /* ROLE COLOR SEPARATION */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-        
-        /* Emerald theme for Students */
         .badge-student { background: #ECFDF5; color: #065F46; }
-        
-        /* Slate theme for Admins */
         .badge-admin { background: #F1F5F9; color: #475569; }
-        
-        /* Indigo theme for Committee */
         .badge-committee { background: #E0E7FF; color: #3730A3; }
-        
-        /* Grey theme for Reviewers */
         .badge-reviewer { background: #F3F4F6; color: #374151; }
 
         .btn-edit { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; color: var(--slate); }
+
+        /* TOAST ALERT - Fixed position off-screen by default */
+        .toast-alert { 
+            position: fixed; top: 20px; right: -400px; width: 300px; background: white; padding: 15px; 
+            border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; 
+            gap: 12px; z-index: 9999; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            border-left: 5px solid var(--emerald);
+        }
+        .toast-alert.show { right: 20px; }
     </style>
 </head>
 <body>
@@ -66,16 +72,27 @@
         <div class="top-bar"><div class="admin-tag">Admin: {{ admin_name }}</div></div>
         <div class="content">
             <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">User Management</h1>
+            
             <div class="search-row">
-                <input type="text" class="input-search" placeholder="Search by name, ID, or email...">
+                <input type="text" id="userSearch" class="input-search" placeholder="Search by name, ID, or email..." onkeyup="filterUsers()">
+                
+                <select id="roleFilter" class="select-filter" onchange="filterUsers()">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="committee">Scholarship Committee</option>
+                    <option value="reviewer">Reviewer</option>
+                    <option value="student">Student</option>
+                </select>
+
                 <button class="btn-add" onclick="window.location.href='{{ url_for('add_user') }}'">+ Add New Staff</button>
             </div>
+
             <div class="card">
-                <table class="user-table">
+                <table class="user-table" id="userTable">
                     <thead><tr><th>User Details</th><th>Role</th><th>Email Address</th><th>Action</th></tr></thead>
                     <tbody>
                         {% for user in users %}
-                        <tr>
+                        <tr class="user-row" data-role="{{ user.role }}">
                             <td><b>{{ user.fullName }}</b><br><span style="font-size: 0.8rem; color: var(--slate);">ID: {{ user.userID }}</span></td>
                             <td>
                                 <span class="badge 
@@ -89,8 +106,7 @@
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                                <button class="btn-edit" 
-                                        onclick="window.location.href='{{ url_for('edit_user', userid=user.userID) }}';">
+                                <button class="btn-edit" onclick="window.location.href='{{ url_for('edit_user', userid=user.userID) }}';">
                                     Edit Account
                                 </button>
                             </td>
@@ -101,8 +117,9 @@
             </div>
         </div>
     </div>
+
     <div id="toastAlert" class="toast-alert">
-        <i data-feather="check-circle" id="toastIcon"></i>
+        <i data-feather="check-circle"></i>
         <div>
             <b style="font-size: 0.85rem; display: block; color: var(--nav-dark);">System Update</b>
             <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Action completed.</span>
@@ -111,7 +128,7 @@
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -122,6 +139,27 @@
 
     <script>
         feather.replace();
+
+        function filterUsers() {
+            const searchQuery = document.getElementById('userSearch').value.toLowerCase();
+            const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+            const rows = document.querySelectorAll('.user-row');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const role = row.getAttribute('data-role').toLowerCase();
+                
+                const matchesSearch = text.includes(searchQuery);
+                const matchesRole = (roleFilter === 'all' || role === roleFilter);
+
+                if (matchesSearch && matchesRole) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar'), btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
@@ -132,8 +170,22 @@
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
+        };
+
+        // Toast logic: Only show if there's a message in sessionStorage
+        window.onload = function() {
+            const msg = sessionStorage.getItem('flashMessage');
+            if (msg) {
+                const toast = document.getElementById('toastAlert');
+                document.getElementById('toastMsg').innerText = msg;
+                toast.classList.add('show');
+                setTimeout(() => { 
+                    toast.classList.remove('show'); 
+                    sessionStorage.removeItem('flashMessage'); 
+                }, 4000);
+            }
         };
     </script>
 </body>

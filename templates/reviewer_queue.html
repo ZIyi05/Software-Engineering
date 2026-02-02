@@ -12,7 +12,7 @@
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Standardized logic */
+        /* SIDEBAR */
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
@@ -50,8 +50,10 @@
         .mini-card h4 { margin: 0; font-size: 0.7rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 800; }
         .mini-card p { margin: 10px 0 0 0; font-size: 2rem; font-weight: 800; color: var(--nav-dark); }
 
+        /* SEARCH & FILTER AREA */
         .search-container { margin-bottom: 25px; display: flex; gap: 15px; }
         .search-input { flex: 1; padding: 12px 18px; border: 1px solid var(--border); border-radius: 10px; font-family: 'Inter'; font-size: 0.9rem; }
+        .filter-select { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; color: var(--slate); font-weight: 600; cursor: pointer; font-family: 'Inter'; }
 
         .queue-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
         .queue-table th { text-align: left; padding: 15px 20px; background: #F8FAFC; font-size: 0.75rem; color: var(--slate); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -99,12 +101,21 @@
             </div>
 
             <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search by Student ID, Name, or Faculty...">
-                <button style="padding: 0 25px; border-radius: 10px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: 700; color: var(--nav-dark);">Filter</button>
+                <input type="text" id="queueSearch" class="search-input" placeholder="Search by Student ID or Name..." onkeyup="filterQueue()">
+                
+                <select id="facultyFilter" class="filter-select" onchange="filterQueue()">
+                    <option value="All">All Faculties</option>
+                    <option value="FCI">Computing & Tech (FCI)</option>
+                    <option value="FCM">Multimedia & Creative (FCM)</option>
+                    <option value="FOB">Business & Management (FOB/FOM)</option>
+                    <option value="FIST">Information Science (FIST)</option>
+                    <option value="FOE">Engineering (FOE)</option>
+                    <option value="FCA">Cinematic Arts (FCA)</option>
+                </select>
             </div>
 
             <div style="background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden;">
-                <table class="queue-table">
+                <table class="queue-table" id="queueTable">
                     <thead>
                         <tr>
                             <th style="width: 35%;">Student Name & ID</th>
@@ -115,7 +126,7 @@
                     </thead>
                     <tbody>
                         {% for task in pending_tasks %}
-                        <tr>
+                        <tr class="queue-row" data-faculty="{{ task.faculty }}">
                             <td>
                                 <b>{{ task.fullName }}</b><br>
                                 <span style="font-size: 0.75rem; color: var(--slate);">ID: {{ task.userID }}</span>
@@ -127,7 +138,7 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{{ url_for('reviewer_assessment', app_id=task.applicationID) }}" class="btn-action" style="text-decoration: none;">Assess</a>
+                                <a href="{{ url_for('reviewer_assessment', app_id=task.applicationID) }}" class="btn-action">Assess</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -139,7 +150,7 @@
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -150,6 +161,27 @@
 
     <script>
         feather.replace();
+
+        function filterQueue() {
+            const searchQuery = document.getElementById('queueSearch').value.toLowerCase();
+            const facultyFilter = document.getElementById('facultyFilter').value;
+            const rows = document.querySelectorAll('.queue-row');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const faculty = row.getAttribute('data-faculty');
+                
+                const matchesSearch = text.includes(searchQuery);
+                const matchesFaculty = (facultyFilter === 'All' || faculty === facultyFilter);
+
+                if (matchesSearch && matchesFaculty) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const btn = document.querySelector('.toggle-btn');

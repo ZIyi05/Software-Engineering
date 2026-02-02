@@ -45,7 +45,6 @@
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
         
-        /* Updated: Admin Tag Name weight */
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
@@ -62,12 +61,14 @@
         .trend-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
         .chart-placeholder { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px; min-height: 400px; }
         .chart-visual { height: 300px; margin-top: 40px; border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); display: flex; align-items: flex-end; justify-content: space-around; padding: 0 10px; }
-        .bar { width: 50px; background: var(--emerald); border-radius: 4px 4px 0 0; position: relative; }
+        .bar { width: 50px; background: var(--emerald); border-radius: 4px 4px 0 0; position: relative; transition: height 0.5s ease; }
         .bar.current { background: var(--sidebar); }
         .bar::after { content: attr(data-month); position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; color: var(--slate); }
+        
         .dist-row { margin-bottom: 25px; }
         .dist-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--slate); margin-bottom: 10px; text-transform: uppercase; }
         .progress-bg { height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.5s ease; }
     </style>
 </head>
 <body>
@@ -97,18 +98,18 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h4>Total Applications</h4>
-                    <div class="value">1,242</div>
+                    <div class="value">{{ stats.total_apps }}</div>
                     <div class="sub-text">Volume across all active programs</div>
                 </div>
                 <div class="stat-card">
                     <h4>Review Completion</h4>
-                    <div class="value">92%</div>
+                    <div class="value">{{ stats.completion_rate }}%</div>
                     <div class="sub-text">Evaluated applications in current cycle</div>
                 </div>
                 <div class="stat-card">
                     <h4>Total Funds Disbursed</h4>
-                    <div class="value">RM 500k</div>
-                    <div class="sub-text">Financial allocation for 2026 awards</div>
+                    <div class="value">RM {{ stats.total_funds }}</div>
+                    <div class="sub-text">Financial allocation for active awards</div>
                 </div>
             </div>
 
@@ -116,28 +117,28 @@
                 <div class="chart-placeholder">
                     <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Application Volume Trend</h3>
                     <div class="chart-visual">
-                        <div class="bar" style="height: 35%" data-month="Oct"></div>
-                        <div class="bar" style="height: 55%" data-month="Nov"></div>
-                        <div class="bar" style="height: 75%" data-month="Dec"></div>
-                        <div class="bar current" style="height: 90%" data-month="Jan"></div>
+                        {% for month, data in trends.monthly.items() %}
+                        <div class="bar {{ 'current' if loop.last }}" 
+                             style="height: {{ data.percent }}%;" 
+                             data-month="{{ month }}">
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 
                 <div class="chart-placeholder">
                     <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Award Distribution</h3>
                     <div style="margin-top: 40px;">
+                        {% for faculty, data in distribution.items() %}
                         <div class="dist-row">
-                            <div class="dist-label"><span>Computing</span><span>80%</span></div>
-                            <div class="progress-bg"><div style="width: 80%; height: 100%; background: var(--emerald);"></div></div>
+                            <div class="dist-label"><span>{{ faculty }}</span><span>{{ data.percent }}%</span></div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" 
+                                     style="width: {{ data.percent }}%; background: {{ data.color }};">
+                                </div>
+                            </div>
                         </div>
-                        <div class="dist-row">
-                            <div class="dist-label"><span>Engineering</span><span>50%</span></div>
-                            <div class="progress-bg"><div style="width: 50%; height: 100%; background: var(--sidebar);"></div></div>
-                        </div>
-                        <div class="dist-row">
-                            <div class="dist-label"><span>Business</span><span>35%</span></div>
-                            <div class="progress-bg"><div style="width: 35%; height: 100%; background: var(--slate);"></div></div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -168,8 +169,8 @@
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
         };
     </script>
 </body>

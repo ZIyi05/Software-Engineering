@@ -39,24 +39,40 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* TOP BAR & NOTIFICATIONS */
+        /* TOP BAR & NOTIFICATIONS (Matches Image 3) */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
 
-        /* IDE-Safe Notification Border Colors */
-        .notif-submitted { border-left: 4px solid var(--emerald); }
-        .notif-draft { border-left: 4px solid var(--amber); }
-
-        /* Notification Bell and Badge Styling */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge {position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;border: 2px solid white; display: none; }
+        .notif-badge { 
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; 
+            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; 
+            border: 2px solid white; display: none; 
+        }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* Dropdown Alignment */
-        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); text-align: left; }
+        .notification-dropdown { 
+            position: absolute; top: 50px; right: 0; width: 320px; 
+            max-height: 400px; /* Limits height for scrolling */
+            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
+            flex-direction: column; overflow: hidden; 
+        }
+        .notification-dropdown.show { display: flex; }
+        .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
+        
+        /* SCROLLABLE LIST CONTAINER */
+        .notif-list { overflow-y: auto; flex: 1; }
+
+        /* PROFESSIONAL ITEM STYLE (Image 3) */
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
+        .notif-item:hover { background: #F8FAFC; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
+        .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
+        .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
 
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
@@ -89,7 +105,7 @@
 
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub.</h2>
+        <h2>MeritHub.STUDENT</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
             <a href="{{ url_for('scholarship_discovery') }}" class="active"><i data-feather="search"></i><span>Find Scholarships</span></a>
@@ -105,24 +121,23 @@
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
                     {% set total_notifs = applications|length if applications else 0 %}
-                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
-                        {{ total_notifs }}
-                    </div>
+                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">{{ total_notifs }}</div>
                 </div>
                 
-                <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList">
-                        {% if applications %}
-                            {% for app in applications %}
-                                {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
-                                
-                                <div class="notif-item {{ status_class }}">
-                                    <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
-                                    {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="notif-header">Notifications</div>
+                    <div class="notif-list"> {% if applications %}
+                            {% for notif in applications %}
+                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ notif.type }}</div>
+                                    <div class="notif-text">{{ notif.message }}</div>
+                                    <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                            </div>
                             {% endfor %}
                         {% else %}
-                            <div class="notif-item">No recent updates.</div>
+                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
                         {% endif %}
                     </div>
                 </div>
@@ -148,7 +163,6 @@
                 </div>
                 <div>
                     <label class="filter-label">Your CGPA: <b id="cgpaVal">{{ sel_cgpa }}</b></label>
-                    
                     <input type="range" name="cgpa" id="cgpaFilter" min="2.0" max="4.0" step="0.1" 
                         value="{{ sel_cgpa }}" 
                         oninput="document.getElementById('cgpaVal').innerText = parseFloat(this.value).toFixed(2)">
@@ -189,7 +203,6 @@
                                 <span class="theme-badge">{{ sch.faculty }}</span>
                                 <h4>{{ sch.scholarshipName }}</h4>
                                 <p>Faculty Eligibility: {{ sch.faculty }}</p>
-                                
                                 <div class="hidden-criteria" style="display: none;">{{ sch.scholarshipCriteria }}</div>
                             </div>
                             <div class="view-details-arrow"><i data-feather="chevron-right" style="width: 18px;"></i></div>
@@ -217,24 +230,33 @@
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
+            const btn = document.querySelector('.toggle-btn');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
 
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
             const badge = document.getElementById('notifBadge');
-            
             dropdown.classList.toggle('show'); 
-            if (badge) {
-                badge.style.display = 'none'; 
+            if (badge) badge.style.display = 'none';
+        }
+
+        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('notifDropdown');
+            const logoutModal = document.getElementById('logoutModal');
+
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!event.target.closest('.notification-bell') && !event.target.closest('#notifDropdown')) {
+                    dropdown.classList.remove('show');
+                }
             }
+            if (event.target == logoutModal) closeLogoutModal();
         }
 
         function toggleFilters() { document.getElementById('filterPane').classList.toggle('open'); }
 
-        // Local Filter Logic for Search Bar
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             const cards = document.querySelectorAll('.sch-card');
@@ -244,34 +266,23 @@
             });
         });
         
-        // Apply Filters logic can be expanded here to handle the filter pane selects
         function applyFilters() {
             const category = document.getElementById('themeFilter').value;
             const faculty = document.getElementById('facultyFilter').value;
             const cgpa = document.getElementById('cgpaFilter').value;
-            
-            // Construct URL with all 3 parameters to ensure persistence
             window.location.href = "{{ url_for('scholarship_discovery') }}?category=" + category + "&faculty=" + faculty + "&cgpa=" + cgpa;
         }
 
         window.onload = function() {
             const params = new URLSearchParams(window.location.search);
-            
-            // 1. Get the CGPA from URL, or use the value from the slider if URL is empty
             const filterCGPA = params.has('cgpa') ? parseFloat(params.get('cgpa')) : 0.0;
-            
             const cards = document.querySelectorAll('.sch-card');
 
             cards.forEach(card => {
                 const criteriaEl = card.querySelector('.hidden-criteria');
                 if (!criteriaEl) return;
-
-                // 2. Extract number from string like "CGPA 3.0"
                 const match = criteriaEl.innerText.match(/(\d+\.\d+)/);
                 const cardReqCGPA = match ? parseFloat(match[0]) : 0.0;
-
-                // 3. FIX: Only hide if the scholarship requirement is HIGHER than what the user filtered
-                // If filter is 3.10 and scholarship needs 3.00, it stays visible.
                 if (cardReqCGPA > filterCGPA && filterCGPA > 0) {
                     card.style.display = 'none';
                 } else {
@@ -282,11 +293,6 @@
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
-        window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
-        };
     </script>
 </body>
 </html>

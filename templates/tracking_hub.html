@@ -33,33 +33,59 @@
 
         /* TOP BAR */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        /* Fix Top Bar Alignment */
         .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
 
-        /* IDE-Safe Notification Border Colors */
-        .notif-submitted { border-left: 4px solid var(--emerald); }
-        .notif-draft { border-left: 4px solid var(--amber); }
-
-        /* Notification Bell and Badge Styling */
-        .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge {position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;border: 2px solid white; display: none; }
+        /* NOTIFICATIONS SYSTEM (Image 3 Style) */
+        .notification-wrapper { position: relative; cursor: pointer; display: flex; align-items: center; padding: 6px; border-radius: 50%; }
+        .notif-badge {
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
+            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;
+            display: none; border: 2px solid white;
+        }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* Dropdown Alignment */
-        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); text-align: left; }
+        .notification-dropdown { 
+            position: absolute; top: 50px; right: 0; width: 320px; 
+            max-height: 400px; /* Limits height for scrolling */
+            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
+            flex-direction: column; overflow: hidden; 
+        }
+        .notification-dropdown.show { display: flex; }
+        .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
+        
+        /* SCROLLABLE LIST CONTAINER */
+        .notif-list { overflow-y: auto; flex: 1; }
+
+        /* NOTIF ITEM: Non-clickable professional style */
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
+        .notif-item:hover { background: #F8FAFC; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
+        .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
+        .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
+
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
         /* CONTENT & TABS */
-        .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
         .tab-nav { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin: 25px 0 30px 0; }
         .tab-item { padding: 10px 0; color: var(--slate); font-weight: 500; cursor: pointer; font-size: 0.9rem; position: relative; }
         .tab-item.active { color: var(--emerald); font-weight: 700; }
         .tab-item.active::after { content: ""; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--emerald); }
 
-        .tab-content { display: none; }
+        .content { 
+            padding: 40px 60px; 
+            overflow-y: auto; /* Enables scrolling across all three tabs */
+            flex: 1; 
+        }
+
+        /* Ensure tab contents expand to fit all application cards */
+        .tab-content { 
+            height: auto; 
+            display: none; 
+        }
         .tab-content.active { display: block; }
 
         /* TOAST ALERT UI */
@@ -75,25 +101,54 @@
         .toast-alert.show { right: 20px; }
         
         /* CARDS & TIMELINE */
-        .app-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .app-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px 35px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
         .card-top h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--sidebar); }
         .card-top p { margin: 5px 0 0 0; color: var(--slate); font-size: 0.85rem; }
         .status-badge { padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+
+        /* UPDATED STATUS COLORS */
         .badge-draft { background: #FEF3C7; color: #92400E; }
         .badge-review { background: #E0E7FF; color: #3730A3; }
+        .badge-awarded { background: #ECFDF5; color: #065F46; }
+        .badge-rejected { background: #FEF2F2 !important; color: var(--crimson) !important; }
 
-        .tracker-wrapper { position: relative; padding: 20px 0 40px 0; margin-top: 20px; width: 100%; }
-        .line-base { position: absolute; top: 12px; left: 7%; right: 7%; height: 2px; background: #E2E8F0; z-index: 1; }
-        .line-fill { position: absolute; top: 12px; left: 7%; height: 2px; background: #064E3B; z-index: 2; transition: width 1s ease; }
-        .steps { position: relative; z-index: 3; display: flex; justify-content: space-between; padding: 0 10px; }
-        .step { display: flex; flex-direction: column; align-items: center; width: 14%; }
+        /* TRACKER GEOMETRY */
+        .tracker-wrapper { position: relative; padding: 0 25px; margin: 40px 0; }
+        .line-base { position: absolute; top: 12px; left: 25px; right: 25px; height: 2px; background: #E2E8F0; z-index: 1; }
+        .line-fill { position: absolute; top: 12px; left: 25px; height: 2px; background: #064E3B; z-index: 2; transition: width 1s ease; }        
+        .line-fill.rejected { background: var(--crimson) !important; }
+
+        /* GEOMETRIC PERCENTAGES (100% / 6 gaps = 16.66% per gap) */
+        .w-submitted { width: 0%; }         
+        .w-reviewing { width: 16.66%; }      
+        .w-approved  { width: 33.33%; }      
+        .w-scheduled { width: 48%; }         
+        .w-finalized { width: calc(100% - 50px); }
+
+        .steps { position: relative; z-index: 3; display: flex; justify-content: space-between; }
+        .step { display: flex; flex-direction: column; align-items: center; width: 40px; }
         .dot { width: 18px; height: 18px; border-radius: 50%; background: white; border: 2px solid var(--border); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* DONE STATE (Green Ticks) */
         .step.done .dot { background: #064E3B; border-color: #064E3B; }
         .step.done .dot::after { content: '✓'; color: white; font-size: 10px; font-weight: 900; }
-        .step.active .dot { background: white; border-color: var(--amber); border-width: 3px; box-shadow: 0 0 0 4px var(--amber-light); }
-        .label { font-size: 0.55rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; text-align: center; }
-        
+        .step.done .label { color: var(--emerald); }
+
+        /* ACTIVE STATE (Yellow Glow) */
+        .step.active .dot { border-color: var(--amber); border-width: 3px; background: white; box-shadow: 0 0 0 4px var(--amber-light); }        
+        .step.active .label { color: var(--amber); font-weight: 800; }
+
+        /* FAIL STATE (Red Crosses) */
+        .step.fail .dot { background: var(--crimson) !important; border-color: var(--crimson) !important; }
+        .step.fail .dot::after { content: '✕'; color: white; font-size: 10px; font-weight: 900; }
+        .step.fail .label { color: var(--crimson) !important; }
+
+        .label { font-size: 0.55rem; font-weight: 800; color: #94A3B8; text-transform: uppercase; text-align: center; white-space: nowrap; position: absolute; top: 30px; }
+
+        .result-box { padding: 15px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border: 1px solid transparent; }
+        .result-awarded { background: #F0FDF4; color: #166534; border-color: #BBF7D0; }
+        .result-rejected { background: #FEF2F2; color: #991B1B; border-color: #FEE2E2; }
         .btn-continue { background: var(--sidebar); color: white; padding: 10px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85rem; display: inline-block; margin-top: 15px; }
     </style>
 </head>
@@ -120,75 +175,91 @@
     </div>
 
     <div class="main">
-            <div class="top-bar">
-                <div style="position: relative;">
-                    <div class="notification-bell" onclick="toggleNotifs()">
-                        <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                        {% set total_notifs = applications|length if applications else 0 %}
-                        <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
-                            {{ total_notifs }}
-                        </div>
-                    </div>
-                    
-                    <div class="notif-dropdown" id="notifDropdown">
-                        <div id="notifList">
-                            {% if applications %}
-                                {% for app in applications %}
-                                    {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
-                                    <div class="notif-item {{ status_class }}">
-                                        <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
-                                        {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="notif-item">No recent updates.</div>
-                            {% endif %}
-                        </div>
+        <div class="top-bar">
+            <div class="notification-wrapper" onclick="toggleNotifs()">
+                <i data-feather="bell" style="width: 18px; height: 18px; color: var(--slate);"></i>
+                {% set unread_count = notifications|selectattr('status', 'equalto', 'Unread')|list|length if notifications else 0 %}
+                <div class="notif-badge {{ 'active' if unread_count > 0 }}" id="notifBadge">{{ unread_count }}</div>
+                
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="notif-header">Notifications</div>
+                    <div class="notif-list"> {% if notifications %}
+                            {% for notif in notifications %}
+                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ notif.type }}</div>
+                                    <div class="notif-text">{{ notif.message }}</div> 
+                                    <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
             </div>
+            <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
+        </div>
 
-            <div class="content">
-                <div class="page-header">
-                    <h1 style="font-weight: 800; font-size: 2.1rem; color: var(--sidebar); margin: 0;">My Applications</h1>
-                    <p style="color: var(--slate); font-size: 0.95rem; margin-top: 5px;">Track your journey and milestones.</p>
-                </div>
-
+        <div class="content">
+            <div class="page-header">
+                <h1 style="font-weight: 800; font-size: 2.1rem; color: var(--sidebar); margin: 0;">My Applications</h1>
                 <div class="tab-nav">
                     <div class="tab-item active" onclick="switchTab('active')">Active ({{ active_c }})</div>
                     <div class="tab-item" onclick="switchTab('drafts')">Drafts ({{ draft_c }})</div>
                     <div class="tab-item" onclick="switchTab('completed')">Completed ({{ completed_c }})</div>
                 </div>
+            </div>
 
-                <div id="active" class="tab-content active">
-                    {% for user_app in applications if user_app.applicationStatus != 'Draft' %}
+            <div id="active" class="tab-content active">
+                {% set active_list = applications | selectattr('applicationStatus', 'in', ['Submitted', 'Under Review', 'Approved', 'Scheduled']) | list %}
+                {% if active_list %}
+                    {% for user_app in active_list %}
                     <div class="app-card">
                         <div class="card-top">
                             <div>
                                 <h3>{{ user_app.scholarshipName }}</h3>
-                                <p>Submitted on: {{ user_app.submissionDate.strftime('%b %d, %Y') if user_app.submissionDate else 'Pending' }}</p>
+                                <p>Submitted on: {{ user_app.submissionDate.strftime('%b %d, %Y') if user_app.submissionDate else 'N/A' }}</p>
                             </div>
-                            <span class="status-badge badge-review">{{ user_app.applicationStatus }}</span>
+                            <span class="status-badge {% if user_app.applicationStatus == 'Approved' %}badge-awarded{% else %}badge-review{% endif %}">
+                                {{ user_app.applicationStatus }}
+                            </span>
                         </div>
+
                         <div class="tracker-wrapper">
                             <div class="line-base"></div>
-                            <div class="line-fill" style="width: 14%;"></div>
+                            <div class="line-fill 
+                                {% if user_app.applicationStatus == 'Under Review' %}w-reviewing
+                                {% elif user_app.applicationStatus == 'Approved' %}w-approved
+                                {% elif user_app.applicationStatus == 'Scheduled' %}w-scheduled
+                                {% else %}w-submitted{% endif %}">
+                            </div>
+
                             <div class="steps">
                                 <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
-                                <div class="step active"><div class="dot"></div><span class="label">In Review</span></div>
-                                <div class="step"><div class="dot"></div><span class="label">Approved</span></div>
-                                <div class="step"><div class="dot"></div><span class="label">Decision</span></div>
+                                <div class="step {{ 'done' if user_app.applicationStatus in ['Approved', 'Scheduled'] else 'active' if user_app.applicationStatus == 'Under Review' else '' }}"><div class="dot"></div><span class="label">In Review</span></div>
+                                <div class="step {{ 'done' if user_app.applicationStatus in ['Approved', 'Scheduled'] else '' }}"><div class="dot"></div><span class="label">App Approved</span></div>
+                                <div class="step {{ 'active' if user_app.applicationStatus == 'Scheduled' else '' }}"><div class="dot"></div><span class="label">Scheduled</span></div>
+                                <div class="step"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                                <div class="step"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                                <div class="step"><div class="dot"></div><span class="label">Final Decision</span></div>
                             </div>
                         </div>
                     </div>
-                    {% else %}
-                    <p style="text-align:center; color:var(--slate); margin-top:40px;">No active applications found.</p>
                     {% endfor %}
-                </div>
+                {% else %}
+                    <div style="text-align:center; color:var(--slate); margin-top:80px;">
+                        <i data-feather="archive" style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p>No active applications found.</p>
+                    </div>
+                {% endif %}
+            </div>
 
-                <div id="drafts" class="tab-content">
-                    {% for user_app in applications if user_app.applicationStatus == 'Draft' %}
+            <div id="drafts" class="tab-content">
+                {% set draft_apps = applications | selectattr('applicationStatus', 'equalto', 'Draft') | list %}
+                {% if draft_apps %}
+                    {% for user_app in draft_apps %}
                     <div class="app-card">
                         <div class="card-top">
                             <div>
@@ -197,10 +268,8 @@
                             </div>
                             <span class="status-badge badge-draft">Draft Mode</span>
                         </div>
-                        
                         <div style="display: flex; gap: 15px; align-items: center; margin-top: 15px;">
-                            <a href="{{ url_for('application_form', id=user_app.scholarshipID) }}" class="btn-continue" style="margin-top: 0;">Continue Application →</a>
-                            
+                            <a href="{{ url_for('application_form', id=user_app.scholarshipID) }}" class="btn-continue">Continue Application →</a>
                             <form id="deleteForm-{{ user_app.applicationID }}" action="{{ url_for('delete_draft', app_id=user_app.applicationID) }}" method="POST">
                                 <button type="button" onclick="showDeleteModal('{{ user_app.applicationID }}')" 
                                         style="background: white; border: 1.5px solid #991B1B; color: #991B1B; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem;">
@@ -209,24 +278,63 @@
                             </form>
                         </div>
                     </div>
-                    {% else %}
-                    <p style="text-align:center; color:var(--slate); margin-top:40px;">No drafts found.</p>
                     {% endfor %}
-                </div>
+                {% else %}
+                    <div style="text-align:center; color:var(--slate); margin-top:80px;">
+                        <i data-feather="archive" style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.3;"></i><p>No drafts found.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="completed" class="tab-content">
+                {% set completed_apps = applications | selectattr('applicationStatus', 'in', ['Awarded', 'Rejected']) | list %}
+                {% if completed_apps %}
+                    {% for user_app in completed_apps %}
+                    <div class="app-card">
+                        <div class="card-top">
+                            <div>
+                                <h3>{{ user_app.scholarshipName }}</h3>
+                                <p>Finalized on: {{ user_app.reviewDate.strftime('%b %d, %Y') if user_app.reviewDate else 'N/A' }}</p>
+                            </div>
+                            <span class="status-badge {{ 'badge-awarded' if user_app.applicationStatus == 'Awarded' else 'badge-rejected' }}">
+                                {{ user_app.applicationStatus }}
+                            </span>
+                        </div>
+                        <div class="tracker-wrapper">
+                            <div class="line-base"></div>
+                            <div class="line-fill w-finalized {{ 'rejected' if user_app.applicationStatus == 'Rejected' else '' }}"></div>
+                            <div class="steps">
+                                <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
+                                <div class="step done"><div class="dot"></div><span class="label">In Review</span></div>
+                                {% set is_rej = user_app.applicationStatus == 'Rejected' %}
+                                {% set status_class = 'fail' if is_rej else 'done' %}
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">App Approved</span></div>
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Scheduled</span></div>
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Interview Complete</span></div>
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Final Scoring</span></div>
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Final Decision</span></div>
+                            </div>
+                        </div>
+                        <div class="result-box {{ 'result-awarded' if user_app.applicationStatus == 'Awarded' else 'result-rejected' }}" style="margin-top: 20px;">
+                            {{ '✓ Accepted: Please check your email for disbursement.' if user_app.applicationStatus == 'Awarded' else 'Thank you for your interest. Application not selected.' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
+    </div>
 
-        <div id="deleteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
-            <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
-                <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Permanently delete this draft?</p>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="closeDeleteModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
-                    <button id="confirmDeleteBtn" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600;">Delete</button>
-                </div>
+    <div id="deleteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Permanently delete this draft?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeDeleteModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <button id="confirmDeleteBtn" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600;">Delete</button>
             </div>
         </div>
-
+    </div>
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
@@ -243,27 +351,23 @@
         feather.replace();
 
         window.onload = function() {
-            const msg = sessionStorage.getItem('flashMessage');
+            const hash = window.location.hash;
+            if (hash === "#drafts") switchTab('drafts');
+            else if (hash === "#completed") switchTab('completed');
+            else switchTab('active');
             
+            const msg = sessionStorage.getItem('flashMessage');
             if (msg) {
                 const toast = document.getElementById('toastAlert');
                 const msgEl = document.getElementById('toastMsg');
-                
                 if (toast && msgEl) {
                     msgEl.innerText = msg;
-                    
                     toast.classList.remove('toast-submitted', 'toast-draft', 'toast-danger');
-                    
-                    if (msg.includes("Draft Saved")) {
-                        toast.classList.add('toast-draft');      
-                    } else if (msg.includes("Removed") || msg.includes("Deleted")) {
-                        toast.classList.add('toast-danger');     
-                    } else {
-                        toast.classList.add('toast-submitted');  
-                    }
+                    if (msg.includes("Draft Saved")) toast.classList.add('toast-draft');
+                    else if (msg.includes("Removed") || msg.includes("Deleted")) toast.classList.add('toast-danger');
+                    else toast.classList.add('toast-submitted');
                     
                     toast.classList.add('show'); 
-                    
                     setTimeout(() => { 
                         toast.classList.remove('show'); 
                         sessionStorage.removeItem('flashMessage'); 
@@ -272,58 +376,58 @@
             }
         };
 
-        function toggleSidebar() { 
-            document.getElementById('sidebar').classList.toggle('collapsed'); 
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            const btn = document.querySelector('.toggle-btn');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
 
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
-            const badge = document.getElementById('notifBadge');
             dropdown.classList.toggle('show'); 
-            if (badge) {
-                badge.style.display = 'none'; 
-                badge.classList.remove('active');
+            const badge = document.getElementById('notifBadge');
+            if (badge) { badge.style.display = 'none'; badge.classList.remove('active'); }
+        }
+
+        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('notifDropdown');
+            const logoutModal = document.getElementById('logoutModal');
+            const deleteModal = document.getElementById('deleteModal');
+
+            // Close notifications if clicking outside
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!event.target.closest('.notification-wrapper') && !event.target.closest('#notifDropdown')) {
+                    dropdown.classList.remove('show');
+                }
             }
+            if (event.target == logoutModal) closeLogoutModal();
+            if (event.target == deleteModal) closeDeleteModal();
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.tab-item').forEach(item => {
+                if (item.innerText.toLowerCase().includes(tabId)) item.classList.add('active');
+            });
         }
 
         let currentAppIdToDelete = null;
-
         function showDeleteModal(appId) {
             currentAppIdToDelete = appId;
             document.getElementById('deleteModal').style.display = 'flex';
-            
             document.getElementById('confirmDeleteBtn').onclick = function() {
                 sessionStorage.setItem('flashMessage', 'System Update: Draft Removed Successfully.');
-                
                 document.getElementById('deleteForm-' + currentAppIdToDelete).submit();
             };
         }
 
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('deleteModal');
-            if (event.target == modal) {
-                closeDeleteModal();
-            }
-        };
-
+        function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
-        window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
-        };
     </script>
 </body>
 </html>
