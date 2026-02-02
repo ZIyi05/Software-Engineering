@@ -111,6 +111,35 @@
 
         .btn-register:hover { opacity: 0.9; }
 
+        .phone-input-group {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: white;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .country-prefix {
+            padding: 12px 0 12px 14px;
+            color: var(--slate);
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: white;
+            user-select: none;
+        }
+
+        .phone-input-group input {
+            border: none !important;
+            flex: 1;
+            padding-left: 5px !important;
+        }
+
+        .phone-input-group:focus-within {
+            border-color: var(--emerald);
+        }
+
         .footer-links {
             margin-top: 25px;
             font-size: 0.9rem;
@@ -157,7 +186,14 @@
 
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="text" name="phone" placeholder="e.g. 0123456789" required>
+                    <div class="phone-input-group">
+                        <span class="country-prefix">+60</span>
+                        <input type="tel" name="phone" id="regPhone" 
+                            placeholder="123456789" 
+                            pattern="[0-9]*" 
+                            oninput="validatePhone(this)" 
+                            required>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -203,5 +239,17 @@
         </div>
     </div>
 
+<script>
+        function validatePhone(input) {
+            // 1. Remove non-numeric characters
+            let val = input.value.replace(/[^0-9]/g, '');
+            // 2. Strip leading zero if present
+            if (val.startsWith('0')) {
+                val = val.substring(1);
+            }
+            input.value = val;
+        }
+</script>
 </body>
+
 </html>

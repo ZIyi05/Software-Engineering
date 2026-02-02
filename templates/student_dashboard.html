@@ -7,212 +7,104 @@
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --bg: #F8FAFC;
-            --sidebar: #0F172A;
-            --emerald: #064E3B;
-            --slate: #475569;
-            --border: #E2E8F0;
-            --white: #FFFFFF;
-            --sidebar-width: 240px;
-            --sidebar-collapsed: 70px;
+            --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B;
+            --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
+            --sidebar-width: 240px; --sidebar-collapsed: 70px;
         }
 
-        body {
-            margin: 0;
-            display: flex;
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            background-color: var(--bg);
-            overflow: hidden;
-        }
+        body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
         /* SIDEBAR */
         .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--sidebar);
-            color: white;
-            padding: 30px 15px;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            width: var(--sidebar-width); background-color: var(--sidebar); color: white;
+            padding: 30px 15px; display: flex; flex-direction: column; flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
         }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
+        .sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; color: #FFFFFF; padding-left: 10px; transition: 0.3s; white-space: nowrap; }
+        .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px; display: flex; align-items: center; font-size: 0.85rem; transition: 0.2s; overflow: hidden; }
+        .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a i { margin-right: 0; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
 
-        .sidebar.collapsed { 
-            width: var(--sidebar-collapsed); 
-            padding: 30px 10px; 
-        }
+        .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+
+        /* TOP BAR & NOTIFICATIONS SYSTEM (Matches Image 3) */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 20px; }
         
-        .sidebar h2 {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 40px;
-            color: #FFFFFF;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-            padding-left: 10px;
-        }
-
-        .sidebar.collapsed h2 { 
-            font-size: 0.55rem; 
-            padding-left: 0; 
-            text-align: center; 
-        }
-
-        .sidebar a {
-            color: #94A3B8;
-            text-decoration: none;
-            padding: 10px 12px;
-            margin-bottom: 4px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            transition: 0.2s;
-            font-size: 0.85rem;
-        }
-
-        .sidebar a i {
-            width: 16px;
-            height: 16px;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-
-        .sidebar.collapsed a i { 
-            margin-right: 0; 
-        }
-
-        .sidebar.collapsed a { 
-            justify-content: center; 
-        }
-
-        .sidebar.collapsed a span { 
-            display: none; 
-        }
-
-        .sidebar a.active {
-            color: #FFFFFF;
-            background: rgba(255, 255, 255, 0.05);
-            font-weight: 700;
-            box-shadow: inset 3px 0 0 var(--emerald);
-        }
-
-        .toggle-btn {
-            position: absolute;
-            top: 75px;
-            right: -12px;
-            background: var(--emerald);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-        }
-
-        .main { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            min-width: 0; 
-        }
-
-        .user-tag {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--slate);
-            background: #F1F5F9;
-            padding: 5px 12px;
-            border-radius: 6px;
-        }
-
-        .workspace { 
-            padding: 40px 60px; 
-            overflow-y: auto; 
-        }
-
-        .hero h1 { 
-            font-size: 2.2rem; 
-            font-weight: 800; 
-            margin: 0; 
-        }
-
-        .hero p { 
-            font-size: 1rem; 
-            color: var(--slate); 
-            margin-top: 10px; 
-        }
-        
-        .btn-browse {
-            background-color: var(--sidebar);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 25px;
-            font-size: 0.9rem;
-            margin-right: 15px;
-            text-decoration: none; 
-            display: inline-block; 
-        }
-
-        .card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            padding: 20px 25px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .card:hover { 
-            border-color: #94A3B8; 
-            transform: translateX(3px); 
-        }
-
-        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
-
-        /* IDE-Safe Notification Border Colors */
-        .notif-submitted { border-left: 4px solid var(--emerald); }
-        .notif-draft { border-left: 4px solid var(--amber); }
-
-        /* Notification Bell and Badge Styling */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge {position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;border: 2px solid white; display: none; }
+        .notif-badge { 
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; 
+            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; 
+            border: 2px solid white; display: none; 
+        }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* Dropdown Alignment */
-        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); text-align: left; }
+        .notification-dropdown { 
+            position: absolute; top: 50px; right: 0; width: 320px; 
+            max-height: 400px; /* Limits height for scrolling */
+            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
+            flex-direction: column; overflow: hidden; 
+        }
+        .notification-dropdown.show { display: flex; }
+        .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
+        
+        /* SCROLLABLE CONTAINER */
+        .notif-list { overflow-y: auto; flex: 1; }
+
+        /* PROFESSIONAL ITEM STYLE (Image 3) */
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
+        .notif-item:hover { background: #F8FAFC; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
+        .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
+        .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
+
+        .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
+
+        /* WORKSPACE */
+        .workspace { 
+            padding: 40px 60px; 
+            overflow-y: auto; /* Enables scrolling for the hero and trackers */
+            flex: 1; 
+        }
+
+        /* Ensure the hero section doesn't push content off-screen */
+        .hero { flex-shrink: 0; }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; margin: 0; }
+        .hero p { font-size: 1rem; color: var(--slate); margin: 10px 0 25px 0; }
+        .btn-browse { background-color: var(--sidebar); color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9rem; text-decoration: none; display: inline-block; }
+
+        .scroll-area { margin-top: 50px; width: 95%; }
+        .section-label-header { font-size: 0.65rem; font-weight: 800; color: var(--slate); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+        .card { background: var(--white); border: 1px solid var(--border); padding: 25px 35px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%; box-sizing: border-box; transition: 0.2s; cursor: pointer; }
+        .card:hover { border-color: #94A3B8; transform: translateX(3px); }
+
+        .status-badge { font-size: 0.7rem; font-weight: 800; padding: 6px 16px; border-radius: 6px; text-transform: uppercase; }
+        .status-submitted { background: #F1F5F9; color: var(--slate); }
+        .status-awarded { background: #ECFDF5; color: var(--emerald); }
+        .status-pending { background: #FEF3C7; color: #92400E; }
+        .status-rejected { background: #FEF2F2; color: #991B1B; }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub.</h2>
+        <h2>MeritHub.STUDENT</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}" class="active"><i data-feather="grid"></i><span>Overview</span></a>
             <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
             <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
-        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto; color: #94A3B8; text-decoration: none; padding: 10px 12px; display: flex; align-items: center; font-size: 0.85rem;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -220,25 +112,24 @@
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    {% set total_notifs = applications|length if applications else 0 %}
-                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
-                        {{ total_notifs }}
-                    </div>
+                    {% set total_unread = applications|selectattr('status', 'equalto', 'Unread')|list|length if applications else 0 %}
+                    <div class="notif-badge {{ 'active' if total_unread > 0 }}" id="notifBadge">{{ total_unread }}</div>
                 </div>
                 
-                <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList">
-                        {% if applications %}
-                            {% for app in applications %}
-                                {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
-                                
-                                <div class="notif-item {{ status_class }}">
-                                    <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
-                                    {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="notif-header">Notifications</div>
+                    <div class="notif-list"> {% if applications %}
+                            {% for notif in applications %}
+                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ notif.type }}</div>
+                                    <div class="notif-text">{{ notif.message }}</div>
+                                    <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                            </div>
                             {% endfor %}
                         {% else %}
-                            <div class="notif-item">No recent updates.</div>
+                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
                         {% endif %}
                     </div>
                 </div>
@@ -248,34 +139,41 @@
 
         <div class="workspace">
             <div class="hero">
-                <h1 id="welcomeHeading">Welcome back, {{ name }}.</h1>
+                <h1>Welcome back, {{ name.split(' ')[0] }}.</h1>
                 <p>You have <b>{{ app_count }}</b> active applications. Check your status below.</p>
                 <a href="{{ url_for('scholarship_discovery') }}" class="btn-browse">Browse Scholarships</a> 
-                <a href="{{ url_for('tracking_hub') }}" style="font-size: 0.8rem; color: var(--emerald); text-decoration: none; font-weight: 600;">View History →</a>
             </div>
-            
+
             <div class="scroll-area">
-                {% for app in applications %}
-                <div class="card" onclick="window.location.href='{{ url_for('tracking_hub') }}'">
-                    <div>
-                        <h4 style="margin:0 0 4px 0; font-size: 0.95rem;">{{ app.scholarshipName }}</h4>
-                        <p style="margin:0; font-size: 0.8rem;">Submitted on: <b>{{ app.submissionDate.strftime('%b %d, %Y') if app.submissionDate else 'N/A' }}</b></p>
-                    </div>
-                    
-                    {% if app.applicationStatus == 'Submitted' %}
-                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #F1F5F9; color: var(--slate);">{{ app.applicationStatus }}</span>
-                    {% elif app.applicationStatus == 'Awarded' %}
-                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #ECFDF5; color: var(--emerald);">{{ app.applicationStatus }}</span>
-                    {% else %}
-                        <span style="font-size: 0.65rem; font-weight: 700; padding: 5px 12px; border-radius: 4px; background: #FEF3C7; color: #92400E;">{{ app.applicationStatus }}</span>
-                    {% endif %}
+                <div class="section-label-header">
+                    <span>Active Application Trackers</span>
+                    <a href="{{ url_for('tracking_hub') }}" style="color: var(--sidebar); text-decoration: none; font-size: 0.75rem; font-weight: 700;">View History →</a>
                 </div>
+                {% if dashboard_apps %}
+                    {% for app in dashboard_apps %}
+                    <div class="card" onclick="location.href='/tracking_hub'">
+                        <div>
+                            <h4 style="margin:0 0 5px 0; font-size: 1rem; font-weight: 700;">{{ app.scholarshipName }}</h4>
+                            <p style="margin:0; font-size: 0.8rem; color: var(--slate);">
+                                Submitted on: <b>{{ app.submissionDate.strftime('%b %d, %Y') if app.submissionDate else 'N/A' }}</b>
+                            </p>
+                        </div>
+                        <span class="status-badge 
+                            {% if app.applicationStatus == 'Awarded' or app.applicationStatus == 'Approved' %}status-awarded
+                            {% elif app.applicationStatus == 'Rejected' %}status-rejected
+                            {% else %}status-submitted{% endif %}">
+                            {{ app.applicationStatus }}
+                        </span>
+                    </div>
+                    {% endfor %}
                 {% else %}
-                <p style="text-align:center; color:var(--slate); margin-top:40px;">No active applications found.</p>
-                {% endfor %}
+                    <div style="padding: 40px; text-align: center; border: 2px dashed var(--border); border-radius: 12px; color: var(--slate);">
+                        No active scholarship trackers found.
+                    </div>
+                {% endif %}
             </div>
-        </div> 
-</div>
+        </div>
+    </div>
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
@@ -287,9 +185,9 @@
             </div>
         </div>
     </div>
- <script>
-        feather.replace();
 
+    <script>
+        feather.replace();
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const btn = document.querySelector('.toggle-btn');
@@ -300,28 +198,25 @@
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
             const badge = document.getElementById('notifBadge');
-            
             dropdown.classList.toggle('show'); 
-            if (badge) {
-                badge.style.display = 'none'; 
-            }
+            if (badge) { badge.style.display = 'none'; }
         }
 
+        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
         window.onclick = function(event) {
-            if (!event.target.closest('.notification-bell')) {
-                const dropdown = document.getElementById('notifDropdown');
-                if (dropdown && dropdown.classList.contains('show')) {
+            const dropdown = document.getElementById('notifDropdown');
+            const logoutModal = document.getElementById('logoutModal');
+
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!event.target.closest('.notification-bell') && !event.target.closest('#notifDropdown')) {
                     dropdown.classList.remove('show');
                 }
             }
+            if (event.target == logoutModal) closeLogoutModal();
         }
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
-        window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
-        };
     </script>
 </body>
+</html>

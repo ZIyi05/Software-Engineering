@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MeritHub Reviewer | Dashboard</title>
+    <title>MeritHub | System Overview</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
@@ -39,14 +39,13 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* MAIN AREA */
         .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; min-width: 0; }
         .top-bar { 
             height: 60px; background: white; border-bottom: 1px solid var(--border); 
             display: flex; align-items: center; justify-content: flex-end; 
             padding: 0 40px; flex-shrink: 0;
         }
-        .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
+        .role-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
@@ -61,42 +60,40 @@
         .trend-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
         .chart-placeholder { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 25px; min-height: 400px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .chart-visual { height: 300px; margin-top: 40px; border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); display: flex; align-items: flex-end; justify-content: space-around; padding: 0 10px; }
-        .bar { width: 50px; background: var(--emerald); border-radius: 4px 4px 0 0; position: relative; }
+        .bar { width: 50px; background: var(--emerald); border-radius: 4px 4px 0 0; position: relative; transition: height 0.5s ease; }
         .bar.current { background: var(--nav-dark); }
         .bar::after { content: attr(data-month); position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; color: var(--slate); }
 
         .dist-row { margin-bottom: 25px; }
-        .dist-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--slate); margin-bottom: 10px; text-transform: uppercase; }
+        .dist-label { display: flex; justify-content: justify; font-size: 0.7rem; font-weight: 800; color: var(--slate); margin-bottom: 10px; text-transform: uppercase; }
+        .dist-label span:last-child { margin-left: auto; }
         .progress-bg { height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden; }
-        
-        .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; display: flex; align-items: center; }
-        .logout-link i { margin-right: 12px; width: 18px; }
+        .progress-fill { height: 100%; transition: width 0.5s ease; }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MERITHUB. REVIEWER</h2>
+        <h2>MERITHUB.</h2>
         <nav>
-            <a href="{{ url_for('reviewer_dashboard') }}" class="{{ 'active' if request.endpoint == 'reviewer_dashboard' }}">
-                <i data-feather="grid"></i><span>Dashboard Overview</span>
+            <a href="{{ url_for('admin_dashboard' if user_role == 'admin' else 'reviewer_dashboard') }}" class="active">
+                <i data-feather="grid"></i><span>System Overview</span>
             </a>
-            <a href="{{ url_for('reviewer_queue') }}" class="{{ 'active' if request.endpoint == 'reviewer_queue' }}">
-                <i data-feather="layers"></i><span>Queue Overview</span>
-            </a>
-            <a href="{{ url_for('reviewer_queue') }}">
-                <i data-feather="file-text"></i><span>Current Assessment</span>
-            </a>
-            <a href="{{ url_for('scoring_history') }}" class="{{ 'active' if request.endpoint == 'scoring_history' }}">
-                <i data-feather="clock"></i><span>Evaluation History</span>
-            </a>
+            {% if user_role == 'admin' %}
+            <a href="{{ url_for('scholarship_manager') }}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('user_management') }}"><i data-feather="users"></i><span>User Management</span></a>
+            <a href="{{ url_for('reviewer_assignment') }}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+            {% else %}
+            <a href="{{ url_for('reviewer_queue') }}"><i data-feather="layers"></i><span>Queue Overview</span></a>
+            <a href="{{ url_for('scoring_history') }}"><i data-feather="clock"></i><span>Evaluation History</span></a>
+            {% endif %}
         </nav>
         <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
         <div class="top-bar">
-            <div class="reviewer-badge">Reviewer: {{ reviewer_name }}</div>
+            <div class="role-badge">{{ user_role|capitalize }}: {{ user_name }}</div>
         </div>
 
         <div class="content">
@@ -105,18 +102,18 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h4>Total Applications</h4>
-                    <div class="value">1,242</div>
+                    <div class="value">{{ stats.total_apps }}</div>
                     <div class="sub-text">Volume across all active programs</div>
                 </div>
                 <div class="stat-card">
                     <h4>Review Completion</h4>
-                    <div class="value">92%</div>
+                    <div class="value">{{ stats.completion_rate }}%</div>
                     <div class="sub-text">Evaluated applications in current cycle</div>
                 </div>
                 <div class="stat-card">
                     <h4>Total Funds Disbursed</h4>
-                    <div class="value">RM 500k</div>
-                    <div class="sub-text">Financial allocation for 2026 awards</div>
+                    <div class="value">RM {{ stats.total_funds }}</div>
+                    <div class="sub-text">Financial allocation for active awards</div>
                 </div>
             </div>
 
@@ -124,28 +121,28 @@
                 <div class="chart-placeholder">
                     <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Application Volume Trend</h3>
                     <div class="chart-visual">
-                        <div class="bar" style="height: 35%" data-month="Oct"></div>
-                        <div class="bar" style="height: 55%" data-month="Nov"></div>
-                        <div class="bar" style="height: 75%" data-month="Dec"></div>
-                        <div class="bar current" style="height: 90%" data-month="Jan"></div>
+                        {% for month, data in trends.monthly.items() %}
+                        <div class="bar {{ 'current' if loop.last }}" 
+                             style="height: {{ data.percent }}%" 
+                             data-month="{{ month }}">
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 
                 <div class="chart-placeholder">
                     <h3 style="margin: 0; font-weight: 800; font-size: 1.1rem;">Award Distribution</h3>
                     <div style="margin-top: 40px;">
+                        {% for faculty, data in distribution.items() %}
                         <div class="dist-row">
-                            <div class="dist-label"><span>Computing</span><span>80%</span></div>
-                            <div class="progress-bg"><div style="width: 80%; height: 100%; background: var(--emerald);"></div></div>
+                            <div class="dist-label"><span>{{ faculty }}</span><span>{{ data.percent }}%</span></div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" 
+                                     style="width: {{ data.percent }}%; background: {{ data.color }};">
+                                </div>
+                            </div>
                         </div>
-                        <div class="dist-row">
-                            <div class="dist-label"><span>Engineering</span><span>50%</span></div>
-                            <div class="progress-bg"><div style="width: 50%; height: 100%; background: var(--nav-dark);"></div></div>
-                        </div>
-                        <div class="dist-row">
-                            <div class="dist-label"><span>Business</span><span>35%</span></div>
-                            <div class="progress-bg"><div style="width: 35%; height: 100%; background: var(--slate);"></div></div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -154,7 +151,7 @@
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <h3 style="margin-top:0;">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -171,14 +168,8 @@
             sidebar.classList.toggle('collapsed');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
-
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
-        window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
-        };
     </script>
 </body>
 </html>

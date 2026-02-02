@@ -112,8 +112,13 @@
                 </div>
 
                 <div style="display: flex; gap: 15px; margin-top: 10px;">
-                    <button type="button" onclick="window.location.href='{{ url_for('user_management') }}';" style="flex: 1; padding: 16px; border-radius: 8px; border: 1px solid var(--border); font-weight: 700; cursor: pointer;">Cancel</button>
-                    <button type="submit" style="flex: 2; background: var(--nav-dark); color: white; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer;">Create Account</button>
+                    <a href="{{ url_for('user_management') }}" 
+                    style="flex: 1; padding: 16px; border-radius: 8px; border: 1px solid var(--border); font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; color: var(--nav-dark); background: white; display: flex; align-items: center; justify-content: center;">
+                    Cancel
+                    </a>
+                    <button type="submit" style="flex: 2; background: var(--nav-dark); color: white; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none;">
+                        Create Account
+                    </button>
                 </div>
             </form>
         </div>

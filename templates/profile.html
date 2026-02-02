@@ -13,13 +13,14 @@
             --slate: #475569;
             --border: #E2E8F0;
             --white: #FFFFFF;
+            --amber: #D97706;
             --sidebar-width: 240px;
             --sidebar-collapsed: 70px;
         }
 
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Compact */
+        /* SIDEBAR */
         .sidebar {
             width: var(--sidebar-width);
             background-color: var(--sidebar);
@@ -34,115 +35,77 @@
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 30px 10px; }
         .sidebar h2 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; color: #FFFFFF; padding-left: 10px; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.55rem; padding-left: 0; text-align: center; }
-
-        .sidebar a {
-            color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px;
-            display: flex; align-items: center; overflow: hidden; font-size: 0.85rem; transition: 0.2s;
-        }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 10px 12px; margin-bottom: 4px; border-radius: 6px; display: flex; align-items: center; font-size: 0.85rem; transition: 0.2s; }
         .sidebar a i { width: 16px; height: 16px; margin-right: 12px; flex-shrink: 0; }
-        .sidebar.collapsed a i { margin-right: 0; }
         .sidebar.collapsed a span { display: none; }
         .sidebar a.active { color: #FFFFFF; background: rgba(255, 255, 255, 0.05); font-weight: 700; box-shadow: inset 3px 0 0 var(--emerald); }
 
-        .toggle-btn {
-            position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white;
-            border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100;
-            display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
-        }
+        .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
-        /* MAIN AREA */
+        /* TOP BAR */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
+        .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 20px; }
 
-        /* IDE-Safe Notification Border Colors */
-        .notif-submitted { border-left: 4px solid var(--emerald); }
-        .notif-draft { border-left: 4px solid var(--amber); }
-
-        /* Notification Bell and Badge Styling */
+        /* PROFESSIONAL NOTIFICATIONS SYSTEM (Image 3 Style) */
         .notification-bell { position: relative; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; }
-        .notif-badge {position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;border: 2px solid white; display: none; }
+        .notif-badge { 
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; 
+            font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800; 
+            border: 2px solid white; display: none; 
+        }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* Dropdown Alignment */
-        .notif-dropdown { position: absolute; top: 45px; right: 0; width: 280px; background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); display: none; z-index: 1000; overflow: hidden; }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar); text-align: left; }
+        .notification-dropdown { 
+            position: absolute; top: 50px; right: 0; width: 320px; 
+            max-height: 400px; /* Limits height for scrolling */
+            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
+            flex-direction: column; overflow: hidden; 
+        }
+        .notification-dropdown.show { display: flex; }
+        .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
+        
+        /* SCROLLABLE CONTAINER */
+        .notif-list { overflow-y: auto; flex: 1; }
+
+        /* PROFESSIONAL ITEM STYLE (Image 3) */
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
+        .notif-item:hover { background: #F8FAFC; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
+        .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
+        .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
+        
+        .view-history-btn { display: block; padding: 12px; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--emerald); background: #F0FDF4; text-decoration: none; border-top: 1px solid var(--border); flex-shrink: 0; }
 
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
-        /* TOAST ALERT */
-        .toast-alert {
-            position: fixed; top: 20px; right: -350px; width: 300px; background: white;
-            border-left: 5px solid var(--emerald); padding: 15px; border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999;
-        }
-        .toast-alert.show { right: 20px; }
-
-        /* FORM CONTENT */
-        .workspace { padding: 40px 60px; overflow-y: auto; }
-        .section-title { font-size: 0.75rem; font-weight: 800; color: var(--emerald); text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 20px 0; display: block; }
+        /* PROFILE CONTENT (Preserved) */
+        .workspace { padding: 40px 60px; overflow-y: auto; flex: 1; }
+        .section-title { font-size: 0.65rem; font-weight: 800; color: var(--slate); text-transform: uppercase; letter-spacing: 1.5px; margin: 40px 0 20px 0; display: block; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; max-width: 900px; }
+        .field { display: flex; flex-direction: column; gap: 8px; }
+        .field label { font-size: 0.85rem; font-weight: 700; color: var(--sidebar); }
+        .field input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; transition: 0.2s; }
+        .field input:disabled { background: #F8FAFC; color: #94A3B8; cursor: not-allowed; }
+        .btn-save { background: var(--sidebar); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 40px; font-size: 0.9rem; transition: 0.2s; }
         
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; }
-        .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--sidebar); margin-bottom: 8px; }
-        .field input { 
-            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 0.9rem; box-sizing: border-box; background: white;
-        }
-        .field input:disabled { background: #F1F5F9; cursor: not-allowed; }
-
-        .btn-save { background: var(--sidebar); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 40px; transition: 0.2s; }
-        .btn-save:active { transform: scale(0.98); }
-
-        .notif-dropdown {
-            position: absolute; top: 45px; right: 0; width: 280px; background: white; 
-            border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
-            display: none; z-index: 1000; overflow: hidden;
-        }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; }
-        
-        /* Success Modal Styles */
-        #verifyPopup {
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(15, 23, 42, 0.9); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 10000;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-        .popup-content {
-            background: white; 
-            padding: 40px; 
-            border-radius: 12px; 
-            text-align: center; 
-            border-top: 6px solid #064E3B; 
-            width: 350px;
-        }
+        /* SUCCESS POPUP */
+        #verifyPopup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 10000; opacity: 0; transition: opacity 0.5s ease; }
+        .popup-content { background: white; padding: 40px; border-radius: 16px; text-align: center; width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-    <div id="toastAlert" class="toast-alert">
-        <i data-feather="check-circle" style="color: var(--emerald);"></i>
-        <div>
-            <b style="font-size: 0.85rem; display: block;">System Update</b>
-            <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Changes saved.</span>
-        </div>
-    </div>
-
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub.</h2>
+        <h2>MeritHub.STUDENT</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
-            <a href="{{ url_for('scholarship_detail', sch_id='global') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
+            <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
+            <a href="{{ url_for('tracking_hub') }}"><i data-feather="file-text"></i><span>My Applications</span></a>
             <a href="{{ url_for('profile') }}" class="active"><i data-feather="user"></i><span>Academic Profile</span></a>
         </nav>
         <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
@@ -153,25 +116,24 @@
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    {% set total_notifs = applications|length if applications else 0 %}
-                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">
-                        {{ total_notifs }}
-                    </div>
+                    {% set unread_count = notifications|selectattr('status', 'equalto', 'Unread')|list|length if notifications else 0 %}
+                    <div class="notif-badge {{ 'active' if unread_count > 0 }}" id="notifBadge">{{ unread_count }}</div>
                 </div>
                 
-                <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList">
-                        {% if applications %}
-                            {% for app in applications %}
-                                {% set status_class = 'notif-submitted' if app.applicationStatus == 'Submitted' else 'notif-draft' %}
-                                
-                                <div class="notif-item {{ status_class }}">
-                                    <b>{{ 'System Update' if app.applicationStatus == 'Submitted' else 'Application Updated' }}</b><br>
-                                    {{ app.scholarshipName }} {{ 'received' if app.applicationStatus == 'Submitted' else 'draft progress' }}.
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="notif-header">Notifications</div>
+                    <div class="notif-list"> {% if notifications %}
+                            {% for notif in notifications %}
+                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ notif.type }}</div>
+                                    <div class="notif-text">{{ notif.message }}</div>
+                                    <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                            </div>
                             {% endfor %}
                         {% else %}
-                            <div class="notif-item">No recent updates.</div>
+                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
                         {% endif %}
                     </div>
                 </div>
@@ -181,58 +143,31 @@
 
         <div class="workspace">
             <h1 style="font-size: 2.2rem; font-weight: 800; margin: 0;">Student Profile</h1>
-            
             <form action="{{ url_for('update_profile') }}" method="POST">
                 <span class="section-title">Personal & Contact Details</span>
                 <div class="form-grid">
-                    <div class="field">
-                        <label>Student ID</label>
-                        <input type="text" value="{{ user_id }}" disabled>
-                    </div>
-                    <div class="field">
-                        <label>Full Name</label>
-                        <input type="text" name="fullName" value="{{ student.fullName }}" required>
-                    </div>
-                    <div class="field">
-                        <label>Email Address</label>
-                        <input type="email" name="email" value="{{ student.email }}" required>
-                    </div>
-                    <div class="field">
-                        <label>Phone Number</label>
-                        <input type="text" name="phone" value="{{ student.phone }}" required>
-                    </div>
+                    <div class="field"><label>Student ID</label><input type="text" value="{{ user_id }}" disabled></div>
+                    <div class="field"><label>Full Name</label><input type="text" name="fullName" value="{{ student.fullName }}" required></div>
+                    <div class="field"><label>Email Address</label><input type="email" name="email" value="{{ student.email }}" required></div>
+                    <div class="field"><label>Phone Number</label><input type="text" name="phone" value="{{ student.phone }}" required></div>
                 </div>
-
                 <span class="section-title">Academic Records</span>
                 <div class="form-grid">
-                    <div class="field">
-                        <label>Faculty</label>
-                        <input type="text" name="faculty" value="{{ student.faculty }}">
-                    </div>
-                    <div class="field">
-                        <label>Program (Course)</label>
-                        <input type="text" name="course" value="{{ student.course }}">
-                    </div>
-                    <div class="field">
-                        <label>Current CGPA</label>
-                        <input type="text" name="cgpa" value="{{ student.cgpa if student.cgpa else '0.00' }}">
-                    </div>
-                    <div class="field">
-                        <label>Total Credit Hours</label>
-                        <input type="number" name="credits" value="{{ student.total_credits if student.total_credits else 0 }}" min="0">
-                    </div>
+                    <div class="field"><label>Faculty</label><input type="text" name="faculty" value="{{ student.faculty }}"></div>
+                    <div class="field"><label>Program (Course)</label><input type="text" name="course" value="{{ student.course }}"></div>
+                    <div class="field"><label>Current CGPA</label><input type="text" name="cgpa" value="{{ student.cgpa if student.cgpa else '0.00' }}"></div>
+                    <div class="field"><label>Total Credit Hours</label><input type="number" name="credits" value="{{ student.total_credits if student.total_credits else 0 }}" min="0"></div>
                 </div>
-
-                <div id="verifyPopup" style="display: none;">
-                    <div class="popup-content">
-                        <span style="font-size: 50px; color: #064E3B;">✓</span>
-                        <h2 style="color: #0F172A; margin: 15px 0 10px 0;">Profile Updated</h2>
-                        <p style="color: #64748B; font-size: 0.9rem;">Your changes have been saved.</p>
-                    </div>
-                </div>
-
                 <button type="submit" class="btn-save" id="saveBtn">Save Profile Changes</button>
             </form>
+        </div>
+    </div>
+
+    <div id="verifyPopup">
+        <div class="popup-content">
+            <span style="font-size: 50px; color: #064E3B;">✓</span>
+            <h2 style="color: #0F172A; margin: 15px 0 10px 0;">Profile Updated</h2>
+            <p style="color: #64748B; font-size: 0.9rem;">Your changes have been saved.</p>
         </div>
     </div>
 
@@ -247,68 +182,55 @@
         </div>
     </div>
 
-    <!-- Create a hidden element to store flash message data -->
-    <div id="flashData" style="display: none;" data-flash-message="
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {{ messages[0] }}
-            {% endif %}
-        {% endwith %}
-    "></div>
+    <div id="flashData" data-flash-message="{{ get_flashed_messages()[0] if get_flashed_messages() else '' }}" style="display:none;"></div>
 
     <script>
         feather.replace();
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
+            const btn = document.querySelector('.toggle-btn');
             btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
         }
 
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
-            const badge = document.getElementById('notifBadge');
-            
             dropdown.classList.toggle('show'); 
-            if (badge) {
-                badge.style.display = 'none'; 
-            }
+            const badge = document.getElementById('notifBadge');
+            if (badge) badge.style.display = 'none';
         }
 
-        // Check if we should show the success popup (when profile was updated)
+        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('notifDropdown');
+            const logoutModal = document.getElementById('logoutModal');
+
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!event.target.closest('.notification-bell') && !event.target.closest('#notifDropdown')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+            if (event.target == logoutModal) closeLogoutModal();
+        }
+
+        // Flash Detector (Profile update success)
         window.addEventListener('DOMContentLoaded', function() {
-            // Get flash message from hidden element
             const flashElement = document.getElementById('flashData');
-            const flashMessage = flashElement.getAttribute('data-flash-message') || '';
-            
-            // Clean up the message (remove extra whitespace)
-            const cleanMessage = flashMessage.trim();
-            
-            if (cleanMessage && 
-                (cleanMessage.includes("updated successfully") || 
-                 cleanMessage.includes("Profile updated"))) {
-                
+            const flashMessage = (flashElement.getAttribute('data-flash-message') || '').trim().toLowerCase();
+            if (flashMessage && (flashMessage.includes("success") || flashMessage.includes("updated"))) {
                 const popup = document.getElementById('verifyPopup');
                 popup.style.display = 'flex';
-                
-                // Hide the popup after 2 seconds
+                setTimeout(() => { popup.style.opacity = '1'; }, 10);
                 setTimeout(function() {
                     popup.style.opacity = '0';
-                    setTimeout(() => { 
-                        popup.style.display = 'none'; 
-                    }, 500);
+                    setTimeout(() => { popup.style.display = 'none'; }, 500);
                 }, 2000);
             }
         });
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
-        window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
-        };
     </script>
 </body>
 </html>

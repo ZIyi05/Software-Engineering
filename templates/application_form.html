@@ -43,24 +43,37 @@
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; gap: 20px; }
         
-        /* NOTIFICATION BELL */
-        .notification-wrapper { position: relative; cursor: pointer; display: flex; align-items: center; }
+        .notification-wrapper { position: relative; cursor: pointer; display: flex; align-items: center; padding: 6px; border-radius: 50%; }
         .notif-badge {
-            position: absolute; top: -5px; right: -5px; background: #ef4444; color: white;
+            position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
             font-size: 0.6rem; padding: 2px 5px; border-radius: 10px; font-weight: 800;
             display: none; border: 2px solid white;
         }
         .notif-badge.active { display: block; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         .notif-dropdown {
-            position: absolute; top: 45px; right: 0; width: 300px; background: white; 
-            border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
-            display: none; z-index: 1000; overflow: hidden;
+            position: absolute; top: 50px; right: 0; width: 320px; 
+            max-height: 400px; /* Limits height for scrolling */
+            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
+            flex-direction: column; overflow: hidden;
         }
-        .notif-dropdown.show { display: block; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #F1F5F9; font-size: 0.8rem; line-height: 1.4; color: var(--sidebar-nav); }
+        .notif-dropdown.show { display: flex; }
+        .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar-nav); flex-shrink: 0; }
         
+        /* SCROLLABLE CONTAINER */
+        .notif-list { overflow-y: auto; flex: 1; }
+
+        /* PROFESSIONAL ITEM STYLE (Image 3) */
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
+        .notif-item:hover { background: #F8FAFC; }
+        .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar-nav); margin-bottom: 4px; }
+        .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
+        .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
+
+        .view-history { display: block; padding: 12px; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--emerald); background: #F0FDF4; text-decoration: none; border-top: 1px solid var(--border); flex-shrink: 0; }
         /* TOAST ALERT */
         .toast-alert {
             position: fixed; top: 20px; right: -350px; width: 300px; background: white;
@@ -150,9 +163,23 @@
         <div class="top-bar">
             <div class="notification-wrapper" onclick="toggleNotifs()">
                 <i data-feather="bell" style="width: 20px; height: 20px; color: var(--slate);"></i>
-                <div class="notif-badge" id="notifBadge">1</div>
+                <div class="notif-badge {{ 'active' if unread_count > 0 }}" id="notifBadge">{{ unread_count }}</div>
                 <div class="notif-dropdown" id="notifDropdown">
-                    <div id="notifList"><div class="notif-item"><b>System Update</b><br>Draft session started.</div></div>
+                    <div class="notif-header">Notifications</div>
+                    <div class="notif-list"> {% if notifications %}
+                            {% for notif in notifications %}
+                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                                <div class="notif-content">
+                                    <div class="notif-title">{{ notif.type }}</div>
+                                    <div class="notif-text">{{ notif.message }}</div> 
+                                    <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             <div class="user-tag">ID: {{ user_id }} | <b>{{ student.fullName }}</b></div>
@@ -179,7 +206,19 @@
                     <label>Contact Number</label>
                     <div class="phone-input-group">
                         <span class="country-prefix">+60</span>
-                        <input type="tel" name="phone" value="{{ draft.phone if draft else '' }}" placeholder="123456789" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        {% set phone_val = "" %}
+                        {% if draft and draft.phone %}
+                            {% set phone_val = draft.phone %}
+                        {% elif student.phone %}
+                            {% set phone_val = student.phone %}
+                        {% endif %}
+
+                        <input type="tel" name="phone" 
+                            value="{{ phone_val[1:] if phone_val.startswith('0') else phone_val }}" 
+                            placeholder="123456789" 
+                            pattern="[0-9]*" 
+                            oninput="validatePhone(this)" 
+                            required>
                     </div>
                 </div>
             </div>
@@ -397,6 +436,20 @@
         window.onclick = function(event) {
                     const logoutModal = document.getElementById('logoutModal');
                     if (event.target == logoutModal) { closeLogoutModal(); }
+        };
+
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('notifDropdown');
+            const logoutModal = document.getElementById('logoutModal');
+            const submitModal = document.getElementById('submitModal');
+
+            if (dropdown && dropdown.classList.contains('show')) {
+                if (!event.target.closest('.notification-wrapper') && !event.target.closest('#notifDropdown')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+            if (event.target == logoutModal) closeLogoutModal();
+            if (event.target == submitModal) closeSubmitModal();
         };
 
     </script>

@@ -55,8 +55,8 @@
         .history-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .history-table { width: 100%; border-collapse: collapse; }
         .history-table th { text-align: left; padding: 15px 20px; background: #F8FAFC; font-size: 0.75rem; color: var(--slate); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
-        .history-table td { padding: 20px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
-        
+        .history-table td { padding: 25px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }       
+
         .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .badge-Approved { background: #ECFDF5; color: #065F46; }
         .badge-Waitlist { background: #FFFBEB; color: #92400E; }
@@ -65,6 +65,25 @@
         .btn-view { background: white; color: var(--slate); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-view:hover { background: var(--nav-dark); color: white; border-color: var(--nav-dark); }
         .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; }
+
+        /* Score threshold colors */
+        .score-green { color: #065F46; } /* Green for scores >= 15 */
+        .score-red { color: #991B1B; }   /* Red for scores < 15 */
+
+        /* Professional Pill Badges */
+        .hist-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+
+        /* Status badge background colors */
+        .badge-approved { background: #ECFDF5; color: #065F46; }
+        .badge-rejected { background: #FEF2F2; color: #991B1B; }
     </style>
 </head>
 <body>
@@ -117,27 +136,33 @@
                                     <b>{{ record.fullName }}</b><br>
                                     <span style="font-size: 0.75rem; color: var(--slate);">ID: {{ record.userID }}</span>
                                 </td>
-                                <td style="font-weight: 800; color: var(--emerald);">
-                                    {{ record.score }} / 20
-                                </td>
+
                                 <td>
-                                    <span class="badge badge-{{ record.applicationStatus }}">
-                                        {{ record.applicationStatus }}
+                                    <span class="{{ 'score-green' if record.score|int >= 15 else 'score-red' }}" style="font-weight: 800; font-size: 1.1rem;">
+                                        {{ "%02d" | format(record.score | int) }} / 20
                                     </span>
                                 </td>
+
                                 <td>
-                                    {{ record.reviewDate.strftime('%b %d, %Y') if record.reviewDate else 'N/A' }}
+                                    {% if record.score|int >= 15 %}
+                                        <span class="hist-badge badge-approved">Approved</span>
+                                    {% else %}
+                                        <span class="hist-badge badge-rejected">Rejected</span>
+                                    {% endif %}
                                 </td>
+
+                                <td>{{ record.reviewDate.strftime('%b %d, %Y') if record.reviewDate else 'N/A' }}</td>
+                                
                                 <td>
-                                    <a href="#" class="btn-view">View Summary</a>
+                                    <a href="{{ url_for('view_assessment_summary', app_id=record.applicationID) }}" class="btn-view">
+                                        View Summary
+                                    </a>
                                 </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="5" style="text-align: center; color: var(--slate); padding: 40px;">
-                                    No completed assessments found in your history.
-                                </td>
+                                <td colspan="5" style="text-align: center; color: var(--slate); padding: 40px;">No completed assessments found.</td>
                             </tr>
                         {% endif %}
                     </tbody>
@@ -145,7 +170,6 @@
             </div>
         </div>
     </div>
-
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>

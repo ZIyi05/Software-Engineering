@@ -12,7 +12,7 @@
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Matched to Dashboard Overview exactly */
+        /* SIDEBAR */
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
@@ -44,31 +44,46 @@
 
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* TOP BAR - Positioning name at the end */
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
         
-        /* Admin Tag Name weight updated */
         .admin-tag { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
 
-        /* RECENT ACTIVITY */
-        .notif-bar { background: #E0F2FE; border: 1px solid #BAE6FD; padding: 12px 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* TABLE & PAGINATION */
+        /* TABLE & SCROLLING */
         .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; }
+        
+        .table-scroll-area {
+            max-height: 550px; 
+            overflow-y: auto;
+            border-bottom: 1px solid var(--border);
+        }
+
         .mgmt-table { width: 100%; border-collapse: collapse; }
-        .mgmt-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        
+        .mgmt-table th { 
+            text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); 
+            text-transform: uppercase; border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; background: white; z-index: 10;
+        }
+        
         .mgmt-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
 
+        /* PAGINATION */
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 25px; align-items: center; }
         .page-btn { padding: 8px 12px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     
+        /* TOAST */
         .toast-alert { position: fixed; top: 20px; right: -350px; width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px; z-index: 9999;transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .toast-alert.show { right: 20px; }
         .toast-submitted { border-left: 5px solid var(--emerald); } 
         .toast-draft { border-left: 5px solid var(--amber); }      
         .toast-danger { border-left: 5px solid #991B1B; }
+        
+        /* Custom Scrollbar */
+        .table-scroll-area::-webkit-scrollbar { width: 6px; }
+        .table-scroll-area::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -83,95 +98,83 @@
         </nav>
         <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
+
     <div class="main">
         <div class="top-bar">
             <div class="admin-tag">Admin: {{ admin_name }}</div>
         </div>
 
         <div class="content">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span style="font-size: 0.7rem; font-weight: 800; color: var(--slate); text-transform: uppercase;">Recent Activity</span>
-                <span style="font-size: 0.7rem; color: #0369A1; font-weight: 700; cursor: pointer;">Clear All</span>
-            </div>
-            <div class="notif-bar">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-size: 0.65rem; color: #0369A1; font-weight: 800; text-transform: uppercase;">Just Now</span>
-                    <span style="color: #0369A1; font-size: 0.85rem; font-weight: 600;">🔔 New Scholarship Uploaded: <b>Global Excellence 2026</b></span>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="page-btn" style="border-color: #BAE6FD;">View</button>
-                    <button style="background: none; border: none; color: #0369A1; font-size: 1.2rem; cursor: pointer;">&times;</button>
-                </div>
-            </div>
-
             <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0 0 25px 0;">Scholarship Programs</h1>
 
             <div class="card">
-                <table class="mgmt-table">
-                    <thead>
-                        <tr>
-                            <th>Program Name</th>
-                            <th>Total Slots</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for prog in scholarships %}
-                        <tr>
-                            <td>
-                                <b>{{ prog.scholarshipName }}</b><br>
-                                <small style="color: var(--slate);">
-                                    Last modified: {{ prog.updated_at.strftime('%d/%m/%Y %H:%M') if prog.updated_at else 'N/A' }}
-                                </small>
-                            </td>
-                            <td>{{ prog.totalSlots }} Slots Available</td>
-                            <td>
-                                {% if prog.is_expired %}
-                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #454545; color: #FFFFFF;">EXPIRED</span>
-                                {% elif prog.status == 'Published' %}
-                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #ECFDF5; color: #065F46;">OPEN</span>
-                                {% elif prog.status == 'Closed' %}
-                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF2F2; color: #991B1B;">CLOSED</span>
-                                {% elif prog.status == 'Draft' %}
-                                    <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E;">DRAFT</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <a href="{{ url_for('scholarship_detail', sch_id=prog.scholarshipID) }}" 
-                                        class="page-btn" 
-                                        style="text-decoration: none; color: var(--nav-dark); border-color: var(--border); display: inline-flex; align-items: center; justify-content: center;">
-                                        View
-                                    </a>
-
-
-                                    {% if prog.status == 'Published' %}
-                                    <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}" method="POST" style="display:inline;">
-                                        <button type="submit" class="page-btn" style="color: var(--amber); border-color: #FED7AA; background: #FFFBEB;">Close</button>
-                                    </form>
+                <div class="table-scroll-area" id="scrollContainer">
+                    <table class="mgmt-table">
+                        <thead>
+                            <tr>
+                                <th>Program Name</th>
+                                <th>Total Slots</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scholarshipTableBody">
+                            {% for prog in scholarships %}
+                            <tr class="scholarship-row">
+                                <td>
+                                    <b>{{ prog.scholarshipName }}</b><br>
+                                    <small style="color: var(--slate);">
+                                        Last modified: {{ prog.updated_at.strftime('%d/%m/%Y %H:%M') if prog.updated_at else 'N/A' }}
+                                    </small>
+                                </td>
+                                <td>{{ prog.totalSlots }} Slots Available</td>
+                                <td>
+                                    {% if prog.is_expired %}
+                                        <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #454545; color: #FFFFFF;">EXPIRED</span>
+                                    {% elif prog.status == 'Published' %}
+                                        <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #ECFDF5; color: #065F46;">OPEN</span>
+                                    {% elif prog.status == 'Closed' %}
+                                        <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF2F2; color: #991B1B;">CLOSED</span>
+                                    {% elif prog.status == 'Draft' %}
+                                        <span style="padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #FEF3C7; color: #92400E;">DRAFT</span>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="{{ url_for('scholarship_detail', sch_id=prog.scholarshipID) }}" 
+                                            class="page-btn" 
+                                            style="text-decoration: none; color: var(--nav-dark); border-color: var(--border); display: inline-flex; align-items: center; justify-content: center;">
+                                            View
+                                        </a>
 
-                                <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}" 
-                                    method="POST" 
-                                    onsubmit="sessionStorage.setItem('flashMessage', 'Program Archived Successfully'); return confirm('Archive this scholarship?');">
-                                    <button type="submit" class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
-                                </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                        {% if prog.status == 'Published' %}
+                                        <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}" method="POST" style="display:inline;">
+                                            <button type="submit" class="page-btn" style="color: var(--amber); border-color: #FED7AA; background: #FFFBEB;">Close</button>
+                                        </form>
+                                        {% endif %}
+
+                                        <form action="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}" 
+                                            method="POST" 
+                                            onsubmit="sessionStorage.setItem('flashMessage', 'Program Archived Successfully'); return confirm('Archive this scholarship?');">
+                                            <button type="submit" class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2;">Archive</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="pagination">
-                    <button class="page-btn" disabled>Previous</button>
-                    <span style="font-size: 0.85rem; font-weight: 600;">Page 1 of 5</span>
-                    <button class="page-btn">Next</button>
+                    <button class="page-btn" id="prevBtn" onclick="changePage(-1)">Previous</button>
+                    <span id="pageIndicator" style="font-size: 0.85rem; font-weight: 600;">Page 1 of 2</span>
+                    <button class="page-btn" id="nextBtn" onclick="changePage(1)">Next</button>
                 </div>
             </div>
         </div>
     </div>
+
     <div id="toastAlert" class="toast-alert">
         <i data-feather="check-circle" id="toastIcon"></i>
         <div>
@@ -193,6 +196,33 @@
 
     <script>
         feather.replace();
+
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        const rows = document.querySelectorAll('.scholarship-row');
+        const totalPages = Math.ceil(rows.length / itemsPerPage) || 1;
+
+        function updateTableDisplay() {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            rows.forEach((row, index) => {
+                row.style.display = (index >= start && index < end) ? 'table-row' : 'none';
+            });
+
+            document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevBtn').disabled = (currentPage === 1);
+            document.getElementById('nextBtn').disabled = (currentPage === totalPages || totalPages === 0);
+            
+            // Auto-scroll back to top of table on page change
+            document.getElementById('scrollContainer').scrollTop = 0;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            updateTableDisplay();
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const btn = document.querySelector('.toggle-btn');
@@ -204,11 +234,13 @@
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
         };
 
         window.onload = function() {
+            updateTableDisplay(); // Initialize pagination
+
             const msg = sessionStorage.getItem('flashMessage');
             if (msg) {
                 const toast = document.getElementById('toastAlert');
@@ -218,13 +250,12 @@
                     msgEl.innerText = msg;
                     toast.classList.remove('toast-submitted', 'toast-draft', 'toast-danger');
 
-                    // Toggle colors based on keywords
                     if (msg.toLowerCase().includes("draft")) {
-                        toast.classList.add('toast-draft'); // Yellow
+                        toast.classList.add('toast-draft'); 
                     } else if (msg.toLowerCase().includes("archived") || msg.toLowerCase().includes("closed") || msg.toLowerCase().includes("deleted")) {
-                        toast.classList.add('toast-danger'); // Red
+                        toast.classList.add('toast-danger'); 
                     } else {
-                        toast.classList.add('toast-submitted'); // Green (Published/Saved)
+                        toast.classList.add('toast-submitted'); 
                     }
 
                     toast.classList.add('show');

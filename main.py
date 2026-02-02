@@ -90,24 +90,35 @@ def register():
     connection = get_db_connection()
     try:
         with connection.cursor() as cur:
-            cur.execute("INSERT INTO user (userID, fullName, password, email, role, status) VALUES (%s, %s, %s, %s, 'student', 'Active')", 
-                        (data['studentID'], data['fullName'], data['password'], data['email']))
-            cur.execute("INSERT INTO student (studentID, faculty, course, address, dob) VALUES (%s, %s, %s, %s, %s)", 
-                        (data['studentID'], data['faculty'], data['course'], data['address'], data['dob']))
+            # FIXED: Added 'phone' and 'gender' columns and values
+            sql_user = """INSERT INTO user (userID, fullName, password, email, phone, gender, role, status) 
+                          VALUES (%s, %s, %s, %s, %s, %s, 'student', 'Active')"""
+            cur.execute(sql_user, (
+                data['studentID'], 
+                data['fullName'], 
+                data['password'], 
+                data['email'], 
+                data.get('phone'), 
+                data.get('gender') # Added gender mapping
+            ))
             
-            # --- DASHBOARD CONNECTION ---
-            # Initialize metrics for reporting
+            # Keep your original student details logic
+            sql_student = "INSERT INTO student (studentID, faculty, course, address, dob) VALUES (%s, %s, %s, %s, %s)"
+            cur.execute(sql_student, (data['studentID'], data['faculty'], data['course'], data['address'], data['dob']))
+            
+            # Keep your original dashboard initialization
             cur.execute("""INSERT INTO DASHBOARD (userID, totalApplications, acceptedApplications, rejectedApplications, pendingApplications) 
                            VALUES (%s, 0, 0, 0, 0)""", (data['studentID'],))
 
         connection.commit()
         flash("Registration successful!")
+        log_security_event(data['studentID'], "New student account registered.") # Ensuring security logging
         return redirect(url_for('index'))
     except Exception as e:
-        connection.rollback()
+        if connection: connection.rollback()
         return f"Database Error: {e}"
     finally:
-        connection.close()
+        if connection: connection.close()
 
 # --- 3. PASSWORD RECOVERY SYSTEM ---
 
@@ -159,7 +170,11 @@ def update_password():
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'user_id' in session and session.get('role') == 'admin':
-        return render_template('admin_dashboard.html', admin_name=session['full_name'])
+        data = get_dashboard_stats() # Call dynamic data helper
+        return render_template('admin_dashboard.html', 
+                               admin_name=session['full_name'], 
+                               user_role='admin',
+                               **data) # Expands the stats, trends, and distribution dictionaries
     return redirect(url_for('index'))
 
 @app.route('/user_management')
@@ -289,8 +304,9 @@ def reviewer_assignment():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                # FIXED: Added s.faculty for future filtering
                 sql_apps = """
-                    SELECT a.applicationID, u.fullName, u.userID, s.scholarshipName 
+                    SELECT a.applicationID, u.fullName, u.userID, s.scholarshipName, s.faculty 
                     FROM application a
                     JOIN user u ON a.studentID = u.userID
                     JOIN scholarship s ON a.scholarshipID = s.scholarshipID
@@ -300,9 +316,11 @@ def reviewer_assignment():
                 """
                 cur.execute(sql_apps)
                 assignments = cur.fetchall()
+
+                # LOAD CALCULATION: Only counts active (unscored) tasks
                 sql_revs = """
                     SELECT u.userID, u.fullName, 
-                    (SELECT COUNT(*) FROM application WHERE reviewerID = u.userID) as current_load
+                    (SELECT COUNT(*) FROM application WHERE reviewerID = u.userID AND score IS NULL) as current_load
                     FROM user u 
                     WHERE u.role = 'reviewer' AND u.status != 'Inactive'
                 """
@@ -322,9 +340,25 @@ def assign_reviewers_submit():
                 for key, reviewer_id in request.form.items():
                     if key.startswith('reviewer_') and reviewer_id:
                         app_id = key.replace('reviewer_', '')
+                        
                         # LOGIC: Change status to 'Under Review' upon assignment
                         sql = "UPDATE application SET reviewerID = %s, applicationStatus = 'Under Review' WHERE applicationID = %s"
                         cur.execute(sql, (reviewer_id, app_id))
+
+                        # NEW: Get info for the notification
+                        cur.execute("""SELECT studentID, scholarshipName FROM application a 
+                                       JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                                       WHERE applicationID = %s""", (app_id,))
+                        task = cur.fetchone()
+
+                        if task:
+                            # Create Notification for Assignment
+                            notif_id = str(uuid.uuid4())[:8]
+                            msg = f"Reviewer assigned for {task['scholarshipName']} - Pending Review."
+                            cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
+                                           VALUES (%s, %s, %s, 'Unread', %s, 'System Alert')""", 
+                                        (notif_id, task['studentID'], msg, datetime.now()))
+
             connection.commit()
             flash("Reviewer assigned. Application is now Under Review.")
             return redirect(url_for('reviewer_assignment'))
@@ -340,7 +374,11 @@ def assign_reviewers_submit():
 @app.route('/reviewer_dashboard')
 def reviewer_dashboard(): 
     if 'user_id' in session and session.get('role') == 'reviewer':
-        return render_template('reviewer_dashboard.html', reviewer_name=session['full_name'])
+        data = get_dashboard_stats() # Call dynamic data helper
+        return render_template('reviewer_dashboard.html', 
+                               reviewer_name=session['full_name'],
+                               user_role='reviewer',
+                               **data)
     return redirect(url_for('index'))
 
 @app.route('/reviewer_queue')
@@ -354,14 +392,19 @@ def reviewer_queue():
                          FROM application a
                          JOIN user u ON a.studentID = u.userID
                          JOIN scholarship s ON a.scholarshipID = s.scholarshipID
-                         WHERE a.reviewerID = %s AND a.score IS NULL"""
+                         WHERE a.reviewerID = %s AND a.score IS NULL""" 
                 cur.execute(sql, (uID,))
                 pending_list = cur.fetchall()
+
+                # 
                 cur.execute("SELECT COUNT(*) as total FROM application WHERE reviewerID = %s", (uID,))
                 total_assigned = cur.fetchone()['total']
                 cur.execute("SELECT COUNT(*) as completed FROM application WHERE reviewerID = %s AND score IS NOT NULL", (uID,))
                 completed_count = cur.fetchone()['completed']
-            return render_template('reviewer_queue.html', reviewer_name=session['full_name'], pending_tasks=pending_list, total=total_assigned, done=completed_count, remain=len(pending_list))
+
+            return render_template('reviewer_queue.html', reviewer_name=session['full_name'], 
+                                   pending_tasks=pending_list, total=total_assigned, 
+                                   done=completed_count, remain=len(pending_list))
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -395,35 +438,85 @@ def submit_assessment():
         app_id = request.form.get('applicationID')
         score = request.form.get('totalScore')
         feedback = request.form.get('feedback')
-        recommendation = request.form.get('recommendation') 
         
-        # Logic: Only explicitly 'Rejected' apps change status; others stay 'Under Review'
-        new_status = 'Rejected' if recommendation == 'Rejected' else 'Under Review'
+        # 1. Capture the direct recommendation ("Approved" or "Rejected")
+        recommendation = request.form.get('recommendation') 
+        new_status = recommendation 
         
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
-                # 1. Update application table (FIXED: Removed 'a.feedback')
+                # 2. Update application table
                 sql_app = """UPDATE application 
                              SET score = %s, applicationStatus = %s, reviewDate = %s 
                              WHERE applicationID = %s"""
                 cur.execute(sql_app, (score, new_status, datetime.now(), app_id))
                 
-                # 2. Insert into REVIEW table (Using 'feedbackComment')
+                # 3. Insert into detailed REVIEW record
                 rev_id = str(uuid.uuid4())[:8]
                 sql_rev = """INSERT INTO REVIEW (reviewID, applicationID, reviewerID, score, feedbackComment, reviewDate, stage) 
                              VALUES (%s, %s, %s, %s, %s, %s, %s)"""
                 cur.execute(sql_rev, (rev_id, app_id, reviewer_id, score, feedback, datetime.now(), 'Evaluation Phase'))
 
+                # 4. Fetch info for Notification and Dashboard Update
+                cur.execute("SELECT studentID, scholarshipName FROM application a JOIN scholarship s ON a.scholarshipID = s.scholarshipID WHERE applicationID = %s", (app_id,))
+                app_info = cur.fetchone()
+                student_id = app_info['studentID']
+                sch_name = app_info['scholarshipName']
+
+                # 5. FIX: Strict conditional for the message
+                if new_status == 'Approved':
+                    msg = f"Congratulations! Your application for {sch_name} has been approved by our Reviewer. Waiting for Interview Scheduling."
+                    notif_type = 'Review Update'
+                else:
+                    # REJECTED PATH: Update Dashboard Statistics
+                    msg = f"Application Update: We regret to inform you that your application for {sch_name} was not approved for the next stage."
+                    notif_type = 'System Alert'
+                    
+                    # Decrement pending and increment rejected counts
+                    sql_dash = "UPDATE DASHBOARD SET rejectedApplications = rejectedApplications + 1, pendingApplications = pendingApplications - 1 WHERE userID = %s"
+                    cur.execute(sql_dash, (student_id,))
+
+                notif_id = str(uuid.uuid4())[:8]
+                cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
+                               VALUES (%s, %s, %s, 'Unread', %s, %s)""", 
+                            (notif_id, student_id, msg, datetime.now(), notif_type))
+
             connection.commit()
             session.pop('current_assessment_id', None)
             flash(f"Assessment complete. Status is now {new_status}.")
             return redirect(url_for('reviewer_queue'))
+            
         except Exception as e:
             if connection: connection.rollback()
             return f"Error: {e}"
         finally:
             if connection: connection.close()
+            
+    return redirect(url_for('index'))
+
+@app.route('/view_assessment_summary/<app_id>')
+def view_assessment_summary(app_id):
+    if 'user_id' in session and session.get('role') == 'reviewer':
+        connection = get_db_connection()
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                sql = """SELECT a.*, r.feedbackComment, r.reviewDate, u.fullName, u.userID
+                         FROM application a
+                         JOIN user u ON a.studentID = u.userID
+                         JOIN REVIEW r ON a.applicationID = r.applicationID
+                         WHERE a.applicationID = %s"""
+                cur.execute(sql, (app_id,))
+                summary_data = cur.fetchone()
+            
+            if summary_data:
+                return render_template('assessment_summary.html', 
+                                       reviewer_name=session['full_name'], 
+                                       app=summary_data)
+            flash("Error: Summary record not found.")
+            return redirect(url_for('scoring_history'))
+        finally:
+            connection.close()
     return redirect(url_for('index'))
 
 @app.route('/scoring_history')
@@ -451,8 +544,11 @@ def scoring_history():
 @app.route('/committee_overview')
 def committee_overview():
     if 'user_id' in session and session.get('role') == 'committee':
-        stats = {'total_apps': 1242, 'completion': '92%', 'funds': 'RM 500k'}
-        return render_template('committee_overview.html', committee_name=session['full_name'], stats=stats)
+        data = get_dashboard_stats() # Call dynamic data helper
+        return render_template('committee_overview.html', 
+                               committee_name=session['full_name'], 
+                               user_role='committee',
+                               **data)
     return redirect(url_for('index'))
 
 @app.route('/committee_dashboard')
@@ -461,7 +557,7 @@ def committee_dashboard():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                # UPDATED SQL: Added status check to exclude rejected applicants
+                # Fetches individual candidates for interview scheduling
                 sql = """
                     SELECT a.applicationID, u.fullName as applicantName, a.score, s.faculty 
                     FROM application a 
@@ -500,8 +596,10 @@ def committee_calendar():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                # ADDED i.interviewVenue to the query
                 sql = """
-                    SELECT i.interviewDate, u.fullName as applicantName, u.userID, i.interviewStatus, a.applicationID
+                    SELECT i.interviewDate, i.interviewVenue, u.fullName as applicantName, 
+                           u.userID, i.interviewStatus, a.applicationID
                     FROM INTERVIEW i
                     JOIN application a ON i.applicationID = a.applicationID
                     JOIN user u ON a.studentID = u.userID
@@ -509,7 +607,9 @@ def committee_calendar():
                 """
                 cur.execute(sql)
                 scheduled_interviews = cur.fetchall()
-            return render_template('committee_calendar.html', committee_name=session['full_name'], interviews=scheduled_interviews)
+            return render_template('committee_calendar.html', 
+                                   committee_name=session['full_name'], 
+                                   interviews=scheduled_interviews)
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -590,25 +690,40 @@ def schedule_interview_submit():
         app_id = request.form.get('applicationID')
         assign_date = request.form.get('assignDate')
         assign_time = request.form.get('assignTime')
+        venue = request.form.get('venue') # Captured from the new Decision Hub input
+        
         interview_datetime = f"{assign_date} {assign_time}:00"
+        
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
                 int_id = str(uuid.uuid4())[:8]
-                cur.execute("INSERT INTO INTERVIEW (interviewID, applicationID, interviewDate, interviewStatus) VALUES (%s, %s, %s, 'Scheduled')", (int_id, app_id, interview_datetime))
+                # SAVE VENUE TO DATABASE
+                cur.execute("""INSERT INTO INTERVIEW (interviewID, applicationID, interviewDate, interviewStatus, interviewVenue) 
+                               VALUES (%s, %s, %s, 'Scheduled', %s)""", 
+                            (int_id, app_id, interview_datetime, venue))
+                
                 cur.execute("UPDATE application SET applicationStatus = 'Scheduled' WHERE applicationID = %s", (app_id,))
                 
-                # --- SAVE NOTIFICATION FOR SCHEDULING ---
-                cur.execute("SELECT studentID FROM application WHERE applicationID = %s", (app_id,))
-                student_id = cur.fetchone()['studentID']
+                # Fetch details for Notification
+                cur.execute("""SELECT a.studentID, s.scholarshipName FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE applicationID = %s""", (app_id,))
+                info = cur.fetchone()
+                
+                # Student Notification including Venue
                 notif_id = str(uuid.uuid4())[:8]
-                msg = f"Interview Scheduled: Your session is set for {assign_date} at {assign_time}."
+                msg = f"Interview Assigned: {info['scholarshipName']}. Date: {assign_date}, Time: {assign_time}. Venue: {venue}."
                 cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
                                VALUES (%s, %s, %s, 'Unread', %s, 'Interview Update')""", 
-                            (notif_id, student_id, msg, datetime.now()))
+                            (notif_id, info['studentID'], msg, datetime.now()))
+                            
             connection.commit()
             flash("Interview slot confirmed and student notified.")
             return redirect(url_for('committee_dashboard'))
+        except Exception as e:
+            if connection: connection.rollback()
+            return f"Error: {e}"
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -649,32 +764,62 @@ def committee_decision(app_id):
 def finalize_decision():
     if 'user_id' in session and session.get('role') == 'committee':
         app_id = request.form.get('applicationID')
-        decision = request.form.get('status') # 'Awarded' or 'Rejected'
-        int_notes = request.form.get('interviewNotes')
+        decision = request.form.get('status')
         
-        # LOGIC: Final decision mapping
+        # 1. Capture notes and strip whitespace to prevent "gibberish"
+        int_notes = request.form.get('interviewNotes', '').strip()
+        
+        # Fallback: If input is too short or looks like junk, provide a professional default
+        if len(int_notes) < 10:
+            int_notes = "Interview successfully conducted. Candidate evaluated based on merit criteria."
+
         final_status = 'Awarded' if decision == 'Awarded' else 'Rejected'
         
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
+                # 2. Update INTERVIEW table with meaningful feedback
                 cur.execute("UPDATE INTERVIEW SET interviewStatus='Completed', interviewResult=%s WHERE applicationID=%s", (int_notes, app_id))
+                
+                # 3. Update application table status
                 cur.execute("UPDATE application SET applicationStatus=%s WHERE applicationID=%s", (final_status, app_id))
                 
-                if final_status == 'Awarded':
-                    cur.execute("SELECT scholarshipID FROM application WHERE applicationID = %s", (app_id,))
-                    res = cur.fetchone()
-                    if res:
-                        cur.execute("UPDATE scholarship SET totalSlots = totalSlots - 1 WHERE scholarshipID = %s AND totalSlots > 0", (res['scholarshipID'],))
-                
-                # Update DASHBOARD table
-                cur.execute("SELECT studentID FROM application WHERE applicationID = %s", (app_id,))
-                student_id = cur.fetchone()['studentID']
-                if final_status == 'Awarded':
-                    sql_dash = "UPDATE DASHBOARD SET acceptedApplications = acceptedApplications + 1, pendingApplications = pendingApplications - 1 WHERE userID = %s"
-                else:
-                    sql_dash = "UPDATE DASHBOARD SET rejectedApplications = rejectedApplications + 1, pendingApplications = pendingApplications - 1 WHERE userID = %s"
-                cur.execute(sql_dash, (student_id,))
+                # 4. Fetch dynamic student and scholarship info for the notification
+                cur.execute("""SELECT a.studentID, s.scholarshipName, a.scholarshipID 
+                               FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE a.applicationID = %s""", (app_id,))
+                info = cur.fetchone()
+
+                if info:
+                    student_id = info['studentID']
+                    sch_name = info['scholarshipName']
+                    
+                    # 5. CONSOLIDATED DASHBOARD & NOTIFICATION LOGIC
+                    # This single block correctly handles the movement from Pending to final status
+                    if final_status == 'Awarded':
+                        # Update Dashboard: Pending -1, Accepted +1
+                        sql_dash = """UPDATE DASHBOARD SET acceptedApplications = acceptedApplications + 1, 
+                                      pendingApplications = pendingApplications - 1 WHERE userID = %s"""
+                        
+                        msg = f"Congratulations! You have been awarded the {sch_name}. Please check your email for disbursement details."
+                        notif_type = 'Award Alert'
+                    else:
+                        # Update Dashboard: Pending -1, Rejected +1
+                        sql_dash = """UPDATE DASHBOARD SET rejectedApplications = rejectedApplications + 1, 
+                                      pendingApplications = pendingApplications - 1 WHERE userID = %s"""
+                        
+                        msg = f"Application Update: Your application for {sch_name} was not approved. We encourage you to apply for other programs."
+                        notif_type = 'System Alert'
+
+                    # Execute the single dashboard update
+                    cur.execute(sql_dash, (student_id,))
+
+                    # 6. Save the notification record
+                    notif_id = str(uuid.uuid4())[:8]
+                    cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
+                                   VALUES (%s, %s, %s, 'Unread', %s, %s)""", 
+                                (notif_id, student_id, msg, datetime.now(), notif_type))
 
             connection.commit()
             flash(f"Final decision saved: {final_status}")
@@ -683,7 +828,8 @@ def finalize_decision():
             if connection: connection.rollback()
             return f"Error: {e}"
         finally:
-            connection.close()
+            if connection: connection.close()
+            
     return redirect(url_for('index'))
 
 # --- 7. STUDENT ROUTES ---
@@ -739,14 +885,38 @@ def tracking_hub():
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
-                cur.execute("SELECT a.*, s.scholarshipName FROM application a JOIN scholarship s ON a.scholarshipID = s.scholarshipID WHERE a.studentID = %s ORDER BY a.submissionDate DESC", (uID,))
+                # 1. Fetch all applications for the student
+                cur.execute("""SELECT a.*, s.scholarshipName 
+                               FROM application a 
+                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                               WHERE a.studentID = %s 
+                               ORDER BY a.submissionDate DESC""", (uID,))
                 user_apps = cur.fetchall()
-                active_count = sum(1 for a in user_apps if a['applicationStatus'] in ['Submitted', 'In Review', 'Scheduled'])
+
+                # 2. Logic to calculate counts for the tab headers
+                # Ensure 'Rejected' is counted in completed_count
+                active_count = sum(1 for a in user_apps if a['applicationStatus'] in ['Submitted', 'Under Review', 'Approved', 'Scheduled'])
                 draft_count = sum(1 for a in user_apps if a['applicationStatus'] == 'Draft')
                 completed_count = sum(1 for a in user_apps if a['applicationStatus'] in ['Awarded', 'Rejected'])
+
+                # 3. Fetch notifications for the bell
                 cur.execute("SELECT * FROM NOTIFICATION WHERE userID = %s ORDER BY timestamp DESC", (uID,))
                 user_notifs = cur.fetchall()
-            return render_template('tracking_hub.html', user_id=uID, name=session.get('full_name'), applications=user_apps, db_notifications=user_notifs, active_c=active_count, draft_c=draft_count, completed_c=completed_count)
+
+                # 4. Fetch specific count of UNREAD notifications for the red badge
+                cur.execute("SELECT COUNT(*) as total FROM NOTIFICATION WHERE userID = %s AND status = 'Unread'", (uID,))
+                unread_data = cur.fetchone()
+                unread_count = unread_data['total'] if unread_data else 0
+
+            return render_template('tracking_hub.html', 
+                                   user_id=uID, 
+                                   name=session.get('full_name'), 
+                                   applications=user_apps, 
+                                   notifications=user_notifs, 
+                                   unread_count=unread_count, # Corrected Badge Count
+                                   active_c=active_count, 
+                                   draft_c=draft_count, 
+                                   completed_c=completed_count)        
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -763,7 +933,7 @@ def profile():
                 student_data = cur.fetchone()
                 cur.execute("SELECT * FROM NOTIFICATION WHERE userID = %s ORDER BY timestamp DESC", (uID,))
                 user_notifs = cur.fetchall()
-                return render_template('profile.html', user_id=uID, name=session.get('full_name'), student=student_data, applications=user_notifs)
+                return render_template('profile.html', user_id=uID, name=session.get('full_name'), student=student_data, applications=user_notifs, notifications=user_notifs)
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -787,6 +957,8 @@ def update_profile():
             cur.execute("UPDATE student SET faculty=%s, course=%s, cgpa=%s, total_credits=%s WHERE studentID=%s", (faculty, course, cgpa, credits, uID))
         connection.commit()
         session['full_name'] = fullName
+        flash("Profile updated successfully!") 
+        
         return redirect(url_for('profile'))
     except Exception as e:
         connection.rollback()
@@ -802,18 +974,47 @@ def application_form():
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
-                cur.execute("""SELECT applicationStatus FROM application WHERE studentID = %s AND scholarshipID = %s AND applicationStatus != 'Rejected'""", (uID, schID))
+                # Check for existing non-draft applications
+                cur.execute("""SELECT applicationStatus FROM application 
+                               WHERE studentID = %s AND scholarshipID = %s 
+                               AND applicationStatus != 'Rejected'""", (uID, schID))
                 existing_app = cur.fetchone()
+                
                 if existing_app and existing_app['applicationStatus'] != 'Draft':
                     flash("Access Denied: You already have an active application for this scholarship.")
                     return redirect(url_for('tracking_hub'))
-                cur.execute("SELECT u.fullName, s.cgpa, s.faculty FROM user u JOIN student s ON u.userID = s.studentID WHERE u.userID = %s", (uID,))
+
+                # Fetch basic student data
+                cur.execute("""SELECT u.fullName, u.phone, s.cgpa, s.faculty 
+                               FROM user u JOIN student s ON u.userID = s.studentID 
+                               WHERE u.userID = %s""", (uID,))
                 student_data = cur.fetchone()
-                cur.execute("SELECT * FROM application WHERE studentID = %s AND scholarshipID = %s AND applicationStatus = 'Draft'", (uID, schID))
+
+                # Fetch existing draft if any
+                cur.execute("""SELECT * FROM application 
+                               WHERE studentID = %s AND scholarshipID = %s 
+                               AND applicationStatus = 'Draft'""", (uID, schID))
                 existing_draft = cur.fetchone()
+
+                # Fetch scholarship info
                 cur.execute("SELECT scholarshipName FROM scholarship WHERE scholarshipID = %s", (schID,))
                 sch_info = cur.fetchone()
-                return render_template('application_form.html', student=student_data, user_id=uID, draft=existing_draft, sch=sch_info)
+
+                # --- NOTIFICATION LOGIC (Fixes the UndefinedError) ---
+                cur.execute("SELECT * FROM NOTIFICATION WHERE userID = %s ORDER BY timestamp DESC", (uID,))
+                user_notifs = cur.fetchall()
+
+                cur.execute("SELECT COUNT(*) as total FROM NOTIFICATION WHERE userID = %s AND status = 'Unread'", (uID,))
+                unread_data = cur.fetchone()
+                unread_count = unread_data['total'] if unread_data else 0
+
+                return render_template('application_form.html', 
+                                       student=student_data, 
+                                       user_id=uID, 
+                                       draft=existing_draft, 
+                                       sch=sch_info,
+                                       notifications=user_notifs, # Pass notifications
+                                       unread_count=unread_count) # Pass unread_count
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -1052,5 +1253,71 @@ def generate_sequential_id(prefix, table_name, column_name):
     finally:
         connection.close()
 
+
+# --- SHARED ANALYTICS HELPER ---
+def get_dashboard_stats():
+    connection = get_db_connection()
+    try:
+        with connection.cursor(pymysql.cursors.DictCursor) as cur:
+            # 1. Total Applications
+            cur.execute("SELECT COUNT(*) as total FROM application")
+            total_apps = cur.fetchone()['total']
+
+            # 2. Review Completion Rate (Apps with scores / Total)
+            cur.execute("SELECT COUNT(*) as completed FROM application WHERE score IS NOT NULL")
+            completed = cur.fetchone()['completed']
+            completion_rate = round((completed / total_apps * 100), 1) if total_apps > 0 else 0
+
+            # 3. Total Funds Disbursed (Sum of Awarded Scholarships)
+            cur.execute("""
+                SELECT SUM(s.scholarshipAmount) as total_funds 
+                FROM application a 
+                JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                WHERE a.applicationStatus = 'Awarded'
+            """)
+            funds_res = cur.fetchone()
+            total_funds = funds_res['total_funds'] if funds_res['total_funds'] else 0
+
+            # 4. Award Distribution by Faculty
+            cur.execute("""
+                SELECT s.faculty, COUNT(*) as count 
+                FROM application a 
+                JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
+                WHERE a.applicationStatus = 'Awarded' 
+                GROUP BY s.faculty
+            """)
+            fac_data = cur.fetchall()
+            distribution = {}
+            colors = ["var(--emerald)", "var(--nav-dark)", "var(--slate)"]
+            for i, row in enumerate(fac_data):
+                distribution[row['faculty']] = {
+                    "percent": round((row['count'] / (completed or 1) * 100), 0),
+                    "color": colors[i % len(colors)]
+                }
+
+            # 5. DYNAMIC Monthly Trend (Last 4 Months)
+            cur.execute("""
+                SELECT DATE_FORMAT(submissionDate, '%b') as month, COUNT(*) as count 
+                FROM application 
+                WHERE submissionDate >= DATE_SUB(NOW(), INTERVAL 4 MONTH)
+                GROUP BY month 
+                ORDER BY submissionDate ASC
+            """)
+            trend_results = cur.fetchall()
+            max_count = max([row['count'] for row in trend_results]) if trend_results else 1
+            trends = {"monthly": {row['month']: {"percent": (row['count'] / max_count) * 100} for row in trend_results}}
+
+            return {
+                "stats": {
+                    "total_apps": "{:,}".format(total_apps),
+                    "completion_rate": completion_rate,
+                    "total_funds": "{:,.0f}k".format(total_funds / 1000) if total_funds >= 1000 else total_funds
+                },
+                "trends": trends,
+                "distribution": distribution
+            }
+    finally:
+        connection.close()
+        
 if __name__ == '__main__':
     app.run(debug=True)
