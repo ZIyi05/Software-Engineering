@@ -76,12 +76,12 @@
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. COMMITTEE</h2>
         <nav>
-            <a href="committee_overview.html"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="committee_dashboard.html"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
-            <a href="committee_portfolio.html"><i data-feather="award"></i><span>Scholarship Manager</span></a>
-            <a href="committee_calendar.html" class="active"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
+            <a href="{{ url_for('committee_overview') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
+            <a href="{{ url_for('committee_dashboard') }}"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="{{ url_for('committee_portfolio') }}"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('committee_calendar') }}" class="active"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
         </nav>
-        <a href="login.html" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="{{ url_for('logout') }}" class="logout-link"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
@@ -91,91 +91,66 @@
 
         <div class="content">
             <div class="pane">
-                <a href="committee_calendar.html" class="btn-back">← Back to Calendar</a>
-                <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Bernice Gan</h1>
-                <p style="color: var(--slate); margin-bottom: 30px; font-size: 1rem;">Final Decision Phase (ID: 123456789)</p>
+                <a href="{{ url_for('committee_calendar') }}" class="btn-back">← Back to Calendar</a>
+                <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">{{ applicant.fullName }}</h1>
+                <p style="color: var(--slate); margin-bottom: 30px; font-size: 1rem;">Final Decision Phase (ID: {{ applicant.studentID }})</p>
 
                 <div class="data-box" style="border-left: 5px solid var(--emerald);">
                     <span class="label">Reviewer Aggregate Score</span>
-                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--emerald);" id="revScore">18 / 20</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--emerald);" id="revScore">{{ applicant.reviewerScore }} / 20</div>
                 </div>
 
                 <div class="data-box">
                     <span class="label">Reviewer Feedback Summary</span>
                     <p style="color: var(--slate); font-style: italic; line-height: 1.5; margin: 0; font-size: 0.9rem;">
-                        "Candidate demonstrates exceptional coding skills and leadership in community tech outreach. Highly recommended for the final award based on technical merit."
+                        "{{ applicant.reviewerFeedback }}"
                     </p>
                 </div>
             </div>
 
             <div class="pane" style="background: white; padding: 40px; border-radius: 16px; border: 1px solid var(--border); height: fit-content; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 60px;">
-                <h3 style="margin-top: 0; font-weight: 800; font-size: 1.2rem;">Interview Evaluation</h3>
-                
-                <div class="form-group">
-                    <label>Interview Performance Score (1-10)</label>
-                    <input type="number" min="0" max="10" placeholder="Enter numeric score..." id="intScore" oninput="calculateTotal()">
-                </div>
+                <form id="finalForm" action="{{ url_for('finalize_decision') }}" method="POST">
+                    <input type="hidden" name="applicationID" value="{{ applicant.applicationID }}">
+                    <input type="hidden" name="status" id="finalStatus" value="">
 
-                <div class="form-group">
-                    <label>Committee Interview Notes</label>
-                    <textarea placeholder="Type detailed observations, strengths, weaknesses, and final committee consensus here..." id="intNotes"></textarea>
-                </div>
+                    <h3 style="margin-top: 0; font-weight: 800; font-size: 1.2rem;">Interview Evaluation</h3>
+                    
+                    <div class="form-group">
+                        <label>Interview Performance Score (1-10)</label>
+                        <input type="number" name="interviewScore" min="0" max="10" placeholder="Enter numeric score..." id="intScore" oninput="calculateTotal()" required>
+                    </div>
 
-                <div class="total-merit-box">
-                    <span style="font-weight: 700; color: var(--emerald); font-size: 0.9rem;">FINAL MERIT SCORE</span>
-                    <span style="font-weight: 800; font-size: 1.1rem; color: var(--emerald);" id="totalScoreDisplay">18 / 30</span>
-                </div>
+                    <div class="form-group">
+                        <label>Committee Interview Notes</label>
+                        <textarea name="interviewNotes" placeholder="Type detailed observations..." id="intNotes" required></textarea>
+                    </div>
 
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+                    <div class="total-merit-box">
+                        <span style="font-weight: 700; color: var(--emerald); font-size: 0.9rem;">FINAL MERIT SCORE</span>
+                        <span style="font-weight: 800; font-size: 1.1rem; color: var(--emerald);" id="totalScoreDisplay">{{ applicant.reviewerScore }} / 30</span>
+                    </div>
 
-                <button class="btn-accept" onclick="finalize('Awarded')">Accept Scholarship</button>
-                <button class="btn-reject" onclick="finalize('Rejected')">Reject Application</button>
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+
+                    <button type="button" class="btn-accept" onclick="submitFinal('Awarded')">Accept Scholarship</button>
+                    <button type="button" class="btn-reject" onclick="submitFinal('Rejected')">Reject Application</button>
+                </form>
             </div>
         </div>
-    </div>
 
-    <script>
-        feather.replace();
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
-            sidebar.classList.toggle('collapsed');
-            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
-        }
-
-        function calculateTotal() {
-            const reviewerScore = 18; 
-            const interviewScore = parseInt(document.getElementById('intScore').value) || 0;
-            const total = reviewerScore + interviewScore;
-            document.getElementById('totalScoreDisplay').innerText = total + " / 30";
-        }
-
-        function finalize(status) {
-            const score = document.getElementById('intScore').value;
-            if(score === "" || score < 0 || score > 10) {
-                alert("Please provide a valid interview score (0-10) before finalizing.");
-                return;
+        <script>
+            function calculateTotal() {
+                const reviewerScore = parseInt("{{ applicant.reviewerScore }}") || 0; 
+                const interviewScore = parseInt(document.getElementById('intScore').value) || 0;
+                document.getElementById('totalScoreDisplay').innerText = (reviewerScore + interviewScore) + " / 30";
             }
-            if(confirm("Are you sure you want to mark this applicant as " + status + "? This action will officially update the student's portal.")) {
-                
-                // UPDATE HERE: SLOT LOGIC FOR PORTFOLIO
-                if(status === 'Awarded') {
-                    // Logic: Get current count, add 1, save back to memory
-                    let currentUsed = localStorage.getItem('global_excellence_slots') || 1;
-                    let nextCount = parseInt(currentUsed) + 1;
-                    
-                    if(nextCount <= 50) {
-                        localStorage.setItem('global_excellence_slots', nextCount);
-                    } else {
-                        alert("Capacity reached! Cannot award more students.");
-                        return;
-                    }
+
+            function submitFinal(status) {
+                if(confirm("Confirm decision: " + status + "?")) {
+                    document.getElementById('finalStatus').value = status;
+                    document.getElementById('finalForm').submit();
                 }
-
-                alert("Decision recorded. Bernice Gan has been " + status + ".");
-                window.location.href = 'committee_dashboard.html';
             }
-        }
-    </script>
+        </script>
 </body>
 </html>

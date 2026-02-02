@@ -78,28 +78,27 @@
                 <table class="decision-table">
                     <thead>
                         <tr>
-                            <th>Applicant Name</th>
+                            <th>Applicant</th>
                             <th>Reviewer Score</th>
-                            <th>Interview Status</th>
+                            <th>Assign Date</th>
+                            <th>Assign Time</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for person in candidates %}
                         <tr>
-                            <td>
-                                <b>{{ person.applicantName }}</b><br>
-                                <small style="color: var(--slate);">ID: {{ person.applicationID }}</small>
-                            </td>
-                            <td><b style="color: var(--emerald);">{{ person.score }} / 20</b></td>
-                            <td>
-                                <span class="status-badge {% if person.applicationStatus == 'Interviewed' %}status-interviewed{% else %}status-pending{% endif %}">
-                                    {{ person.applicationStatus }}
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn-decide" onclick="location.href='{{ url_for('committee_calendar') }}'">Assign Slot</button>
-                            </td>
+                            <form action="{{ url_for('schedule_interview_submit') }}" method="POST">
+                                <input type="hidden" name="applicationID" value="{{ person.applicationID }}">
+                                <td>
+                                    <b>{{ person.applicantName }}</b><br>
+                                    <small style="color: var(--slate);">{{ person.faculty }}</small>
+                                </td>
+                                <td><b style="color: var(--emerald);">{{ person.score }} / 20</b></td>
+                                <td><input type="date" name="assignDate" class="input-schedule" required></td>
+                                <td><input type="time" name="assignTime" class="input-schedule" required></td>
+                                <td><button type="submit" class="btn-decide">Confirm Slot</button></td>
+                            </form>
                         </tr>
                         {% endfor %}
                     </tbody>

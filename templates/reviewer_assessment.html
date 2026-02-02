@@ -111,15 +111,14 @@
                     <div class="weighted-val" id="totalDisplay">0 / 20</div>
                     <div class="field">
                         <label>Recommendation</label>
-                        <select id="finalStatus">
+                        <select id="finalStatus" name="recommendation">
                             <option value="Approved">Approved for Interview Stage</option>
-                            <option value="Waitlist">Waitlist</option>
                             <option value="Rejected">Rejected</option>
                         </select>
                     </div>
                     <div class="field">
                         <label>Feedback</label>
-                        <textarea id="feedback" rows="4" placeholder="Provide a brief explanation for your scores..."></textarea>
+                        <textarea id="feedback" name="feedback" rows="4" placeholder="Provide a brief explanation for your scores..."></textarea>
                     </div>
                     <button type="button" class="btn-emerald-submit" onclick="showBrandedModal()">Submit Final Assessment</button>
                 </form>

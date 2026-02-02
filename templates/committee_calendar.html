@@ -12,7 +12,7 @@
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR - Professional Dark Theme */
+        /* SIDEBAR */
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
@@ -21,32 +21,29 @@
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
         .sidebar.collapsed h2 { font-size: 0.5rem; text-align: center; opacity: 0.5; }
-
         .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; white-space: nowrap; }
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
-        .sidebar.collapsed a i { margin: 0 auto; }
         .sidebar.collapsed a span { display: none; }
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
 
-        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
-
-        /* MAIN CONTENT SECTION */
+        /* MAIN CONTENT */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
         .user-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
-        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-top: 30px;}
 
-        /* CALENDAR TABLE STYLES */
-        .calendar-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        /* TABLE STYLING */
+        .calendar-table { width: 100%; border-collapse: collapse; }
         .calendar-table th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        .calendar-table td { padding: 20px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        .calendar-table td { padding: 25px 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; vertical-align: middle; }
 
         .time-tag { background: #F1F5F9; color: var(--nav-dark); padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; display: inline-block; margin-top: 4px; }
         .btn-status { background: var(--emerald); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
         .btn-status:hover { opacity: 0.9; }
-        
+
+        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
         .logout-link { margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px; border-radius: 8px; display: flex; align-items: center; }
     </style>
 </head>
@@ -69,10 +66,10 @@
         </div>
 
         <div class="content">
-            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Interview Calendar</h1>
-            <p style="color: var(--slate); margin-top: 5px;">Manage scheduled interviews. Once an interview is finished, click "Complete & Score".</p>
+            <h1 style="font-weight: 800; font-size: 2.8rem; margin: 0;">Interview Calendar</h1>
+            <p style="color: var(--slate); margin: 10px 0 0 0; font-size: 1.1rem;">Manage scheduled interviews. Once an interview is finished, click "Complete & Score".</p>
             
-            <div class="card" style="margin-top: 30px;">
+            <div class="card">
                 <table class="calendar-table">
                     <thead>
                         <tr>
@@ -83,22 +80,24 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for intv in interviews %}
                         <tr>
-                            <td><b>Jan 31, 2026</b><br><span class="time-tag">02:30 PM</span></td>
-                            <td><b>Bernice Gan</b><br><small style="color: var(--slate);">ID: 123456789</small></td>
-                            <td>Physical (Room 4A)</td>
                             <td>
-                                <button class="btn-status" onclick="location.href='{{ url_for('committee_dashboard') }}'">Complete & Score</button>
+                                <b>{{ intv.interviewDate.strftime('%b %d, %Y') }}</b><br>
+                                <span class="time-tag">{{ intv.interviewDate.strftime('%I:%M %p') }}</span>
+                            </td>
+                            <td>
+                                <b>{{ intv.applicantName }}</b><br>
+                                <small style="color: var(--slate);">ID: {{ intv.userID }}</small>
+                            </td>
+                            <td>Zoom Meeting / Physical</td>
+                            <td>
+                                <button class="btn-status" onclick="location.href='/decision/{{ intv.applicationID }}'">
+                                    Complete & Score
+                                </button>
                             </td>
                         </tr>
-                        <tr>
-                            <td><b>Jan 30, 2026</b><br><span class="time-tag">10:00 AM</span></td>
-                            <td><b>Ariff Shauqi</b><br><small style="color: var(--slate);">ID: 243UC881</small></td>
-                            <td>Zoom Meeting</td>
-                            <td>
-                                <button class="btn-status" onclick="location.href='{{ url_for('committee_dashboard') }}'">Complete & Score</button>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

@@ -147,9 +147,9 @@
                     </select>
                 </div>
                 <div>
-                    <label class="filter-label">Minimum CGPA: <b id="cgpaVal">{{ sel_cgpa }}</b></label>
+                    <label class="filter-label">Your CGPA: <b id="cgpaVal">{{ sel_cgpa }}</b></label>
                     
-                    <input type="range" id="cgpaFilter" min="2.0" max="4.0" step="0.1" 
+                    <input type="range" name="cgpa" id="cgpaFilter" min="2.0" max="4.0" step="0.1" 
                         value="{{ sel_cgpa }}" 
                         oninput="document.getElementById('cgpaVal').innerText = parseFloat(this.value).toFixed(2)">
                 </div>
