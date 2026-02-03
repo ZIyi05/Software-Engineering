@@ -204,23 +204,56 @@
                             Edit Program
                         </a>
                     {% else %}
-                        {% if existing_status == 'Submitted' or existing_status == 'In Review' or existing_status == 'Awarded' %}
-                            <p style="color: var(--emerald); font-weight: 700;">You have already applied for this scholarship.</p>
-                            <a href="{{ url_for('tracking_hub') }}" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">                        {% elif existing_status == 'Draft' %}
-                            <p style="color: var(--amber); font-weight: 700;">You have a saved draft for this scholarship.</p>
-                            <a href="{{ url_for('tracking_hub') }}" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Continue from Draft</button>
-                        {% else %}
-                            <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
-                                <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">Validating Academic Profile...</span>
-                                <div class="progress-bg"><div id="pBar" class="progress-fill"></div></div>
+                    {% if existing_status in ['Submitted', 'In Review', 'Awarded'] %}
+                        <p style="color: var(--emerald); font-weight: 700;">
+                            You have already applied for this scholarship.
+                        </p>
+
+                        <a href="{{ url_for('tracking_hub') }}"
+                        class="btn-apply unlocked"
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                            View My Application
+                        </a>
+
+                    {% elif existing_status == 'Draft' %}
+                        <p style="color: #D97706; font-weight: 700;">
+                            You have a saved draft for this scholarship.
+                        </p>
+
+                        <a href="{{ url_for('tracking_hub') }}"
+                        class="btn-apply unlocked"
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                            Continue from Draft
+                        </a>
+
+                    {% else %}
+                        <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
+                            <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">
+                                Validating Academic Profile...
+                            </span>
+                            <div class="progress-bg">
+                                <div id="pBar" class="progress-fill"></div>
                             </div>
-                            <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
-                            <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">✓ Eligibility Verified.</div>
-                            
-                            <button id="checkBtn" class="btn-check" onclick="runCheck()">Check My Eligibility</button>
-                            <button id="applyBtn" class="btn-apply" disabled onclick="proceed()">Apply Now</button>
-                        {% endif %}
+                        </div>
+
+                        <div id="errorMsg" class="error-box"
+                            style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
+
+                        <div id="successMsg" class="success-box"
+                            style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">
+                            ✓ Eligibility Verified.
+                        </div>
+
+                        <button id="checkBtn" class="btn-check" onclick="runCheck()">
+                            Check My Eligibility
+                        </button>
+
+                        <button id="applyBtn" class="btn-apply" disabled onclick="proceed()">
+                            Apply Now
+                        </button>
                     {% endif %}
+                {% endif %}
+
                 </div>
             </div>
         </div>
