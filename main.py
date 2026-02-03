@@ -1195,7 +1195,7 @@ def submit_application_data():
         guardian_job, statement, bank_acc = data.get('guardianJob'), data.get('statement'), data.get('accNo')
         filename1, filename2 = "", ""
         
-        # File handling and tracking
+        # 文件处理逻辑保持不变...
         file1 = request.files.get('transcript')
         f1_size, f1_type = 0, ""
         if file1 and file1.filename != '':
@@ -1217,7 +1217,7 @@ def submit_application_data():
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
-                # 1. Update/Insert into APPLICATION table
+                # 1. 更新或插入 APPLICATION 表
                 cur.execute("SELECT applicationID FROM application WHERE studentID=%s AND scholarshipID=%s", (uID, schID))
                 existing = cur.fetchone()
                 
@@ -1238,38 +1238,28 @@ def submit_application_data():
                              VALUES (%s, %s, 'Submitted', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, activities, income, guardian_job, statement, bank_acc, final_bank_name, filename1, filename2))
                 
-                # --- DOCUMENT CONNECTION ---
-                # Save metadata for reporting and file management
+                # --- DOCUMENT & NOTIFICATION 逻辑保持不变 ---
                 if filename1:
                     doc1_id = str(uuid.uuid4())[:8]
-                    sql_doc1 = """INSERT INTO DOCUMENT (documentID, applicationID, fileName, fileType, fileSizeKB, storagePath, uploadDate) 
-                                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-                    cur.execute(sql_doc1, (doc1_id, app_id, filename1, f1_type, f1_size, f"static/uploads/{filename1}", datetime.now()))
+                    cur.execute("INSERT INTO DOCUMENT (documentID, applicationID, fileName, fileType, fileSizeKB, storagePath, uploadDate) VALUES (%s, %s, %s, %s, %s, %s, %s)", (doc1_id, app_id, filename1, f1_type, f1_size, f"static/uploads/{filename1}", datetime.now()))
                 
                 if filename2:
                     doc2_id = str(uuid.uuid4())[:8]
-                    sql_doc2 = """INSERT INTO DOCUMENT (documentID, applicationID, fileName, fileType, fileSizeKB, storagePath, uploadDate) 
-                                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-                    cur.execute(sql_doc2, (doc2_id, app_id, filename2, f2_type, f2_size, f"static/uploads/{filename2}", datetime.now()))
+                    cur.execute("INSERT INTO DOCUMENT (documentID, applicationID, fileName, fileType, fileSizeKB, storagePath, uploadDate) VALUES (%s, %s, %s, %s, %s, %s, %s)", (doc2_id, app_id, filename2, f2_type, f2_size, f"static/uploads/{filename2}", datetime.now()))
 
-                # --- DASHBOARD CONNECTION (Total Count) ---
-                # Increment total and pending counts for reporting
                 sql_dash = "UPDATE DASHBOARD SET totalApplications = totalApplications + 1, pendingApplications = pendingApplications + 1 WHERE userID = %s"
                 cur.execute(sql_dash, (uID,))
 
-                # NOTIFICATION SAVE
-                notif_id = str(uuid.uuid4())[:8]
                 cur.execute("SELECT scholarshipName FROM scholarship WHERE scholarshipID = %s", (schID,))
                 sch_res = cur.fetchone()
                 sch_name = sch_res['scholarshipName'] if sch_res else "Scholarship"
                 msg = f"System Update: MeritHub {sch_name} received."
-                cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
-                               VALUES (%s, %s, %s, 'Unread', %s, 'System Alert')""", 
-                            (notif_id, uID, msg, datetime.now()))
+                cur.execute("INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) VALUES (%s, %s, %s, 'Unread', %s, 'System Alert')", (str(uuid.uuid4())[:8], uID, msg, datetime.now()))
             
             connection.commit()
-            flash("Application submitted and recorded!")
-            return redirect(url_for('tracking_hub'))
+            flash("Application submitted successfully!")
+            # 核心修改：正式提交后跳转到 Active 标签
+            return redirect(url_for('tracking_hub', tab='active'))
         except Exception as e:
             if connection: connection.rollback()
             return f"Database Error: {e}"
@@ -1307,13 +1297,11 @@ def save_application_draft():
         bank_choice = request.form.get('bank')
         other_name = request.form.get('other_bank_name')
         final_bank_name = other_name if bank_choice == 'Others' else bank_choice
-        phone = data.get('phone')
-        semester = data.get('semester')
-        activities = data.get('activities')
-        statement = data.get('statement')
+        phone, semester = data.get('phone'), data.get('semester')
+        activities, statement = data.get('activities'), data.get('statement')
         income = data.get('income') or 0
-        guardian_job = data.get('guardianJob')
-        bank_acc = data.get('accNo')
+        guardian_job, bank_acc = data.get('guardianJob'), data.get('accNo')
+        
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
@@ -1334,7 +1322,7 @@ def save_application_draft():
                               VALUES (%s, %s, 'Draft', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, activities, statement, income, guardian_job, bank_acc, final_bank_name))
             connection.commit()
-            return redirect(url_for('tracking_hub'))
+            return redirect(url_for('tracking_hub', tab='drafts'))
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -1352,7 +1340,7 @@ def delete_draft(app_id):
             return f"Error: {e}"
         finally:
             connection.close()
-    return redirect(url_for('tracking_hub'))
+    return redirect(url_for('tracking_hub', tab='drafts'))
 
 def generate_sequential_id(prefix, table_name, column_name):
     connection = get_db_connection()
