@@ -92,7 +92,9 @@
         <div class="content">
             <div class="content-header">
                 <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Dashboard Overview</h1>
-                <button class="btn-report" onclick="alert('Analytics report generated.')">Generate System Report</button>
+                <button class="btn-report" onclick="window.location.href='{{ url_for('generate_system_report') }}'">
+                    Generate System Report
+                </button>
             </div>
 
             <div class="stats-grid">
@@ -119,8 +121,8 @@
                     <div class="chart-visual">
                         {% for month, data in trends.monthly.items() %}
                         <div class="bar {{ 'current' if loop.last }}" 
-                             style="height: {{ data.percent }}%;" 
-                             data-month="{{ month }}">
+                            style="height: {{ data.percent|int }}%;" 
+                            data-month="{{ month }}">
                         </div>
                         {% endfor %}
                     </div>
@@ -134,7 +136,7 @@
                             <div class="dist-label"><span>{{ faculty }}</span><span>{{ data.percent }}%</span></div>
                             <div class="progress-bg">
                                 <div class="progress-fill" 
-                                     style="width: {{ data.percent }}%; background: {{ data.color }};">
+                                    style="width: {{ data.percent|int }}%; background-color: {{ data.color }};">
                                 </div>
                             </div>
                         </div>

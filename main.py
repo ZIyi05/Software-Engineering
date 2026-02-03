@@ -1,9 +1,20 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import pymysql.cursors
+# 1. Standard Python library imports (Built-in)
+import io  # MUST be on its own line
+import os
 import uuid
 from datetime import datetime
-import os
+
+# 2. Flask specific imports
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+
+# 3. Third-party library imports (Installed via pip)
+import pymysql.cursors
 from werkzeug.utils import secure_filename
+
+# 4. ReportLab imports
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 
 
 app = Flask(__name__)
@@ -1367,6 +1378,69 @@ def get_dashboard_stats():
             }
     finally:
         connection.close()
+
+@app.route('/generate_system_report')
+def generate_system_report():
+    if 'user_id' not in session or session.get('role') != 'admin':
+        return redirect(url_for('index'))
+
+    # 1. Fetch the same data used by the dashboard
+    data = get_dashboard_stats()
+    
+    # 2. Create a Byte stream for the PDF
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # --- Header ---
+    p.setFont("Helvetica-Bold", 20)
+    p.drawString(50, height - 50, "MeritHub System Analytics Report")
+    
+    p.setFont("Helvetica", 10)
+    p.drawString(50, height - 65, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawString(50, height - 78, f"Admin: {session.get('full_name')}")
+    p.line(50, height - 85, width - 50, height - 85)
+
+    # --- Section: Key Performance Indicators ---
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 120, "Key Performance Indicators")
+    
+    p.setFont("Helvetica", 12)
+    p.drawString(70, height - 145, f"• Total Applications Volume: {data['stats']['total_apps']}")
+    p.drawString(70, height - 165, f"• Review Completion Rate: {data['stats']['completion_rate']}%")
+    p.drawString(70, height - 185, f"• Total Funds Disbursed: RM {data['stats']['total_funds']}")
+
+    # --- Section: Award Distribution by Faculty ---
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, height - 230, "Award Distribution by Faculty")
+    
+    y_pos = height - 255
+    p.setFont("Helvetica", 11)
+    for faculty, info in data['distribution'].items():
+        p.drawString(70, y_pos, f"• {faculty}: {info['percent']}% of total awards")
+        y_pos -= 20
+
+    # --- Section: Application Trends ---
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y_pos - 30, "Recent Monthly Trends")
+    
+    y_pos -= 55
+    for month, trend_info in data['trends']['monthly'].items():
+        p.drawString(70, y_pos, f"• {month}: {int(trend_info['percent'])}% relative activity")
+        y_pos -= 20
+
+    # --- Footer ---
+    p.line(50, 50, width - 50, 50)
+    p.setFont("Helvetica-Oblique", 8)
+    p.drawString(50, 40, "Confidential - MeritHub Scholarship Management System Internal Document")
+
+    p.showPage()
+    p.save()
+
+    # 3. Finalize buffer and send
+    buffer.seek(0)
+    filename = f"MeritHub_Report_{datetime.now().strftime('%Y%m%d')}.pdf"
+    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application/pdf')
         
 if __name__ == '__main__':
     app.run(debug=True)
