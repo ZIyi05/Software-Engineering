@@ -98,10 +98,11 @@ def show_register_page():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.form
-    connection = get_db_connection()
+    connection = get_db_connection() #
     try:
         with connection.cursor() as cur:
-            # FIXED: Added 'phone' and 'gender' columns and values
+            # 1. Insert into the main user table
+            # FIXED: Includes phone and gender from the registration form
             sql_user = """INSERT INTO user (userID, fullName, password, email, phone, gender, role, status) 
                           VALUES (%s, %s, %s, %s, %s, %s, 'student', 'Active')"""
             cur.execute(sql_user, (
@@ -110,26 +111,43 @@ def register():
                 data['password'], 
                 data['email'], 
                 data.get('phone'), 
-                data.get('gender') # Added gender mapping
+                data.get('gender')
             ))
             
-            # Keep your original student details logic
-            sql_student = "INSERT INTO student (studentID, faculty, course, address, dob) VALUES (%s, %s, %s, %s, %s)"
-            cur.execute(sql_student, (data['studentID'], data['faculty'], data['course'], data['address'], data['dob']))
+            # 2. Insert detailed academic profile into student table
+            sql_student = """INSERT INTO student (studentID, faculty, course, address, dob) 
+                             VALUES (%s, %s, %s, %s, %s)"""
+            cur.execute(sql_student, (
+                data['studentID'], 
+                data['faculty'], 
+                data['course'], 
+                data['address'], 
+                data['dob']
+            ))
             
-            # Keep your original dashboard initialization
-            cur.execute("""INSERT INTO DASHBOARD (userID, totalApplications, acceptedApplications, rejectedApplications, pendingApplications) 
-                           VALUES (%s, 0, 0, 0, 0)""", (data['studentID'],))
+            # 3. Initialize the student's dashboard metrics
+            # Set all starting application counts to 0
+            sql_dash = """INSERT INTO DASHBOARD (userID, totalApplications, acceptedApplications, rejectedApplications, pendingApplications) 
+                          VALUES (%s, 0, 0, 0, 0)"""
+            cur.execute(sql_dash, (data['studentID'],))
 
+        # IMPORTANT: Commit only after ALL three inserts are successful
         connection.commit()
+        
+        # Log the security event for the new registration
+        log_security_event(data['studentID'], "New student account registered.")
+        
         flash("Registration successful!")
-        log_security_event(data['studentID'], "New student account registered.") # Ensuring security logging
         return redirect(url_for('index'))
+
     except Exception as e:
-        if connection: connection.rollback()
+        # If ANY table fails, undo everything so the email/ID is available to try again
+        if connection: 
+            connection.rollback()
         return f"Database Error: {e}"
     finally:
-        if connection: connection.close()
+        if connection: 
+            connection.close() #
 
 # --- 3. PASSWORD RECOVERY SYSTEM ---
 
@@ -327,8 +345,17 @@ def scholarship_manager():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                cur.execute("SELECT * FROM scholarship WHERE status != 'Archived' ORDER BY deadline DESC")
+                # LIVE DATA SQL: Subtracts 'Awarded' applications from totalSlots
+                sql = """
+                    SELECT s.*, 
+                    (s.totalSlots - (SELECT COUNT(*) FROM application WHERE scholarshipID = s.scholarshipID AND applicationStatus = 'Awarded')) as slotsLeft
+                    FROM scholarship s
+                    WHERE s.status != 'Archived'
+                    ORDER BY s.deadline DESC
+                """
+                cur.execute(sql)
                 programs = cur.fetchall()
+                
                 today = datetime.now().date()
                 for prog in programs:
                     if prog['deadline']:
@@ -336,6 +363,7 @@ def scholarship_manager():
                         if isinstance(deadline, datetime):
                             deadline = deadline.date()
                         prog['is_expired'] = today > deadline
+                        
             return render_template('scholarship_manager.html', admin_name=session['full_name'], scholarships=programs)
         finally:
             connection.close()
@@ -529,12 +557,15 @@ def submit_assessment():
                     msg = f"Congratulations! Your application for {sch_name} has been approved by our Reviewer. Waiting for Interview Scheduling."
                     notif_type = 'Review Update'
                 else:
-                    # REJECTED PATH: Update Dashboard Statistics
-                    msg = f"Application Update: We regret to inform you that your application for {sch_name} was not approved for the next stage."
+                    # REJECTED PATH: Update Dashboard Statistics correctly
+                    msg = f"Application Update: We regret to inform you that your application for {sch_name} was not approved."
                     notif_type = 'System Alert'
                     
-                    # Decrement pending and increment rejected counts
-                    sql_dash = "UPDATE DASHBOARD SET rejectedApplications = rejectedApplications + 1, pendingApplications = pendingApplications - 1 WHERE userID = %s"
+                    # FIX: Ensure rejected count goes up and pending goes down
+                    sql_dash = """UPDATE DASHBOARD 
+                                SET rejectedApplications = rejectedApplications + 1, 
+                                pendingApplications = pendingApplications - 1 
+                                WHERE userID = %s"""
                     cur.execute(sql_dash, (student_id,))
 
                 notif_id = str(uuid.uuid4())[:8]
@@ -643,9 +674,39 @@ def committee_portfolio():
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                cur.execute("SELECT * FROM scholarship")
+                # DYNAMIC SQL: Counts rows in application table where status is 'Awarded'
+                sql = """
+                    SELECT s.*, 
+                    (SELECT COUNT(*) FROM application WHERE scholarshipID = s.scholarshipID AND applicationStatus = 'Awarded') as slotsUsed
+                    FROM scholarship s
+                """
+                cur.execute(sql)
                 programs = cur.fetchall()
             return render_template('committee_portfolio.html', committee_name=session['full_name'], scholarships=programs)
+        finally:
+            connection.close()
+    return redirect(url_for('index'))
+
+@app.route('/view_awarded_students/<sch_id>')
+def view_awarded_students(sch_id):
+    if 'user_id' in session and session.get('role') == 'committee':
+        connection = get_db_connection()
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cur:
+                # Get Scholarship Name for the header
+                cur.execute("SELECT scholarshipName FROM scholarship WHERE scholarshipID = %s", (sch_id,))
+                sch = cur.fetchone()
+                
+                # Fetch only students with 'Awarded' status
+                sql = """
+                    SELECT u.fullName, u.userID, u.email, a.reviewDate 
+                    FROM application a
+                    JOIN user u ON a.studentID = u.userID
+                    WHERE a.scholarshipID = %s AND a.applicationStatus = 'Awarded'
+                """
+                cur.execute(sql, (sch_id,))
+                students = cur.fetchall()
+            return render_template('award_list.html', scholarship=sch, students=students)
         finally:
             connection.close()
     return redirect(url_for('index'))
@@ -841,7 +902,7 @@ def finalize_decision():
                 # 2. Update INTERVIEW table with meaningful feedback
                 cur.execute("UPDATE INTERVIEW SET interviewStatus='Completed', interviewResult=%s WHERE applicationID=%s", (int_notes, app_id))
                 
-                # 3. Update application table status
+                # 3. Update application table status to 'Awarded' to trigger slot deduction
                 cur.execute("UPDATE application SET applicationStatus=%s WHERE applicationID=%s", (final_status, app_id))
                 
                 # 4. Fetch dynamic student and scholarship info for the notification
@@ -856,16 +917,16 @@ def finalize_decision():
                     sch_name = info['scholarshipName']
                     
                     # 5. CONSOLIDATED DASHBOARD & NOTIFICATION LOGIC
-                    # This single block correctly handles the movement from Pending to final status
+                    # Correctly handles the movement from Pending to final status in Student Dashboard
                     if final_status == 'Awarded':
-                        # Update Dashboard: Pending -1, Accepted +1
+                        # Update Student Dashboard: Pending -1, Accepted +1
                         sql_dash = """UPDATE DASHBOARD SET acceptedApplications = acceptedApplications + 1, 
                                       pendingApplications = pendingApplications - 1 WHERE userID = %s"""
                         
                         msg = f"Congratulations! You have been awarded the {sch_name}. Please check your email for disbursement details."
                         notif_type = 'Award Alert'
                     else:
-                        # Update Dashboard: Pending -1, Rejected +1
+                        # Update Student Dashboard: Pending -1, Rejected +1
                         sql_dash = """UPDATE DASHBOARD SET rejectedApplications = rejectedApplications + 1, 
                                       pendingApplications = pendingApplications - 1 WHERE userID = %s"""
                         
@@ -1315,6 +1376,7 @@ def generate_sequential_id(prefix, table_name, column_name):
 
 
 # --- SHARED ANALYTICS HELPER ---
+# --- SHARED ANALYTICS HELPER ---
 def get_dashboard_stats():
     connection = get_db_connection()
     try:
@@ -1367,18 +1429,21 @@ def get_dashboard_stats():
             max_count = max([row['count'] for row in trend_results]) if trend_results else 1
             trends = {"monthly": {row['month']: {"percent": (row['count'] / max_count) * 100} for row in trend_results}}
 
+            # MODIFIED: Formatting logic to ensure correct display of "k" values
             return {
                 "stats": {
                     "total_apps": "{:,}".format(total_apps),
                     "completion_rate": completion_rate,
+                    # This will divide by 1000 and add 'k'. 
+                    # If total_funds is 40,000, it will show "40k".
                     "total_funds": "{:,.0f}k".format(total_funds / 1000) if total_funds >= 1000 else total_funds
                 },
                 "trends": trends,
                 "distribution": distribution
             }
     finally:
-        connection.close()
-
+        if connection:
+            connection.close() #
 @app.route('/generate_system_report')
 def generate_system_report():
     if 'user_id' not in session or session.get('role') != 'admin':

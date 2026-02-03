@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MeritHub | Decision Hub</title>
+    <title>MeritHub | Awarded Students</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
@@ -20,83 +20,77 @@
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; }
+        
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; white-space: nowrap; }
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
         .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
         /* MAIN CONTENT */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; }
+        .top-bar { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; }
         .user-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .content { padding: 40px 60px; overflow-y: auto; flex: 1; }
-        .table-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-top: 30px; }
+        .back-link { display: flex; align-items: center; gap: 8px; color: var(--slate); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 20px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-
-        input[type="date"], input[type="time"], input[type="text"] { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Inter'; font-size: 0.85rem; }
-        .btn-confirm { background: var(--emerald); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .user-table { width: 100%; border-collapse: collapse; }
+        .user-table th { text-align: left; padding: 15px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .user-table td { padding: 20px 15px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
     </style>
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub. Committee</h2>
+        <h2>MERITHUB. COMMITTEE</h2>
         <nav>
             <a href="{{ url_for('committee_overview') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="{{ url_for('committee_dashboard') }}" class="active"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
-            <a href="{{ url_for('committee_portfolio') }}"><i data-feather="award"></i><span>Scholarship Manager</span></a>
+            <a href="{{ url_for('committee_dashboard') }}"><i data-feather="check-circle"></i><span>Decision Hub</span></a>
+            <a href="{{ url_for('committee_portfolio') }}" class="active"><i data-feather="award"></i><span>Scholarship Manager</span></a>
             <a href="{{ url_for('committee_calendar') }}"><i data-feather="calendar"></i><span>Interview Calendar</span></a>
         </nav>
-        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
+        <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto; color: #94A3B8; text-decoration: none; padding: 14px 16px;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
 
     <div class="main">
-        <div class="top-bar"><div class="user-badge">Committee: {{ committee_name }}</div></div>
+        <div class="top-bar">
+            <div class="user-badge">Committee: {{ committee_name }}</div>
+        </div>
 
         <div class="content">
-            <h1 style="font-weight: 800; font-size: 2.5rem; margin: 0;">Decision Hub</h1>
-            <p style="color: var(--slate); margin-top: 10px;">Review successful candidates and manage interview slots.</p>
+            <a href="{{ url_for('committee_portfolio') }}" class="back-link">
+                <i data-feather="arrow-left" style="width: 16px;"></i> Back to Portfolio
+            </a>
 
-            <div class="table-card">
-                <table>
+            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0 0 10px 0;">Awarded Students</h1>
+            <p style="color: var(--slate); margin-bottom: 30px;">Recipients for: <b>{{ scholarship.scholarshipName }}</b></p>
+
+            <div class="card">
+                <table class="user-table">
                     <thead>
                         <tr>
-                            <th>Applicant</th>
-                            <th>Reviewer Score</th>
-                            <th>Assign Date</th>
-                            <th>Assign Time</th>
-                            <th>Venue / Platform</th>
-                            <th>Action</th>
+                            <th>Student Name</th>
+                            <th>Student ID</th>
+                            <th>Email Address</th>
+                            <th>Award Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for cand in candidates %}
+                        {% for student in students %}
                         <tr>
-                            <form action="{{ url_for('schedule_interview_submit') }}" method="POST">
-                                <input type="hidden" name="applicationID" value="{{ cand.applicationID }}">
-                                <td>
-                                    <b>{{ cand.applicantName }}</b><br>
-                                    <small style="color: var(--slate);">{{ cand.faculty }}</small>
-                                </td>
-                                <td style="font-weight: 800; color: var(--emerald);">{{ cand.score }} / 20</td>
-                                <td><input type="date" name="assignDate" required></td>
-                                <td><input type="time" name="assignTime" required></td>
-                                <td>
-                                    <input type="text" name="venue" placeholder="e.g. Zoom / Block A R101" required>
-                                </td>
-                                <td><button type="submit" class="btn-confirm">Confirm Slot</button></td>
-                            </form>
+                            <td><b>{{ student.fullName }}</b></td>
+                            <td>{{ student.userID }}</td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.reviewDate.strftime('%d/%m/%Y') if student.reviewDate else 'N/A' }}</td>
                         </tr>
                         {% endfor %}
                         
-                        {% if not candidates %}
+                        {% if not students %}
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--slate); padding: 40px;">
-                                No pending candidates for scheduling.
+                            <td colspan="4" style="text-align: center; padding: 40px; color: var(--slate);">
+                                No students have been awarded for this program yet.
                             </td>
                         </tr>
                         {% endif %}
@@ -108,7 +102,7 @@
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
+            <h3 style="margin-top:0;">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -119,7 +113,9 @@
 
     <script>
         feather.replace();
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
     </script>

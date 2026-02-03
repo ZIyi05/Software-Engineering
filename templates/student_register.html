@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeritHub | Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
             --bg: #F8FAFC; 
-            --nav-dark: #0F172A; /* Dark Navy from your Login */
+            --nav-dark: #0F172A; 
             --emerald: #064E3B;
             --slate: #475569;
             --border: #E2E8F0;
@@ -95,6 +96,33 @@
             background-color: #fff;
         }
 
+        /* 修复后的密码包装器样式 */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 12px;
+            cursor: pointer;
+            color: var(--slate);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+
+        .eye-icon svg {
+            width: 18px;
+            height: 18px;
+        }
+
         .btn-register {
             background: var(--nav-dark);
             color: white;
@@ -137,7 +165,7 @@
         }
 
         .phone-input-group:focus-within {
-            border-color: var(--emerald);
+            border-color: var(--nav-dark);
         }
 
         .footer-links {
@@ -159,7 +187,7 @@
         <div class="brand">MERITHUB.</div>
         <div class="subtitle">Join the MeritHub Student Community</div>
 
-        <form action="/register" method="POST">
+        <form action="/register" method="POST" onsubmit="return validateForm()">
             <div class="form-grid">
                 <div class="form-group full-width">
                     <label>Full Name</label>
@@ -168,7 +196,7 @@
 
                 <div class="form-group">
                     <label>Student ID</label>
-                    <input type="text" name="studentID" placeholder="e.g. 1234567890" required>
+                    <input type="text" name="studentID" placeholder="e.g. std0001" oninput="validateStudentID(this)" required>
                 </div>
 
                 <div class="form-group">
@@ -178,10 +206,7 @@
 
                 <div class="form-group">
                     <label>Date of Birth</label>
-                    <input type="date" name="dob" required>
-                    <script>
-                        document.getElementById('dobField').max = new Date().toISOString().split("T")[0];
-                    </script>
+                    <input type="date" name="dob" id="dobField" required>
                 </div>
 
                 <div class="form-group">
@@ -190,7 +215,6 @@
                         <span class="country-prefix">+60</span>
                         <input type="tel" name="phone" id="regPhone" 
                             placeholder="123456789" 
-                            pattern="[0-9]*" 
                             oninput="validatePhone(this)" 
                             required>
                     </div>
@@ -227,7 +251,12 @@
 
                 <div class="form-group">
                     <label>Create Password</label>
-                    <input type="password" name="password" placeholder="Min. 8 characters" minlength="8" required>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="passwordField" placeholder="Min. 8 characters" minlength="8" required>
+                        <div class="eye-icon" onclick="togglePasswordVisibility()">
+                            <i data-feather="eye" id="eyeIcon"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -239,17 +268,56 @@
         </div>
     </div>
 
-<script>
+    <script>
+        feather.replace();
+
+        window.addEventListener('load', function() {
+            const today = new Date().toISOString().split("T")[0];
+            const dobField = document.getElementById('dobField');
+            if (dobField) {
+                dobField.setAttribute('max', today);
+            }
+        });
+
         function validatePhone(input) {
-            // 1. Remove non-numeric characters
             let val = input.value.replace(/[^0-9]/g, '');
-            // 2. Strip leading zero if present
             if (val.startsWith('0')) {
                 val = val.substring(1);
             }
+            if (val.length > 10) {
+                val = val.substring(0, 10);
+            }
             input.value = val;
-        }
-</script>
-</body>
 
+            if (val.length > 0 && val.length < 9) {
+                input.setCustomValidity("Phone number must be at least 9 digits.");
+            } else {
+                input.setCustomValidity(""); 
+            }
+        }
+
+        function validateStudentID(input) {
+            const val = input.value.toLowerCase();
+            if (val.length > 0 && !val.startsWith('std')) {
+                input.setCustomValidity("Student ID must start with 'std'."); 
+            } else {
+                input.setCustomValidity("");
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('passwordField');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.setAttribute('data-feather', 'eye');
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.setAttribute('data-feather', 'eye-off');
+            }
+            feather.replace(); 
+        }
+    </script>
+</body>
 </html>

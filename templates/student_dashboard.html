@@ -143,6 +143,7 @@
                 <p>You have <b>{{ app_count }}</b> active applications. Check your status below.</p>
                 <a href="{{ url_for('scholarship_discovery') }}" class="btn-browse">Browse Scholarships</a> 
             </div>
+            
 
             <div class="scroll-area">
                 <div class="section-label-header">
@@ -151,7 +152,7 @@
                 </div>
                 {% if dashboard_apps %}
                     {% for app in dashboard_apps %}
-                    <div class="card" onclick="location.href='/tracking_hub'">
+                    <div class="card" onclick="location.href='{{ url_for('tracking_hub') }}{{ '?tab=completed' if app.applicationStatus in ['Awarded', 'Rejected'] else '?tab=active' }}'">
                         <div>
                             <h4 style="margin:0 0 5px 0; font-size: 1rem; font-weight: 700;">{{ app.scholarshipName }}</h4>
                             <p style="margin:0; font-size: 0.8rem; color: var(--slate);">
@@ -159,7 +160,7 @@
                             </p>
                         </div>
                         <span class="status-badge 
-                            {% if app.applicationStatus == 'Awarded' or app.applicationStatus == 'Approved' %}status-awarded
+                            {% if app.applicationStatus == 'Awarded' %}status-awarded
                             {% elif app.applicationStatus == 'Rejected' %}status-rejected
                             {% else %}status-submitted{% endif %}">
                             {{ app.applicationStatus }}

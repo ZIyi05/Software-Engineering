@@ -120,10 +120,10 @@
         .line-fill.rejected { background: var(--crimson) !important; }
 
         /* GEOMETRIC PERCENTAGES (100% / 6 gaps = 16.66% per gap) */
-        .w-submitted { width: 0%; }         
+        .w-submitted { width: 16%; }         
         .w-reviewing { width: 16.66%; }      
-        .w-approved  { width: 33.33%; }      
-        .w-scheduled { width: 48%; }         
+        .w-approved  { width: 48%; }      
+        .w-scheduled { width: 65%; } 
         .w-finalized { width: calc(100% - 50px); }
 
         .steps { position: relative; z-index: 3; display: flex; justify-content: space-between; }
@@ -164,7 +164,7 @@
 
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub.</h2>
+        <h2>MeritHub.STUDENT</h2>
         <nav>
             <a href="{{ url_for('student_dashboard') }}"><i data-feather="grid"></i><span>Overview</span></a>
             <a href="{{ url_for('scholarship_discovery') }}"><i data-feather="search"></i><span>Find Scholarships</span></a>
@@ -226,7 +226,6 @@
                                 {{ user_app.applicationStatus }}
                             </span>
                         </div>
-
                         <div class="tracker-wrapper">
                             <div class="line-base"></div>
                             <div class="line-fill 
@@ -238,10 +237,23 @@
 
                             <div class="steps">
                                 <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
-                                <div class="step {{ 'done' if user_app.applicationStatus in ['Approved', 'Scheduled'] else 'active' if user_app.applicationStatus == 'Under Review' else '' }}"><div class="dot"></div><span class="label">In Review</span></div>
-                                <div class="step {{ 'done' if user_app.applicationStatus in ['Approved', 'Scheduled'] else '' }}"><div class="dot"></div><span class="label">App Approved</span></div>
-                                <div class="step {{ 'active' if user_app.applicationStatus == 'Scheduled' else '' }}"><div class="dot"></div><span class="label">Scheduled</span></div>
-                                <div class="step"><div class="dot"></div><span class="label">Interview Complete</span></div>
+
+                                <div class="step {{ 'done' if user_app.applicationStatus in ['Under Review', 'Approved', 'Scheduled'] else 'active' if user_app.applicationStatus == 'Submitted' else '' }}">
+                                    <div class="dot"></div><span class="label">In Review</span>
+                                </div>
+
+                                <div class="step {{ 'done' if user_app.applicationStatus in ['Approved', 'Scheduled'] else 'active' if user_app.applicationStatus == 'Under Review' else '' }}">
+                                    <div class="dot"></div><span class="label">App Approved</span>
+                                </div>
+
+                                <div class="step {{ 'done' if user_app.applicationStatus == 'Scheduled' else 'active' if user_app.applicationStatus == 'Approved' else '' }}">
+                                    <div class="dot"></div><span class="label">Scheduled</span>
+                                </div>
+
+                                <div class="step {{ 'active' if user_app.applicationStatus == 'Scheduled' else '' }}">
+                                    <div class="dot"></div><span class="label">Interview Complete</span>
+                                </div>
+
                                 <div class="step"><div class="dot"></div><span class="label">Final Scoring</span></div>
                                 <div class="step"><div class="dot"></div><span class="label">Final Decision</span></div>
                             </div>
@@ -272,7 +284,7 @@
                             <a href="{{ url_for('application_form', id=user_app.scholarshipID) }}" class="btn-continue">Continue Application →</a>
                             <form id="deleteForm-{{ user_app.applicationID }}" action="{{ url_for('delete_draft', app_id=user_app.applicationID) }}" method="POST">
                                 <button type="button" onclick="showDeleteModal('{{ user_app.applicationID }}')" 
-                                        style="background: white; border: 1.5px solid #991B1B; color: #991B1B; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem;">
+                                        style="background: white; border: 1.5px solid #991B1B; color: #991B1B; padding: 10px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; margin-top: 15px;">
                                     Remove Draft
                                 </button>
                             </form>
@@ -302,12 +314,13 @@
                         </div>
                         <div class="tracker-wrapper">
                             <div class="line-base"></div>
-                            <div class="line-fill w-finalized {{ 'rejected' if user_app.applicationStatus == 'Rejected' else '' }}"></div>
+                            <div class="line-fill w-finalized {{ 'rejected' if 'Rejected' in user_app.applicationStatus else '' }}"></div>
+                            
                             <div class="steps">
-                                <div class="step done"><div class="dot"></div><span class="label">Submitted</span></div>
-                                <div class="step done"><div class="dot"></div><span class="label">In Review</span></div>
-                                {% set is_rej = user_app.applicationStatus == 'Rejected' %}
-                                {% set status_class = 'fail' if is_rej else 'done' %}
+                                {% set status_class = 'fail' if 'Rejected' in user_app.applicationStatus else 'done' %}
+
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Submitted</span></div>
+                                <div class="step {{ status_class }}"><div class="dot"></div><span class="label">In Review</span></div>
                                 <div class="step {{ status_class }}"><div class="dot"></div><span class="label">App Approved</span></div>
                                 <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Scheduled</span></div>
                                 <div class="step {{ status_class }}"><div class="dot"></div><span class="label">Interview Complete</span></div>
@@ -322,6 +335,9 @@
                     {% endfor %}
                 {% endif %}
             </div>
+
+            <div id="drafts" class="tab-content">
+                </div>
         </div>
     </div>
 
@@ -351,26 +367,26 @@
         feather.replace();
 
         window.onload = function() {
-            const hash = window.location.hash;
-            if (hash === "#drafts") switchTab('drafts');
-            else if (hash === "#completed") switchTab('completed');
-            else switchTab('active');
-            
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTab = urlParams.get('tab');
+
+            if (targetTab === 'completed') {
+                switchTab('completed');
+            } else if (targetTab === 'drafts') {
+                switchTab('drafts');
+            } else {
+                switchTab('active'); 
+            }
+
             const msg = sessionStorage.getItem('flashMessage');
             if (msg) {
                 const toast = document.getElementById('toastAlert');
-                const msgEl = document.getElementById('toastMsg');
-                if (toast && msgEl) {
-                    msgEl.innerText = msg;
-                    toast.classList.remove('toast-submitted', 'toast-draft', 'toast-danger');
-                    if (msg.includes("Draft Saved")) toast.classList.add('toast-draft');
-                    else if (msg.includes("Removed") || msg.includes("Deleted")) toast.classList.add('toast-danger');
-                    else toast.classList.add('toast-submitted');
-                    
-                    toast.classList.add('show'); 
+                if (toast) {
+                    document.getElementById('toastMsg').innerText = msg;
+                    toast.classList.add('show');
                     setTimeout(() => { 
                         toast.classList.remove('show'); 
-                        sessionStorage.removeItem('flashMessage'); 
+                        sessionStorage.removeItem('flashMessage');
                     }, 4000);
                 }
             }
@@ -390,7 +406,6 @@
             if (badge) { badge.style.display = 'none'; badge.classList.remove('active'); }
         }
 
-        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
         window.onclick = function(event) {
             const dropdown = document.getElementById('notifDropdown');
             const logoutModal = document.getElementById('logoutModal');
@@ -409,9 +424,17 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+
+            // 激活选中的内容
+            const selectedContent = document.getElementById(tabId);
+            if (selectedContent) {
+                selectedContent.classList.add('active');
+            }
+
             document.querySelectorAll('.tab-item').forEach(item => {
-                if (item.innerText.toLowerCase().includes(tabId)) item.classList.add('active');
+                if (item.getAttribute('onclick').includes(tabId)) {
+                    item.classList.add('active');
+                }
             });
         }
 

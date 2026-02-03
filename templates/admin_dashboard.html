@@ -9,8 +9,7 @@
         :root { 
             --bg: #F8FAFC; --sidebar: #0F172A; --emerald: #064E3B; 
             --slate: #475569; --border: #E2E8F0; --white: #FFFFFF;
-            --sidebar-width: 250px;
-            --sidebar-collapsed: 70px;
+            --sidebar-width: 250px; --sidebar-collapsed: 70px;
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
 
@@ -92,7 +91,7 @@
         <div class="content">
             <div class="content-header">
                 <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Dashboard Overview</h1>
-                <button class="btn-report" onclick="window.location.href='{{ url_for('generate_system_report') }}'">
+                <button class="btn-report" id="reportBtn" data-url="{{ url_for('generate_system_report') }}">
                     Generate System Report
                 </button>
             </div>
@@ -121,7 +120,7 @@
                     <div class="chart-visual">
                         {% for month, data in trends.monthly.items() %}
                         <div class="bar {{ 'current' if loop.last }}" 
-                            style="height: {{ data.percent|int }}%;" 
+                            style="--bar-height: {{ data.percent|int }}%; height: var(--bar-height);" 
                             data-month="{{ month }}">
                         </div>
                         {% endfor %}
@@ -135,9 +134,9 @@
                         <div class="dist-row">
                             <div class="dist-label"><span>{{ faculty }}</span><span>{{ data.percent }}%</span></div>
                             <div class="progress-bg">
-                                <div class="progress-fill" 
-                                    style="width: {{ data.percent|int }}%; background-color: {{ data.color }};">
-                                </div>
+                            <div class="progress-fill" 
+                                style="--fill-width: {{ data.percent|int }}%; --fill-color: {{ data.color }}; width: var(--fill-width); background-color: var(--fill-color);">
+                            </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -174,6 +173,10 @@
             const logoutModal = document.getElementById('logoutModal');
             if (event.target == logoutModal) { closeLogoutModal(); }
         };
+
+        document.getElementById('reportBtn').addEventListener('click', function() {
+            window.location.href = this.getAttribute('data-url');
+        });
     </script>
 </body>
 </html>

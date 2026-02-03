@@ -186,6 +186,12 @@
                     </div>
 
                     <div class="sticky-footer">
+                        <a href="{{ url_for('committee_portfolio') if session.get('role') == 'committee' else url_for('scholarship_manager') }}" 
+                        class="btn-draft" 
+                        style="text-decoration: none; display: flex; align-items: center; justify-content: center; border-color: #94A3B8; color: #64748B;">
+                            Discard & Return
+                        </a>
+
                         <button type="submit" name="action" value="draft" class="btn-draft" onclick="handleAdminDraft()">
                             Save as Draft
                         </button>

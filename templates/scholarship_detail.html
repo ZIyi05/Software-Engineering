@@ -198,25 +198,36 @@
                         <p style="color: var(--slate); font-weight: 700;">Preview Mode: Admin Access Only</p>
                         <div style="display: flex; gap: 15px;">
                             <a href="{{ url_for('scholarship_manager') }}" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                            Back to Manager
-                        </a>
-                        <a href="{{ url_for('committee_manager', sch_id=sch.scholarshipID) }}" class="btn-apply unlocked" style="background: var(--sidebar); text-decoration: none; display: flex; align-items: center; justify-content: center;">
-                            Edit Program
-                        </a>
+                                Back to Manager
+                            </a>
+                            <a href="{{ url_for('committee_manager', sch_id=sch.scholarshipID) }}" class="btn-apply unlocked" style="background: var(--sidebar); text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                Edit Program
+                            </a>
+                        </div>
                     {% else %}
-                        {% if existing_status == 'Submitted' or existing_status == 'In Review' or existing_status == 'Awarded' %}
-                            <p style="color: var(--emerald); font-weight: 700;">You have already applied for this scholarship.</p>
-                            <a href="{{ url_for('tracking_hub') }}" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">                        {% elif existing_status == 'Draft' %}
-                            <p style="color: var(--amber); font-weight: 700;">You have a saved draft for this scholarship.</p>
-                            <a href="{{ url_for('tracking_hub') }}" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Continue from Draft</button>
+                        {% if existing_status in ['Awarded', 'Approved', 'Rejected'] %}
+                            <p style="color: var(--emerald); font-weight: 700; margin-bottom: 10px;">Your application has been finalized.</p>
+                            <a href="{{ url_for('tracking_hub') }}?tab=completed" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                View Final Decision
+                            </a>
+                        {% elif existing_status in ['Submitted', 'In Review'] %}
+                            <p style="color: var(--emerald); font-weight: 700; margin-bottom: 10px;">You have already applied for this scholarship.</p>
+                            <a href="{{ url_for('tracking_hub') }}?tab=active" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                View Application Status
+                            </a>
+                        {% elif existing_status == 'Draft' %}
+                            <p style="color: #D97706; font-weight: 700; margin-bottom: 10px;">You have a saved draft for this scholarship.</p>
+                            <a href="{{ url_for('tracking_hub') }}?tab=drafts" class="btn-apply unlocked" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                                Continue from Draft
+                            </a>
                         {% else %}
+                            {# 正常申请验证流程 #}
                             <div id="scanUI" class="scan-overlay" style="width: 300px; margin: 0 auto;">
                                 <span style="font-weight: 700; font-size: 0.85rem; color: var(--sidebar);">Validating Academic Profile...</span>
                                 <div class="progress-bg"><div id="pBar" class="progress-fill"></div></div>
                             </div>
                             <div id="errorMsg" class="error-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;"></div>
                             <div id="successMsg" class="success-box" style="width: 100%; max-width: 400px; margin: 0 auto 15px auto;">✓ Eligibility Verified.</div>
-                            
                             <button id="checkBtn" class="btn-check" onclick="runCheck()">Check My Eligibility</button>
                             <button id="applyBtn" class="btn-apply" disabled onclick="proceed()">Apply Now</button>
                         {% endif %}
