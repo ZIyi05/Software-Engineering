@@ -71,9 +71,12 @@
                 <b>{{ user.fullName }} (ID: {{ user.userID }})</b>
             </div>
 
-            <button class="btn-wide btn-reset" onclick="alert('Reset link sent to {{ user.email }}')">
-                Reset User Password
-            </button>
+            <form action="{{ url_for('reset_password_request') }}" method="POST" style="display:inline;">
+                <input type="hidden" name="email" value="{{ user.email }}">
+                <button type="submit" class="btn-wide btn-reset" onclick="alert('Reset link sent to {{ user.email }}')">
+                    Reset User Password
+                </button>
+            </form>
             
             <form action="{{ url_for('delete_user', userid=user.userID) }}" method="POST" onsubmit="return confirm('Are you sure? This user will lose access immediately.');">
                 <button type="submit" class="btn-wide btn-danger">Deactivate Account</button>

@@ -243,6 +243,55 @@ def edit_user(userid):
             connection.close()
     return redirect(url_for('index'))
 
+@app.route('/reset_password_request', methods=['POST'])
+def reset_password_request():
+    # Capture email from the hidden input
+    email = request.form.get('email')
+    
+    if not email:
+        flash("Error: No email provided.")
+        return redirect(url_for('user_management'))
+
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cur:
+            # 1. Strict verification: Get the ID and Name
+            cur.execute("SELECT userID, fullName FROM user WHERE email = %s", (email,))
+            user_record = cur.fetchone()
+            
+            # CRITICAL CHECK: Only proceed if the user actually exists
+            if user_record and user_record['userID']:
+                uID = user_record['userID']
+                
+                # 2. Log the Security Event (Shows in Admin Logs)
+                log_security_event(uID, f"Admin initiated password reset for {email}")
+
+                # 3. Insert into NOTIFICATION table (This is the "Saving" part)
+                notif_id = str(uuid.uuid4())[:8]
+                msg = f"Security Alert: A password reset link was sent to your email ({email})."
+                
+                # We use 'System Alert' type to match your tracking_hub filters
+                sql_notif = """INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
+                               VALUES (%s, %s, %s, 'Unread', %s, 'System Alert')"""
+                
+                cur.execute(sql_notif, (notif_id, uID, msg, datetime.now()))
+                
+                # COMMIT makes the changes permanent in the DB
+                connection.commit()
+                flash(f"Reset link successfully sent to {email}")
+            else:
+                flash(f"Error: User with email {email} does not exist in the database.")
+                
+    except Exception as e:
+        if connection: connection.rollback()
+        # Log the actual error to your terminal for debugging
+        print(f"DEBUG ERROR: {e}")
+        return f"Backend Error: {e}"
+    finally:
+        if connection: connection.close()
+        
+    return redirect(request.referrer or url_for('user_management'))
+
 @app.route('/delete_user/<userid>', methods=['POST'])
 def delete_user(userid):
     if 'user_id' in session and session.get('role') == 'admin':
