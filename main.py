@@ -1238,7 +1238,6 @@ def submit_application_data():
                              VALUES (%s, %s, 'Submitted', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cur.execute(sql, (app_id, datetime.now(), uID, schID, phone, semester, activities, income, guardian_job, statement, bank_acc, final_bank_name, filename1, filename2))
                 
-                # --- DOCUMENT & NOTIFICATION 逻辑保持不变 ---
                 if filename1:
                     doc1_id = str(uuid.uuid4())[:8]
                     cur.execute("INSERT INTO DOCUMENT (documentID, applicationID, fileName, fileType, fileSizeKB, storagePath, uploadDate) VALUES (%s, %s, %s, %s, %s, %s, %s)", (doc1_id, app_id, filename1, f1_type, f1_size, f"static/uploads/{filename1}", datetime.now()))
@@ -1258,7 +1257,6 @@ def submit_application_data():
             
             connection.commit()
             flash("Application submitted successfully!")
-            # 核心修改：正式提交后跳转到 Active 标签
             return redirect(url_for('tracking_hub', tab='active'))
         except Exception as e:
             if connection: connection.rollback()

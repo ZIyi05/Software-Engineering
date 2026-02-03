@@ -296,6 +296,11 @@
             if (event.target == logoutModal) closeLogoutModal();
         }
         
+
+        window.onload = function() {
+            sessionStorage.removeItem('flashMessage'); 
+        };
+        
         function runCheck() {
             const checkBtn = document.getElementById('checkBtn');
             const scanUI = document.getElementById('scanUI');
