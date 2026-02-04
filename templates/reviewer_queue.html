@@ -61,13 +61,37 @@
         
         .btn-action { background: var(--emerald); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-decoration: none; }
         .btn-action:hover { opacity: 0.9; }
+
+        /* --- 1. ADDED TOAST CSS --- */
+        .toast-alert { 
+            position: fixed; top: 20px; right: -350px; width: 300px; background: white; 
+            padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; gap: 12px; 
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; 
+            border-left: 5px solid var(--emerald);
+        }        
+        .toast-alert.show { right: 20px; } 
     </style>
 </head>
 <body>
 
+    <div id="toastAlert" class="toast-alert">
+        <i data-feather="check-circle" style="color: var(--emerald);"></i>
+        <div>
+            <b style="font-size: 0.85rem; display: block; color: var(--nav-dark);">System Update</b>
+            <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Action Completed</span>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div id="flash-data" data-message="{{ messages[0] }}" style="display:none;"></div>
+      {% endif %}
+    {% endwith %}
+
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
-        <h2>MeritHub. Reviewer</h2>
+        <h2>MERITHUB. REVIEWER</h2>
         <nav>
             <a href="{{ url_for('reviewer_dashboard') }}" class="{{ 'active' if request.endpoint == 'reviewer_dashboard' }}">
                 <i data-feather="grid"></i><span>Dashboard Overview</span>
@@ -126,12 +150,12 @@
                     </thead>
                     <tbody>
                         {% for task in pending_tasks %}
-                        <tr class="queue-row" data-faculty="{{ task.faculty }}">
+                        <tr class="queue-row" data-faculty="{{ task.studentFaculty }}">
                             <td>
                                 <b>{{ task.fullName }}</b><br>
                                 <span style="font-size: 0.75rem; color: var(--slate);">ID: {{ task.userID }}</span>
                             </td>
-                            <td>{{ task.faculty }}</td>
+                            <td>{{ task.studentFaculty }}</td>
                             <td>
                                 <span style="color: #D97706; font-weight: 800; font-size: 0.75rem; text-transform: uppercase;">
                                     ● {{ task.applicationStatus if task.applicationStatus else 'Pending' }}
@@ -161,6 +185,22 @@
 
     <script>
         feather.replace();
+
+        // --- 4. JS TO SHOW TOAST ON LOAD ---
+        window.onload = function() {
+            const flashDiv = document.getElementById('flash-data');
+            if (flashDiv) {
+                const msg = flashDiv.getAttribute('data-message');
+                showToast(msg);
+            }
+        };
+
+        function showToast(message) {
+            const toast = document.getElementById('toastAlert');
+            document.getElementById('toastMsg').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 4000);
+        }
 
         function filterQueue() {
             const searchQuery = document.getElementById('queueSearch').value.toLowerCase();

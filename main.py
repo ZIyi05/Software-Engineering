@@ -2,7 +2,7 @@
 import io  # MUST be on its own line
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # 2. Flask specific imports
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
@@ -106,7 +106,7 @@ def show_register_page():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.form
-    connection = get_db_connection() #
+    connection = get_db_connection() 
     try:
         with connection.cursor() as cur:
             # 1. Insert into the main user table
@@ -155,7 +155,7 @@ def register():
         return f"Database Error: {e}"
     finally:
         if connection: 
-            connection.close() #
+            connection.close() 
 
 # --- 3. PASSWORD RECOVERY SYSTEM ---
 
@@ -254,7 +254,8 @@ def add_user_submit():
             connection.commit()
             log_security_event(session['user_id'], f"Admin onboarded new {role}: {name} ({uid})")
             
-            flash(f"Successfully created {role} account for {name}.")
+            # FIX: Added category "user_update" so it only shows on User Mgmt page
+            flash(f"Successfully created {role} account for {name}.", "user_update")
             return redirect(url_for('user_management'))
             
         except Exception as e:
@@ -315,9 +316,10 @@ def reset_password_request():
                 
                 # COMMIT makes the changes permanent in the DB
                 connection.commit()
-                flash(f"Reset link successfully sent to {email}")
+                # FIX: Added category "user_update"
+                flash(f"Reset link successfully sent to {email}", "user_update")
             else:
-                flash(f"Error: User with email {email} does not exist in the database.")
+                flash(f"Error: User with email {email} does not exist in the database.", "user_update")
                 
     except Exception as e:
         if connection: connection.rollback()
@@ -339,10 +341,12 @@ def delete_user(userid):
                 cur.execute(sql, (userid,))
             connection.commit()
             log_security_event(session['user_id'], f"Admin deactivated account: {userid}")
-            flash(f"Account {userid} has been deactivated.")
+            
+            # FIX: Added category "user_update"
+            flash(f"Account {userid} has been deactivated.", "user_update")
         except Exception as e:
             if connection: connection.rollback()
-            flash(f"Error: {e}")
+            flash(f"Error: {e}", "user_update")
         finally:
             if connection: connection.close()
     return redirect(url_for('user_management'))
@@ -386,10 +390,11 @@ def admin_manage_status(sch_id, action):
             with connection.cursor() as cur:
                 cur.execute("UPDATE scholarship SET status = %s WHERE scholarshipID = %s", (new_status, sch_id))
             connection.commit()
-            flash(f"Scholarship {sch_id} has been {new_status.lower()}.")
+            # FIX: Added category "scholarship_update"
+            flash(f"Scholarship {sch_id} has been {new_status.lower()}.", "scholarship_update")
         except Exception as e:
             connection.rollback()
-            flash(f"Error: {e}")
+            flash(f"Error: {e}", "scholarship_update")
         finally:
             connection.close()
     return redirect(url_for('scholarship_manager'))
@@ -456,7 +461,8 @@ def assign_reviewers_submit():
                                         (notif_id, task['studentID'], msg, datetime.now()))
 
             connection.commit()
-            flash("Reviewer assigned. Application is now Under Review.")
+            # FIX: Added category "reviewer_update"
+            flash("Reviewer assigned. Application is now Under Review.", "reviewer_update")
             return redirect(url_for('reviewer_assignment'))
         except Exception as e:
             if connection: connection.rollback()
@@ -477,33 +483,49 @@ def reviewer_dashboard():
                                **data)
     return redirect(url_for('index'))
 
-@app.route('/reviewer_queue')
+@app.route('/reviewer/queue')
 def reviewer_queue():
     if 'user_id' in session and session.get('role') == 'reviewer':
-        uID = session['user_id']
+        reviewer_id = session['user_id']
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                sql = """SELECT a.applicationID, u.fullName, u.userID, s.faculty, a.applicationStatus 
-                         FROM application a
-                         JOIN user u ON a.studentID = u.userID
-                         JOIN scholarship s ON a.scholarshipID = s.scholarshipID
-                         WHERE a.reviewerID = %s AND a.score IS NULL""" 
-                cur.execute(sql, (uID,))
-                pending_list = cur.fetchall()
+                # UPDATED QUERY:
+                # 1. Joins 'student s' table.
+                # 2. Selects 's.faculty AS studentFaculty' to ensure we get the STUDENT'S info.
+                sql = """
+                    SELECT 
+                        a.applicationID, 
+                        a.applicationStatus,
+                        u.fullName, 
+                        u.userID,
+                        s.faculty AS studentFaculty, 
+                        sch.scholarshipName
+                    FROM application a
+                    JOIN user u ON a.studentID = u.userID
+                    JOIN student s ON a.studentID = s.studentID
+                    JOIN scholarship sch ON a.scholarshipID = sch.scholarshipID
+                    WHERE a.reviewerID = %s 
+                    AND a.applicationStatus IN ('Under Review', 'Pending Review')
+                """
+                cur.execute(sql, (reviewer_id,))
+                tasks = cur.fetchall()
+                
+                # Calculate stats for the dashboard mini-cards
+                total = len(tasks)
+                # Count logic can be adjusted based on your exact status names
+                done = sum(1 for t in tasks if t['applicationStatus'] == 'Reviewed') 
+                pending = total - done
 
-                # 
-                cur.execute("SELECT COUNT(*) as total FROM application WHERE reviewerID = %s", (uID,))
-                total_assigned = cur.fetchone()['total']
-                cur.execute("SELECT COUNT(*) as completed FROM application WHERE reviewerID = %s AND score IS NOT NULL", (uID,))
-                completed_count = cur.fetchone()['completed']
-
-            return render_template('reviewer_queue.html', reviewer_name=session['full_name'], 
-                                   pending_tasks=pending_list, total=total_assigned, 
-                                   done=completed_count, remain=len(pending_list))
+            return render_template('reviewer_queue.html', 
+                                   reviewer_name=session.get('full_name'), 
+                                   pending_tasks=tasks,
+                                   total=total, 
+                                   done=done, 
+                                   remain=pending)
         finally:
             connection.close()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.route('/reviewer/assessment/<app_id>')
 def reviewer_assessment(app_id):
@@ -512,19 +534,30 @@ def reviewer_assessment(app_id):
         connection = get_db_connection()
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cur:
-                sql = """SELECT a.*, u.fullName, u.userID, s.faculty, s.cgpa
+                # This query fetches Application details (a.*) + User Name + Student Details
+                sql = """SELECT a.*, u.fullName, u.userID, s.faculty, s.cgpa, sch.scholarshipName
                          FROM application a
                          JOIN user u ON a.studentID = u.userID
                          JOIN student s ON a.studentID = s.studentID
+                         JOIN scholarship sch ON a.scholarshipID = sch.scholarshipID
                          WHERE a.applicationID = %s"""
                 cur.execute(sql, (app_id,))
                 application_data = cur.fetchone()
+            
             if not application_data:
                 session.pop('current_assessment_id', None)
                 return redirect(url_for('reviewer_queue'))
-            return render_template('reviewer_assessment.html', reviewer_name=session['full_name'], app=application_data)
+            
+            # --- FIX IS HERE ---
+            # Changed 'app=application_data' to 'applicant=application_data'
+            # to match the {{ applicant.fullName }} in your HTML.
+            return render_template('reviewer_assessment.html', 
+                                   reviewer_name=session.get('full_name'), 
+                                   applicant=application_data)
+                                   
         finally:
             connection.close()
+            
     return redirect(url_for('index'))
 
 @app.route('/submit_assessment', methods=['POST'])
@@ -774,14 +807,19 @@ def add_scholarship_submit():
         faculty = request.form.get('faculty')
         description = request.form.get('description')
         terms = request.form.get('termAndCondition')
+        
+        # --- FIX: IMPROVED AMOUNT CLEANING ---
         try:
             raw_amount = request.form.get('scholarshipAmount', '0')
-            clean_amount = ''.join(filter(str.isdigit, str(raw_amount)))
-            amount = int(clean_amount) if clean_amount else 0
+            # Remove 'RM' and commas, then convert to float to preserve decimals
+            clean_string = str(raw_amount).replace('RM', '').replace(',', '').strip()
+            amount = float(clean_string) if clean_string else 0.0
+            
             raw_slots = request.form.get('totalSlots', '0')
             slots = int(raw_slots) if raw_slots.isdigit() else 0
         except Exception as type_err:
             return f"Data Format Error: {type_err}"
+            
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
@@ -801,7 +839,10 @@ def add_scholarship_submit():
                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cur.execute(sql, (sch_id, name, criteria, deadline, amount, terms, faculty, slots, description, status))
             connection.commit()
-            flash(f"Scholarship '{name}' saved successfully.")
+            
+            # FIX: Added category "scholarship_update"
+            flash(f"Scholarship '{name}' has been published and is now live.", "scholarship_update")
+            
             if user_role == 'admin':
                 return redirect(url_for('scholarship_manager'))
             else:
@@ -813,48 +854,117 @@ def add_scholarship_submit():
             if connection: connection.close()
     return redirect(url_for('index'))
 
+from datetime import datetime, timedelta  # Ensure these are imported at top of file
+import uuid
+
+# ENSURE THIS IS AT THE TOP OF FILE: from datetime import datetime, timedelta
+
 @app.route('/schedule_interview_submit', methods=['POST'])
 def schedule_interview_submit():
     if 'user_id' in session and session.get('role') == 'committee':
         app_id = request.form.get('applicationID')
         assign_date = request.form.get('assignDate')
         assign_time = request.form.get('assignTime')
-        venue = request.form.get('venue') # Captured from the new Decision Hub input
+        venue = request.form.get('venue') 
         
-        interview_datetime = f"{assign_date} {assign_time}:00"
-        
+        # 1. PARSE DATE & TIME
+        try:
+            date_obj = datetime.strptime(assign_date, '%Y-%m-%d').date()
+            time_obj = datetime.strptime(assign_time, '%H:%M').time()
+            new_interview_dt = datetime.combine(date_obj, time_obj)
+        except ValueError:
+            flash("Invalid date or time format.", "error")
+            return redirect(url_for('committee_dashboard'))
+
+        # 2. CHECK: MONDAY TO FRIDAY ONLY
+        if new_interview_dt.weekday() >= 5:
+            flash(f"Scheduling Error: Interviews are only allowed on Monday to Friday. {assign_date} is a weekend.", "error")
+            return redirect(url_for('committee_dashboard'))
+
+        # 3. CHECK: 9AM to 4PM ONLY
+        if not (9 <= new_interview_dt.hour <= 16):
+            flash(f"Scheduling Error: Interview time must be between 9:00 AM and 4:00 PM.", "error")
+            return redirect(url_for('committee_dashboard'))
+
         connection = get_db_connection()
         try:
             with connection.cursor() as cur:
+                # 4. CHECK CONFLICTS
+                start_buffer = new_interview_dt - timedelta(minutes=59)
+                end_buffer   = new_interview_dt + timedelta(minutes=59)
+                
+                query_conflict = """
+                    SELECT interviewID, interviewDate FROM INTERVIEW 
+                    WHERE interviewDate > %s AND interviewDate < %s
+                """
+                cur.execute(query_conflict, (start_buffer, end_buffer))
+                conflict = cur.fetchone()
+
+                if conflict:
+                    # 获取数据库里的冲突时间 (Get the busy time from DB)
+                    busy_datetime = conflict['interviewDate'] 
+                    
+                    # 格式化显示： "2026-02-18 at 09:00 AM"
+                    # Format as: YYYY-MM-DD at HH:MM AM/PM
+                    if isinstance(busy_datetime, datetime):
+                        busy_time_str = busy_datetime.strftime('%Y-%m-%d at %I:%M %p')
+                    else:
+                        # 如果数据库返回的是字符串，直接用 (Fallback if string)
+                        busy_time_str = str(busy_datetime)
+
+                    # Grammar Corrected Message
+                    flash(f"Conflict Error: The committee already has an interview scheduled for {busy_time_str}. Please choose another time slot.", "error")
+                    return redirect(url_for('committee_dashboard'))
+
+                # --- SAVE DATA ---
                 int_id = str(uuid.uuid4())[:8]
-                # SAVE VENUE TO DATABASE
+                interview_datetime_str = new_interview_dt.strftime('%Y-%m-%d %H:%M:%S')
+
                 cur.execute("""INSERT INTO INTERVIEW (interviewID, applicationID, interviewDate, interviewStatus, interviewVenue) 
                                VALUES (%s, %s, %s, 'Scheduled', %s)""", 
-                            (int_id, app_id, interview_datetime, venue))
+                            (int_id, app_id, interview_datetime_str, venue))
                 
                 cur.execute("UPDATE application SET applicationStatus = 'Scheduled' WHERE applicationID = %s", (app_id,))
                 
-                # Fetch details for Notification
-                cur.execute("""SELECT a.studentID, s.scholarshipName FROM application a 
-                               JOIN scholarship s ON a.scholarshipID = s.scholarshipID 
-                               WHERE applicationID = %s""", (app_id,))
+                # --- SAFER FETCH: Joining User table to ensure we find the Name ---
+                # NOTE: Ensure your user table is named 'user' or 'users'. Change 'user' below if needed.
+                cur.execute("""
+                    SELECT a.studentID, u.fullName, s.scholarshipName 
+                    FROM application a 
+                    JOIN scholarship s ON a.scholarshipID = s.scholarshipID
+                    JOIN user u ON a.studentID = u.userID
+                    WHERE a.applicationID = %s
+                """, (app_id,))
+                
                 info = cur.fetchone()
                 
-                # Student Notification including Venue
-                notif_id = str(uuid.uuid4())[:8]
-                msg = f"Interview Assigned: {info['scholarshipName']}. Date: {assign_date}, Time: {assign_time}. Venue: {venue}."
-                cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
-                               VALUES (%s, %s, %s, 'Unread', %s, 'Interview Update')""", 
-                            (notif_id, info['studentID'], msg, datetime.now()))
+                if info:
+                    # Send Notification
+                    notif_id = str(uuid.uuid4())[:8]
+                    msg = f"Interview Assigned: {info['scholarshipName']}. Date: {assign_date}, Time: {assign_time}. Venue: {venue}."
+                    cur.execute("""INSERT INTO NOTIFICATION (notificationID, userID, message, status, timestamp, type) 
+                                   VALUES (%s, %s, %s, 'Unread', %s, 'Interview Update')""", 
+                                (notif_id, info['studentID'], msg, datetime.now()))
+                    
+                    # Formatted Success Message
+                    formatted_time = time_obj.strftime('%I:%M %p')
+                    success_msg = f"Success: Interview scheduled for {info['studentID']}, {info['fullName']} on {assign_date} at {formatted_time} at {venue}."
+                    flash(success_msg, "success")
+                else:
+                    # Fallback if fetching info failed
+                    flash("Success: Interview scheduled.", "success")
                             
             connection.commit()
-            flash("Interview slot confirmed and student notified.")
             return redirect(url_for('committee_dashboard'))
+            
         except Exception as e:
             if connection: connection.rollback()
-            return f"Error: {e}"
+            flash(f"System Error: {e}", "error")
+            return redirect(url_for('committee_dashboard'))
+            
         finally:
             connection.close()
+            
     return redirect(url_for('index'))
 
 @app.route('/decision/<app_id>')
@@ -1203,7 +1313,6 @@ def submit_application_data():
         guardian_job, statement, bank_acc = data.get('guardianJob'), data.get('statement'), data.get('accNo')
         filename1, filename2 = "", ""
         
-        # 文件处理逻辑保持不变...
         file1 = request.files.get('transcript')
         f1_size, f1_type = 0, ""
         if file1 and file1.filename != '':
@@ -1454,7 +1563,8 @@ def get_dashboard_stats():
             }
     finally:
         if connection:
-            connection.close() #
+            connection.close() 
+
 @app.route('/generate_system_report')
 def generate_system_report():
     if 'user_id' not in session or session.get('role') != 'admin':

@@ -78,6 +78,13 @@
     </style>
 </head>
 <body>
+
+    {% with messages = get_flashed_messages(category_filter=["scholarship_update"]) %}
+      {% if messages %}
+        <div id="flash-data" data-message="{{ messages[0] }}" style="display:none;"></div>
+      {% endif %}
+    {% endwith %}
+
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
@@ -138,12 +145,14 @@
 
                                         {% if prog.status == 'Published' %}
                                         <a href="javascript:void(0)" 
-                                           onclick="showConfirmModal('Close Scholarship', 'Closing this will stop new applications. Proceed?', '{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}')" 
+                                           data-url="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='close') }}"
+                                           onclick="showConfirmModal('Close Scholarship', 'Closing this will stop new applications. Proceed?', this.getAttribute('data-url'))" 
                                            class="page-btn" style="color: var(--amber); border-color: #FED7AA; background: #FFFBEB; text-decoration: none;">Close</a>
                                         {% endif %}
 
                                         <a href="javascript:void(0)" 
-                                           onclick="showConfirmModal('Archive Program', 'This will remove the program from active management. Proceed?', '{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}')" 
+                                           data-url="{{ url_for('admin_manage_status', sch_id=prog.scholarshipID, action='archive') }}"
+                                           onclick="showConfirmModal('Archive Program', 'This will remove the program from active management. Proceed?', this.getAttribute('data-url'))" 
                                            class="page-btn" style="color: #DC2626; border-color: #FEE2E2; background: #FEF2F2; text-decoration: none;">Archive</a>
                                     </div>
                                 </td>
@@ -162,20 +171,6 @@
         </div>
     </div>
 
-    <div class="confirm-modal-overlay" id="confirmActionModal">
-        <div class="confirm-modal-card">
-            <div class="modal-icon-circle" id="modalIconBox"><i data-feather="alert-triangle"></i></div>
-            <h3 id="modalTitle" style="margin:0; color:#0F172A; font-weight:800;">Confirm Action</h3>
-            <p id="modalDescription" style="color:#64748B; font-size:0.9rem; margin:15px 0 30px;">Are you sure you want to proceed?</p>
-            <div style="display:flex; gap:12px;">
-                <button onclick="closeConfirmModal()" style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:white; cursor:pointer;">Cancel</button>
-                <form id="modalForm" method="POST" style="flex:1;">
-                    <button type="submit" id="confirmBtn" style="width:100%; padding:12px; border-radius:10px; background:#0F172A; color:white; font-weight:700; cursor:pointer; border:none;">Yes, Proceed</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <div id="toastAlert" class="toast-alert">
         <i data-feather="check-circle" id="toastIcon"></i>
         <div>
@@ -184,31 +179,27 @@
         </div>
     </div>
 
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
+            <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
+                <a href="{{ url_for('logout') }}" style="flex:1; padding:12px; border-radius:8px; border:none; background:#991B1B; color:white; cursor:pointer; font-weight:600; text-decoration:none; display:flex; align-items:center; justify-content:center;">Yes, Log out</a>
+            </div>
+        </div>
+    </div>
+
     <script>
         feather.replace();
 
-        function showConfirmModal(title, desc, url) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalDescription').innerText = desc;
-            document.getElementById('modalForm').action = url;
-            document.getElementById('confirmActionModal').style.display = 'flex';
-            
-            // Adjust icon color based on action type
-            const iconBox = document.getElementById('modalIconBox');
-            if(title.toLowerCase().includes('logout')) {
-                iconBox.style.background = '#DBEAFE'; iconBox.style.color = '#2563EB';
-            } else {
-                iconBox.style.background = '#FEE2E2'; iconBox.style.color = '#DC2626';
-            }
-            feather.replace();
-        }
+        function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
+        function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
-        function closeConfirmModal() { document.getElementById('confirmActionModal').style.display = 'none'; }
-
-        function showLogoutModal() {
-            showConfirmModal('Logout Session', 'Are you sure you want to log out of the Admin panel?', "{{ url_for('logout') }}");
-        }
-
+        window.onclick = function(event) {
+                    const logoutModal = document.getElementById('logoutModal');
+                    if (event.target == logoutModal) { closeLogoutModal(); }
+        };
         let currentPage = 1;
         const itemsPerPage = 10;
         const rows = document.querySelectorAll('.scholarship-row');
@@ -235,12 +226,15 @@
 
         window.onload = function() {
             updateTableDisplay();
-            const msg = sessionStorage.getItem('flashMessage');
-            if (msg) {
+            
+            // 2. FIXED: Removed sessionStorage logic. Only read from the flash block.
+            const flashElem = document.getElementById('flash-data');
+            if (flashElem) {
+                const msg = flashElem.getAttribute('data-message');
                 const toast = document.getElementById('toastAlert');
                 document.getElementById('toastMsg').innerText = msg;
                 toast.classList.add('show', 'toast-submitted');
-                setTimeout(() => { toast.classList.remove('show'); sessionStorage.removeItem('flashMessage'); }, 4000);
+                setTimeout(() => { toast.classList.remove('show'); }, 4000);
             }
         };
     </script>

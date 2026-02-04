@@ -139,7 +139,7 @@
         <div class="content">
             <form action="{{ url_for('add_scholarship_submit') }}" method="POST">
                 {% if sch %}
-                <input type="hidden" name="scholarshipID" value="{{ sch.scholarshipID }}">
+                    <input type="hidden" name="scholarshipID" value="{{ sch.scholarshipID }}">
                 {% endif %}
 
                 <div class="form-card">

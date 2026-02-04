@@ -2,96 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin | Account Settings</title>
+    <title>MeritHub Admin | Edit User</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        :root { 
-            --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
-            --sidebar-width: 260px; --sidebar-collapsed: 75px;
-        }
+        :root { --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0;  --sidebar-width: 250px; --sidebar-collapsed: 70px;  }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background-color: var(--bg); overflow: hidden; }
-
+        
         /* SIDEBAR */
-        .sidebar { width: var(--sidebar-width); background-color: var(--nav-dark); color: white; padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; transition: 0.3s; position: relative; height: 100vh; box-sizing: border-box; }
-        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; }
-        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; transition: 0.2s; }
-        .sidebar a i { width: 18px; height: 18px; margin-right: 12px; }
-        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
-        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
-        .logout-link { margin-top: auto !important; }
+        .sidebar { width: var(--sidebar-width); background-color: var(--nav-dark); color: white; padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; transition: all 0.3s; position: relative; }        
+        .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; }
+        .sidebar.collapsed h2 { display: none; }
+        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; transition: 0.2s; white-space: nowrap; }
+        .sidebar a i { width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
+        .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; box-shadow: inset 4px 0 0 var(--emerald); }
+        .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+        
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: white; }
+        .content { flex: 1; padding: 40px 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .card { width: 100%; max-width: 500px; padding: 40px; border: 1px solid var(--border); border-radius: 12px; background: white; text-align: center; }
+        
+        .user-info-box { background: #F1F5F9; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; border-left: 4px solid var(--nav-dark); }
+        .user-info-box span { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--slate); font-weight: 700; display: block; margin-bottom: 5px; }
+        .user-info-box h3 { margin: 0; color: var(--nav-dark); font-size: 1.1rem; }
 
-        /* MAIN CONTENT */
-        .main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; align-items: center; }
-        .header-section { width: 100%; max-width: 600px; margin-top: 60px; margin-bottom: 30px; }
+        .action-btn { display: block; width: 100%; padding: 15px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-bottom: 15px; transition: 0.2s; border: 1px solid var(--border); background: white; color: var(--nav-dark); box-sizing: border-box; }
+        .action-btn:hover { background: #F8FAFC; border-color: var(--slate); }
         
-        /* SETTINGS CARD */
-        .form-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 40px; width: 100%; max-width: 600px; box-sizing: border-box; }
-        
-        /* FOCUS BOX - MATCHES SCREENSHOT */
-        .user-focus-box { 
-            background: #F1F5F9; padding: 25px; border-radius: 10px; 
-            border-left: 5px solid var(--nav-dark); margin-bottom: 30px; 
+        .btn-danger { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+        .btn-danger:hover { background: #FEE2E2; }
+
+        /* FIXED: Styles for vertical (up and down) buttons */
+        .btn-save { 
+            display: block; 
+            width: 100%; 
+            background: #064E3B; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            margin-top: 20px; 
+            text-decoration: none; 
+            text-align: center;
+            box-sizing: border-box; /* Keeps padding inside width */
         }
-        .user-focus-box p { margin: 0; font-size: 0.8rem; color: var(--slate); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
-        .user-focus-box b { font-size: 1.25rem; color: var(--nav-dark); display: block; margin-top: 5px; }
+        .btn-save:hover { opacity: 0.9; }
 
-        /* BUTTONS */
-        .btn-wide { width: 100%; padding: 16px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 15px; font-family: 'Inter'; font-size: 0.9rem; border: 1px solid var(--border); transition: 0.2s; }
-        .btn-reset { background: white; color: var(--nav-dark); }
-        .btn-danger { background: #FEE2E2; border-color: #FCA5A5; color: #991B1B; }
-        .btn-danger:hover { background: #fecaca; }
-        .btn-save { background: var(--emerald); color: white; border: none; margin-top: 15px; }
-        .btn-save:hover { filter: brightness(1.1); }
-        
-        .back-link { background: none; border: none; width: 100%; color: var(--slate); font-weight: 600; cursor: pointer; margin-top: 10px; font-size: 0.9rem; text-decoration: none; display: block; text-align: center; }
+        .btn-back { 
+            display: block; 
+            width: 100%; 
+            background: white; 
+            border: 1px solid var(--border); 
+            color: var(--slate); 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            text-decoration: none; 
+            text-align: center;
+            box-sizing: border-box; /* Keeps padding inside width */
+        }
+        .btn-back:hover { background: #F8FAFC; border-color: var(--slate); }
+
+        /* MODAL STYLES */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; background: var(--emerald); color: white; }
     </style>
 </head>
 <body>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div id="flash-message" data-msg="{{ messages[0] }}" style="display:none;"></div>
+      {% endif %}
+    {% endwith %}
+
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
         <nav>
-            <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
-            <a href="{{ url_for('scholarship_manager')}}"><i data-feather="briefcase"></i><span>Scholarship Manager</span></a>
-            <a href="{{ url_for('user_management')}}"><i data-feather="users"></i><span>User Management</span></a>
-            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assign Reviewers</span></a>
+            <a href="{{ url_for('admin_dashboard')}}"><i data-feather="grid"></i><span>Dashboard</span></a>
+            <a href="{{ url_for('scholarship_manager')}}"><i data-feather="briefcase"></i><span>Scholarships</span></a>
+            <a href="{{ url_for('user_management')}}" class="active"><i data-feather="users"></i><span>Users</span></a>
+            <a href="{{ url_for('reviewer_assignment')}}"><i data-feather="check-square"></i><span>Assignments</span></a>
         </nav>
         <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Logout</span></a>
     </div>
 
     <div class="main">
-        <div class="header-section">
-            <h1 style="font-weight: 800; font-size: 2.2rem; margin: 0;">Account Settings</h1>
-        </div>
+        <div class="content">
+            <h1 style="margin-bottom: 40px; color: var(--nav-dark);">Account Settings</h1>
+            
+            <div class="card">
+                <div class="user-info-box">
+                    <span>Managing Account For</span>
+                    <h3>{{ user.fullName }} (ID: {{ user.userID }})</h3>
+                </div>
 
-        <div class="form-card">
-            <div class="user-focus-box">
-                <p>MANAGING ACCOUNT FOR</p>
-                <b>{{ user.fullName }} (ID: {{ user.userID }})</b>
+                <form action="{{ url_for('reset_password_request') }}" method="POST">
+                    <input type="hidden" name="email" value="{{ user.email }}">
+                    <button type="submit" class="action-btn">Reset User Password</button>
+                </form>
+
+                <form action="{{ url_for('delete_user', userid=user.userID) }}" method="POST" onsubmit="return confirm('Are you sure you want to deactivate this user?');">
+                    <button type="submit" class="action-btn btn-danger">Deactivate Account</button>
+                </form>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid var(--border);">
+
+                <a href="{{ url_for('user_management') }}" class="btn-save">
+                    Save Changes
+                </a>
+                
+                <a href="{{ url_for('user_management') }}" class="btn-back">
+                    Cancel and Go Back
+                </a>
             </div>
-
-            <form action="{{ url_for('reset_password_request') }}" method="POST" style="display:inline;">
-                <input type="hidden" name="email" value="{{ user.email }}">
-                <button type="submit" class="btn-wide btn-reset" onclick="alert('Reset link sent to {{ user.email }}')">
-                    Reset User Password
-                </button>
-            </form>
-            
-            <form action="{{ url_for('delete_user', userid=user.userID) }}" method="POST" onsubmit="return confirm('Are you sure? This user will lose access immediately.');">
-                <button type="submit" class="btn-wide btn-danger">Deactivate Account</button>
-            </form>
-            
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 30px 0;">
-            
-            <a href="{{ url_for('user_management') }}" class="btn-wide btn-save">Save Changes</a>
-            <a href="{{ url_for('user_management') }}" class="back-link">Cancel and Go Back</a>
         </div>
     </div>
 
-    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
-        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+    <div id="systemModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon"><i data-feather="check"></i></div>
+            <h3 style="margin-top:0; color:var(--nav-dark);">System Update</h3>
+            <p id="sysMsg" style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;"></p>
+            <button onclick="closeSystemModal()" style="width:100%; padding:12px; border-radius:8px; border:none; background:var(--nav-dark); color:white; cursor:pointer; font-weight:600;">Okay</button>
+        </div>
+    </div>
+
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -102,19 +151,37 @@
 
     <script>
         feather.replace();
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const btn = document.querySelector('.toggle-btn');
             sidebar.classList.toggle('collapsed');
-            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
+        // Show modal if python sends a message
+        window.onload = function() {
+            const flashDiv = document.getElementById('flash-message');
+            if (flashDiv) {
+                const msg = flashDiv.getAttribute('data-msg');
+                showSystemModal(msg);
+            }
+        };
+
+        function showSystemModal(msg) {
+            document.getElementById('sysMsg').innerText = msg;
+            document.getElementById('systemModal').style.display = 'flex';
+            feather.replace(); 
+        }
+
+        function closeSystemModal() {
+            document.getElementById('systemModal').style.display = 'none';
         }
 
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
-
+        
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            if (event.target == document.getElementById('logoutModal')) closeLogoutModal();
+            if (event.target == document.getElementById('systemModal')) closeSystemModal();
         };
     </script>
 </body>

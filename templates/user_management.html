@@ -34,7 +34,13 @@
         .search-row { display: flex; gap: 15px; margin: 30px 0; align-items: center; }
         .input-search { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; }
         .select-filter { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; color: var(--slate); font-weight: 600; cursor: pointer; }
-        .btn-add { background: var(--nav-dark); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        
+        /* FIXED: Updated CSS for Link Buttons */
+        .btn-add { 
+            background: var(--nav-dark); color: white; border: none; padding: 12px 24px; 
+            border-radius: 8px; font-weight: 700; cursor: pointer; white-space: nowrap; 
+            text-decoration: none; display: inline-block; 
+        }
         
         .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 30px; }
         .user-table { width: 100%; border-collapse: collapse; }
@@ -47,19 +53,22 @@
         .badge-committee { background: #E0E7FF; color: #432DD7; }
         .badge-reviewer { background: #ddd7ff; color: #5D0EC0; }
 
-        .btn-edit { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; color: var(--slate); }
-
-        /* TOAST ALERT - Fixed position off-screen by default */
-        .toast-alert { 
-            position: fixed; top: 20px; right: -400px; width: 300px; background: white; padding: 15px; 
-            border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: flex; align-items: center; 
-            gap: 12px; z-index: 9999; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            border-left: 5px solid var(--emerald);
+        /* FIXED: Updated CSS for Edit Button */
+        .btn-edit { 
+            background: white; border: 1px solid var(--border); padding: 8px 16px; 
+            border-radius: 6px; font-weight: 700; cursor: pointer; color: var(--slate);
+            text-decoration: none; display: inline-block; 
         }
-        .toast-alert.show { right: 20px; }
     </style>
 </head>
 <body>
+
+    {% with messages = get_flashed_messages(category_filter=["user_update"]) %}
+      {% if messages %}
+        <div id="flash-message" data-msg="{{ messages[0] }}" style="display:none;"></div>
+      {% endif %}
+    {% endwith %}
+    
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
         <h2>MERITHUB. ADMIN</h2>
@@ -88,7 +97,7 @@
                     <option value="student">Student</option>
                 </select>
 
-                <button class="btn-add" onclick="window.location.href='{{ url_for('add_user') }}'">+ Add New Staff</button>
+                <a href="{{ url_for('add_user') }}" class="btn-add">+ Add New Staff</a>
             </div>
 
             <div class="card">
@@ -110,9 +119,9 @@
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                                <button class="btn-edit" onclick="window.location.href='{{ url_for('edit_user', userid=user.userID) }}';">
+                                <a href="{{ url_for('edit_user', userid=user.userID) }}" class="btn-edit">
                                     Edit Account
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -122,11 +131,14 @@
         </div>
     </div>
 
-    <div id="toastAlert" class="toast-alert">
-        <i data-feather="check-circle"></i>
-        <div>
-            <b style="font-size: 0.85rem; display: block; color: var(--nav-dark);">System Update</b>
-            <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Action completed.</span>
+    <div id="systemModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
+        <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <div style="background: var(--emerald); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                <i data-feather="check"></i>
+            </div>
+            <h3 style="margin-top:0; color:var(--nav-dark);">System Update</h3>
+            <p id="sysMsg" style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;"></p>
+            <button onclick="closeSystemModal()" style="width:100%; padding:12px; border-radius:8px; border:none; background:var(--nav-dark); color:white; cursor:pointer; font-weight:600;">Okay</button>
         </div>
     </div>
 
@@ -143,6 +155,30 @@
 
     <script>
         feather.replace();
+
+        window.onload = function() {
+            const flashDiv = document.getElementById('flash-message');
+            if (flashDiv) {
+                const msg = flashDiv.getAttribute('data-msg');
+                showSystemModal(msg);
+            }
+            
+            const sessionMsg = sessionStorage.getItem('flashMessage');
+            if (sessionMsg) {
+                showSystemModal(sessionMsg);
+                sessionStorage.removeItem('flashMessage');
+            }
+        };
+
+        function showSystemModal(msg) {
+            document.getElementById('sysMsg').innerText = msg;
+            document.getElementById('systemModal').style.display = 'flex';
+            feather.replace(); 
+        }
+
+        function closeSystemModal() {
+            document.getElementById('systemModal').style.display = 'none';
+        }
 
         function filterUsers() {
             const searchQuery = document.getElementById('userSearch').value.toLowerCase();
@@ -176,20 +212,6 @@
         window.onclick = function(event) {
             const logoutModal = document.getElementById('logoutModal');
             if (event.target == logoutModal) { closeLogoutModal(); }
-        };
-
-        // Toast logic: Only show if there's a message in sessionStorage
-        window.onload = function() {
-            const msg = sessionStorage.getItem('flashMessage');
-            if (msg) {
-                const toast = document.getElementById('toastAlert');
-                document.getElementById('toastMsg').innerText = msg;
-                toast.classList.add('show');
-                setTimeout(() => { 
-                    toast.classList.remove('show'); 
-                    sessionStorage.removeItem('flashMessage'); 
-                }, 4000);
-            }
         };
     </script>
 </body>

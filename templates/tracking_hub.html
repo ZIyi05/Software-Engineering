@@ -121,7 +121,7 @@
 
         /* GEOMETRIC PERCENTAGES (100% / 6 gaps = 16.66% per gap) */
         .w-submitted { width: 16%; }         
-        .w-reviewing { width: 16.66%; }      
+        .w-reviewing { width: 33%; }      
         .w-approved  { width: 48%; }      
         .w-scheduled { width: 65%; } 
         .w-finalized { width: calc(100% - 50px); }
@@ -300,6 +300,7 @@
 
             <div id="completed" class="tab-content">
                 {% set completed_apps = applications | selectattr('applicationStatus', 'in', ['Awarded', 'Rejected']) | list %}
+                
                 {% if completed_apps %}
                     {% for user_app in completed_apps %}
                     <div class="app-card">
@@ -333,6 +334,12 @@
                         </div>
                     </div>
                     {% endfor %}
+                
+                {% else %}
+                    <div style="text-align:center; color:var(--slate); margin-top:80px;">
+                        <i data-feather="archive" style="width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p >No completed applications found.</p>
+                    </div>
                 {% endif %}
             </div>
 

@@ -43,9 +43,26 @@
         .select-reviewer { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: white; font-family: inherit; font-size: 0.9rem; }
         .btn-confirm { background: var(--emerald); color: white; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 700; cursor: pointer; float: right; transition: 0.2s; }
         .btn-confirm:hover { background: #047857; }
+
+        /* TOAST CSS */
+        .toast-alert { 
+            position: fixed; top: 20px; right: -350px; width: 300px; background: white; 
+            padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; gap: 12px; 
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; 
+            border-left: 5px solid var(--emerald);
+        }        
+        .toast-alert.show { right: 20px; } 
     </style>
 </head>
 <body>
+    
+    {% with messages = get_flashed_messages(category_filter=["reviewer_update"]) %}
+      {% if messages %}
+        <div id="flash-data" data-message="{{ messages[0] }}" style="display:none;"></div>
+      {% endif %}
+    {% endwith %}
+
     <div id="toastAlert" class="toast-alert">
         <i data-feather="check-circle" style="color: var(--emerald);"></i>
         <div>
@@ -125,18 +142,6 @@
         </div>
     </div>
 
-<style>
-        .toast-alert { 
-            position: fixed; top: 20px; right: -350px; width: 300px; background: white; 
-            padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            display: flex; align-items: center; gap: 12px; 
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; 
-            border-left: 5px solid var(--emerald);
-        }        
-        .toast-alert.show { right: 20px; } 
-    </style>
-
-
     <script>
         feather.replace();
 
@@ -171,6 +176,7 @@
         };
 
         window.onload = function() {
+            // 2. FIXED: This now reads from the HTML block we added above
             const flashElem = document.getElementById('flash-data');
             if (flashElem) {
                 const msg = flashElem.getAttribute('data-message');

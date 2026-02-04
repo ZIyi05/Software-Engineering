@@ -5,6 +5,9 @@
     <title>MeritHub | Decision Hub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <style>
         :root { 
             --bg: #F8FAFC; --nav-dark: #0F172A; --emerald: #064E3B; --slate: #475569; --border: #E2E8F0; 
@@ -37,6 +40,7 @@
         th { text-align: left; padding: 12px; font-size: 0.75rem; color: var(--slate); text-transform: uppercase; border-bottom: 1px solid var(--border); }
         td { padding: 20px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
+        /* General Input Styles */
         input[type="date"], input[type="time"], input[type="text"] { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Inter'; font-size: 0.85rem; }
         .btn-confirm { background: var(--emerald); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
     </style>
@@ -58,6 +62,25 @@
         <div class="top-bar"><div class="user-badge">Committee: {{ committee_name }}</div></div>
 
         <div class="content">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                {% if category == 'error' %}
+                    <div style="background-color: #FEF2F2; border: 1px solid #F87171; color: #991B1B; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center;">
+                        <i data-feather="alert-circle" style="margin-right: 10px;"></i>
+                        <b>{{ message }}</b>
+                    </div>
+                {% else %}
+                    <div style="background-color: #ECFDF5; border: 1px solid #34D399; color: #065F46; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center;">
+                        <i data-feather="check-circle" style="margin-right: 10px;"></i>
+                        <b>{{ message }}</b>
+                    </div>
+                {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+            
             <h1 style="font-weight: 800; font-size: 2.5rem; margin: 0;">Decision Hub</h1>
             <p style="color: var(--slate); margin-top: 10px;">Review successful candidates and manage interview slots.</p>
 
@@ -83,10 +106,17 @@
                                     <small style="color: var(--slate);">{{ cand.faculty }}</small>
                                 </td>
                                 <td style="font-weight: 800; color: var(--emerald);">{{ cand.score }} / 20</td>
-                                <td><input type="date" name="assignDate" required></td>
-                                <td><input type="time" name="assignTime" required></td>
+                                
                                 <td>
-                                    <input type="text" name="venue" placeholder="e.g. Zoom / Block A R101" required>
+                                    <input type="text" class="input-field date-picker" name="assignDate" placeholder="Select Weekday..." required>
+                                </td>
+
+                                <td>
+                                    <input type="text" class="input-field time-picker" name="assignTime" placeholder="Select Time..." required>
+                                </td>
+                                
+                                <td>
+                                    <input type="text" name="venue" placeholder="e.g. Zoom / Block A" required>
                                 </td>
                                 <td><button type="submit" class="btn-confirm">Confirm Slot</button></td>
                             </form>
@@ -117,11 +147,52 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
         feather.replace();
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
+
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
+
+        window.onclick = function(event) {
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
+        };
+
+        // --- FLATPICKR CONFIGURATION ---
+
+        // 1. DATE PICKER (Attached to class .date-picker)
+        flatpickr(".date-picker", {  // <--- Changed from #dateInput to .date-picker
+            dateFormat: "Y-m-d",     
+            minDate: "today",        
+            disable: [
+                function(date) {
+                    // Disable Weekends (0=Sun, 6=Sat)
+                    return (date.getDay() === 0 || date.getDay() === 6);
+                }
+            ],
+            locale: { firstDayOfWeek: 1 }
+        });
+
+        // 2. TIME PICKER (Attached to class .time-picker)
+        flatpickr(".time-picker", {  // <--- Changed from #timeInput to .time-picker
+            enableTime: true,
+            noCalendar: true,       
+            dateFormat: "H:i",      
+            altInput: true,         
+            altFormat: "h:i K",     
+            minTime: "09:00",       
+            maxTime: "16:00",       
+            minuteIncrement: 60     
+        });
+
     </script>
 </body>
 </html>

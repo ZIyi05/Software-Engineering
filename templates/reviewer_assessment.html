@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,25 +12,38 @@
         }
         body { margin: 0; display: flex; font-family: 'Inter', sans-serif; height: 100vh; background: var(--bg); overflow: hidden; }
 
-        /* SIDEBAR */
         .sidebar { 
             width: var(--sidebar-width); background-color: var(--nav-dark); color: white; 
             padding: 40px 24px; flex-shrink: 0; display: flex; flex-direction: column; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
         }
         .sidebar.collapsed { width: var(--sidebar-collapsed); padding: 40px 10px; }
+        
         .sidebar h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2.5px; margin-bottom: 50px; color: #FFFFFF; font-weight: 800; white-space: nowrap; transition: 0.3s; }
-        .sidebar a { color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; transition: 0.2s; white-space: nowrap; }
+        .sidebar.collapsed h2 { font-size: 0.5rem; padding-left: 0; text-align: center; letter-spacing: 1px; white-space: normal; line-height: 1.2; }
+
+        .sidebar a { 
+            color: #94A3B8; text-decoration: none; padding: 14px 16px; margin-bottom: 8px; 
+            border-radius: 8px; display: flex; align-items: center; font-size: 0.95rem; font-weight: 500; 
+            transition: 0.2s; white-space: nowrap;
+        }
+
         .sidebar a i { display: block; width: 18px; height: 18px; margin-right: 12px; flex-shrink: 0; }
+        .sidebar.collapsed a i { margin-right: 0; margin: 0 auto; }
+        .sidebar.collapsed a span { display: none; }
         .sidebar a.active { background-color: rgba(255, 255, 255, 0.05); color: white; font-weight: 700; box-shadow: inset 4px 0 0 var(--emerald); }
+
         .toggle-btn { position: absolute; top: 85px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
         .main-container { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
         .fixed-top-header { height: 60px; background: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 40px; flex-shrink: 0; z-index: 10; }
         .reviewer-badge { font-size: 0.8rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 6px 16px; border-radius: 6px; }
 
         .split-view { display: flex; flex: 1; overflow: hidden; }
+        
         .left-pane { flex: 1; background: white; padding: 40px; overflow-y: auto; border-right: 1px solid var(--border); }
+        
         .student-header h1 { font-size: 2.8rem; font-weight: 800; margin: 0; }
         .student-meta { font-size: 1.1rem; color: var(--slate); margin: 10px 0 40px 0; }
         .doc-section { margin-bottom: 35px; }
@@ -46,9 +58,31 @@
         .field select, .field input, .field textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter'; font-size: 1rem; box-sizing: border-box; }
         .weighted-val { font-size: 3rem; font-weight: 800; color: var(--emerald); margin: 10px 0 40px 0; }
         .btn-emerald-submit { background-color: var(--emerald); color: white; border: none; padding: 18px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; }
+        
+        .info-card { background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 25px; margin-bottom: 25px; }
+        .info-card h3 { margin-top: 0; color: var(--nav-dark); font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 15px; }
+        .info-card p { color: var(--slate); line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap; }
+        .pdf-preview { width: 100%; height: 300px; background: #E2E8F0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--slate); font-weight: 600; margin-bottom: 25px; border: 2px dashed #CBD5E1; }
+
+        .toast-alert { 
+            position: fixed; top: 20px; right: -350px; width: 300px; background: white; 
+            padding: 15px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; gap: 12px; 
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; 
+            border-left: 5px solid var(--emerald);
+        }        
+        .toast-alert.show { right: 20px; }
     </style>
 </head>
 <body>
+
+    <div id="toastAlert" class="toast-alert">
+        <i data-feather="check-circle" style="color: var(--emerald);"></i>
+        <div>
+            <b style="font-size: 0.85rem; display: block; color: var(--nav-dark);">Success</b>
+            <span id="toastMsg" style="font-size: 0.75rem; color: var(--slate);">Assessment submitted successfully.</span>
+        </div>
+    </div>
 
     <div class="sidebar" id="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()">◂</button>
@@ -56,48 +90,65 @@
         <nav>
             <a href="{{ url_for('reviewer_dashboard') }}"><i data-feather="grid"></i><span>Dashboard Overview</span></a>
             <a href="{{ url_for('reviewer_queue') }}"><i data-feather="layers"></i><span>Queue Overview</span></a>
-            <a href="{{ url_for('reviewer_assessment', app_id=app.applicationID) }}" class="active"><i data-feather="file-text"></i><span>Current Assessment</span></a>
+            
+            <a href="{{ url_for('reviewer_assessment', app_id=applicant.applicationID) }}" class="active">
+                <i data-feather="file-text"></i><span>Current Assessment</span>
+            </a>
+            
             <a href="{{ url_for('scoring_history') }}"><i data-feather="clock"></i><span>Evaluation History</span></a>
         </nav>
         <a href="javascript:void(0)" onclick="showLogoutModal()" style="margin-top: auto;"><i data-feather="log-out"></i><span>Log out</span></a>
     </div>
-
+    
     <div class="main-container">
         <div class="fixed-top-header"><div class="reviewer-badge">Reviewer: {{ reviewer_name }}</div></div>
 
         <div class="split-view">
+
             <div class="left-pane">
-                <div class="student-header">
-                    <h1>{{ app.fullName }}</h1>
-                    <p class="student-meta">ID: {{ app.userID }} | {{ app.faculty }} Faculty (CGPA: {{ app.cgpa }})</p>
+                <div class="applicant-header">
+                    <h1>{{ applicant.fullName }}</h1>
+                    <p>ID: {{ applicant.userID }} | {{ applicant.faculty }} Faculty (CGPA: {{ applicant.cgpa }})</p>
+                    <p style="margin-top: 5px; color: var(--emerald); font-weight: 600;">Applying for: {{ applicant.scholarshipName }}</p>
                 </div>
+
                 <div class="doc-section">
                     <span class="doc-label">Academic Transcript</span>
                     <div class="pdf-viewer-box">
-                        {% if app.documentUploaded %}
-                            <embed src="{{ url_for('static', filename='uploads/' + app.documentUploaded) }}" type="application/pdf" style="width:100%; height:100%;">
+                        {% if applicant.documentUploaded %}
+                            <embed src="{{ url_for('static', filename='uploads/' + applicant.documentUploaded) }}" type="application/pdf" style="width:100%; height:100%;">
                         {% else %}<p>No transcript uploaded.</p>{% endif %}
                     </div>
                 </div>
                 <div class="doc-section">
                     <span class="doc-label">Family Income Slip</span>
                     <div class="pdf-viewer-box">
-                        {% if app.incomeProof %}
-                            <embed src="{{ url_for('static', filename='uploads/' + app.incomeProof) }}" type="application/pdf" style="width:100%; height:100%;">
+                        {% if applicant.incomeProof %}
+                            <embed src="{{ url_for('static', filename='uploads/' + applicant.incomeProof) }}" type="application/pdf" style="width:100%; height:100%;">
                         {% else %}<p>No income proof uploaded.</p>{% endif %}
                     </div>
                 </div>
-            </div>
+
+                <div class="info-card">
+                    <h3>Personal Statement</h3>
+                    <p>{{ applicant.statementOfPurpose }}</p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Leadership & Extracurriculars</h3>
+                    <p>{{ applicant.leadershipActivities }}</p>
+                </div>
+            </div> 
 
             <div class="right-pane">
                 <h1 class="rubric-title">Assessment Rubric</h1>
                 <form id="assessmentForm" action="{{ url_for('submit_assessment') }}" method="POST">
-                    <input type="hidden" name="applicationID" value="{{ app.applicationID }}">
+                    <input type="hidden" name="applicationID" value="{{ applicant.applicationID }}">
                     <input type="hidden" name="totalScore" id="hiddenTotal" value="0">
                     
                     <div class="field">
                         <label>Academic Merit Score (0-10)</label>
-                        <select id="academicScore" onchange="updateTotal()">
+                        <select id="academicScore" name="academic_score" onchange="updateTotal()">
                             <option value="0">0 - Below Requirement</option>
                             <option value="5">5 - Satisfactory (CGPA 2.5 - 2.99)</option>
                             <option value="7">7 - Good (CGPA 3.0 - 3.49)</option>
@@ -105,16 +156,16 @@
                             <option value="10">10 - Outstanding (CGPA 3.8+)</option>
                         </select>
                     </div>
-                    <div class="field">
+                    <div class="form-group field"> 
                         <label>Leadership Potential (0-10)</label>
-                        <input type="number" name="leadershipScore" id="leadershipScore" value="0" min="0" max="10" oninput="updateTotal()">
+                        <input type="number" class="score-input" id="leadershipScore" name="leadership_score" min="0" max="10" placeholder="0-10" oninput="updateTotal()" required>
                     </div>
                     <div class="weighted-val" id="totalDisplay">0 / 20</div>
                     <div class="field">
                         <label>Recommendation</label>
-                        <select id="finalStatus" name="recommendation">
-                            <option value="Approved">Approved for Interview Stage (Final Scoring > 15 marks)</option>
-                            <option value="Rejected">Rejected (Final Scoring < 15marks)</option>
+                        <select id="finalStatus" name="final_status"> 
+                            <option value="Shortlisted">Approved for Interview Stage (Final Scoring > 15 marks)</option>
+                            <option value="Rejected">Rejected (Final Scoring < 15 marks)</option>
                         </select>
                     </div>
                     <div class="field">
@@ -123,9 +174,9 @@
                     </div>
                     <button type="button" class="btn-emerald-submit" onclick="showBrandedModal()">Submit Final Assessment</button>
                 </form>
-            </div>
-        </div>
-    </div>
+            </div> 
+        </div> 
+    </div> 
 
     <div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
@@ -138,7 +189,7 @@
 
     <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10001; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--sidebar);">MeritHub</h3>
+            <h3 style="margin-top:0; color:var(--nav-dark);">MeritHub</h3>
             <p style="color:var(--slate); font-size:0.9rem; margin-bottom:25px;">Are you sure you want to log out?</p>
             <div style="display:flex; gap:10px;">
                 <button onclick="closeLogoutModal()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:white; cursor:pointer; font-weight:600;">Cancel</button>
@@ -149,14 +200,34 @@
 
     <script>
         feather.replace();
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.querySelector('.toggle-btn');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? '▸' : '◂';
+        }
         
         function updateTotal() {
             const academic = parseInt(document.getElementById('academicScore').value) || 0;
             const leadership = parseInt(document.getElementById('leadershipScore').value) || 0;
-            const total = academic + leadership;
+            
+            if(leadership > 10) { 
+                document.getElementById('leadershipScore').value = 10;
+            }
+
+            const total = academic + (leadership > 10 ? 10 : leadership);
             document.getElementById('totalDisplay').innerText = total + " / 20";
             document.getElementById('hiddenTotal').value = total;
+            
+            // Visual feedback
+            const totalBox = document.getElementById('totalDisplay');
+            if(total >= 16) {
+                totalBox.style.color = "#064E3B"; // Emerald
+            } else if (total >= 10) {
+                totalBox.style.color = "#D97706"; // Amber
+            } else {
+                totalBox.style.color = "#991B1B"; // Red
+            }
         }
 
         function showBrandedModal() {
@@ -168,12 +239,28 @@
 
         function finalSubmit() { document.getElementById('assessmentForm').submit(); }
 
+        function submitWithToast() {
+            const toast = document.getElementById('toastAlert');
+            const status = document.getElementById('finalStatus').value;
+            
+            // Update Toast Message dynamically
+            document.getElementById('toastMsg').innerText = `Assessment finalized as: ${status}. Saving...`;
+            
+            // Show Toast (Slide in from Right)
+            toast.classList.add('show');
+            
+            // Wait 1.5 Seconds for visual effect, then actually submit form
+            setTimeout(() => {
+                document.getElementById('assessmentForm').submit();
+            }, 1500);
+        }
+
         function showLogoutModal() { document.getElementById('logoutModal').style.display = 'flex'; }
         function closeLogoutModal() { document.getElementById('logoutModal').style.display = 'none'; }
 
         window.onclick = function(event) {
-                    const logoutModal = document.getElementById('logoutModal');
-                    if (event.target == logoutModal) { closeLogoutModal(); }
+            const logoutModal = document.getElementById('logoutModal');
+            if (event.target == logoutModal) { closeLogoutModal(); }
         };
     </script>
 </body>
