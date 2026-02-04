@@ -39,7 +39,7 @@
             display: flex; align-items: center; justify-content: center; font-size: 0.7rem;
         }
 
-        /* TOP BAR & NOTIFICATIONS (Matches Image 3) */
+        /* TOP BAR & NOTIFICATIONS */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 15px; }
 
@@ -54,7 +54,7 @@
 
         .notification-dropdown { 
             position: absolute; top: 50px; right: 0; width: 320px; 
-            max-height: 400px; /* Limits height for scrolling */
+            max-height: 400px; 
             background: white; border: 1px solid var(--border); border-radius: 12px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
             flex-direction: column; overflow: hidden; 
@@ -62,17 +62,20 @@
         .notification-dropdown.show { display: flex; }
         .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
         
-        /* SCROLLABLE LIST CONTAINER */
         .notif-list { overflow-y: auto; flex: 1; }
 
-        /* PROFESSIONAL ITEM STYLE (Image 3) */
-        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
-        .notif-item:hover { background: #F8FAFC; }
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; align-items: center; }
         .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .notif-content { flex: 1; }
         .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
         .notif-text { font-size: 0.8rem; color: var(--slate); line-height: 1.4; margin-bottom: 4px; }
         .notif-time { font-size: 0.65rem; color: #94A3B8; font-weight: 500; }
+        
+        /* MARK AS READ STYLES */
+        .notif-link { text-decoration: none; display: block; color: inherit; }
+        .unread-item { background-color: #F0F9FF; }
+        .unread-dot { width: 8px; height: 8px; background-color: #10B981; border-radius: 50%; flex-shrink: 0; }
+        .notif-item:hover { background: #F1F5F9 !important; }
 
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
@@ -120,26 +123,33 @@
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    {% set total_notifs = applications|length if applications else 0 %}
-                    <div class="notif-badge {{ 'active' if total_notifs > 0 }}" id="notifBadge">{{ total_notifs }}</div>
+                    {% set unread_count = applications|selectattr('status', 'equalto', 'Unread')|list|length if applications else 0 %}
+                    <div class="notif-badge {{ 'active' if unread_count > 0 }}" id="notifBadge">{{ unread_count }}</div>
                 </div>
                 
                 <div class="notification-dropdown" id="notifDropdown">
                     <div class="notif-header">Notifications</div>
-                    <div class="notif-list"> {% if applications %}
-                            {% for notif in applications %}
-                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                    <div class="notif-list"> 
+                    {% if applications %}
+                        {% for notif in applications %}
+                        <a href="{{ url_for('mark_read', notif_id=notif.notificationID) }}" class="notif-link">
+                            <div class="notif-item {% if notif.status == 'Unread' %}unread-item{% endif %}"> 
+                                <div class="notif-icon"><i data-feather="bell"></i></div>
                                 <div class="notif-content">
                                     <div class="notif-title">{{ notif.type }}</div>
                                     <div class="notif-text">{{ notif.message }}</div>
                                     <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                                {% if notif.status == 'Unread' %}
+                                    <div class="unread-dot"></div>
+                                {% endif %}
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
-                        {% endif %}
-                    </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
+                    {% endif %}
+                </div>
                 </div>
             </div>
             <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>
@@ -237,12 +247,10 @@
 
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
-            const badge = document.getElementById('notifBadge');
             dropdown.classList.toggle('show'); 
-            if (badge) badge.style.display = 'none';
+            // Removed logic that forced hides the badge; it will hide on reload after clicking a link
         }
 
-        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
         window.onclick = function(event) {
             const dropdown = document.getElementById('notifDropdown');
             const logoutModal = document.getElementById('logoutModal');

@@ -92,6 +92,32 @@
         .status-awarded { background: #ECFDF5; color: var(--emerald); }
         .status-pending { background: #FEF3C7; color: #92400E; }
         .status-rejected { background: #FEF2F2; color: #991B1B; }
+
+        /* Styling for the new notification link wrapper */
+        .notif-link {
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        /* Background for unread items */
+        .unread-item {
+            background-color: #F0F9FF; /* Light blue tint for unread */
+        }
+
+        /* Optional: Add a small green dot to unread notifications */
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            align-self: center;
+            margin-right: 5px;
+        }
+
+        .notif-item:hover {
+            background: #F1F5F9 !important;
+        }
     </style>
 </head>
 <body>
@@ -118,20 +144,27 @@
                 
                 <div class="notification-dropdown" id="notifDropdown">
                     <div class="notif-header">Notifications</div>
-                    <div class="notif-list"> {% if applications %}
-                            {% for notif in applications %}
-                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                    <div class="notif-list"> 
+                    {% if applications %}
+                        {% for notif in applications %}
+                        <a href="{{ url_for('mark_read', notif_id=notif.notificationID) }}" class="notif-link">
+                            <div class="notif-item {% if notif.status == 'Unread' %}unread-item{% endif %}"> 
+                                <div class="notif-icon"><i data-feather="bell"></i></div>
                                 <div class="notif-content">
                                     <div class="notif-title">{{ notif.type }}</div>
                                     <div class="notif-text">{{ notif.message }}</div>
                                     <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                                {% if notif.status == 'Unread' %}
+                                    <div class="unread-dot"></div>
+                                {% endif %}
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
-                        {% endif %}
-                    </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
+                    {% endif %}
+                </div>
                 </div>
             </div>
             <div class="user-tag">ID: {{ user_id }} | {{ name }}</div>

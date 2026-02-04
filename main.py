@@ -1313,6 +1313,25 @@ def generate_sequential_id(prefix, table_name, column_name):
     finally:
         connection.close()
 
+@app.route('/mark_read/<notif_id>')
+def mark_read(notif_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cur:
+            # Update the specific notification for this user
+            sql = "UPDATE NOTIFICATION SET status = 'Read' WHERE notificationID = %s AND userID = %s"
+            cur.execute(sql, (notif_id, session['user_id']))
+        connection.commit()
+    except Exception as e:
+        print(f"Error updating notification: {e}")
+    finally:
+        connection.close()
+    
+    # Redirect back to where they were, or to the tracking hub
+    return redirect(request.referrer or url_for('tracking_hub'))
 
 # --- SHARED ANALYTICS HELPER ---
 def get_dashboard_stats():
