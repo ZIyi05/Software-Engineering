@@ -31,7 +31,7 @@
 
         .toggle-btn { position: absolute; top: 75px; right: -12px; background: var(--emerald); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
 
-        /* TOP BAR & NOTIFICATIONS SYSTEM (Matches Image 3) */
+        /* TOP BAR & NOTIFICATIONS SYSTEM */
         .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .top-bar { height: 56px; background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 30px; gap: 20px; }
         
@@ -46,20 +46,22 @@
 
         .notification-dropdown { 
             position: absolute; top: 50px; right: 0; width: 320px; 
-            max-height: 400px; /* Limits height for scrolling */
-            background: white; border: 1px solid var(--border); border-radius: 12px; 
+            max-height: 400px; background: white; border: 1px solid var(--border); border-radius: 12px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; z-index: 1000; 
             flex-direction: column; overflow: hidden; 
         }
         .notification-dropdown.show { display: flex; }
         .notif-header { padding: 15px 20px; font-weight: 800; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; color: var(--sidebar); flex-shrink: 0; }
         
-        /* SCROLLABLE CONTAINER */
         .notif-list { overflow-y: auto; flex: 1; }
 
-        /* PROFESSIONAL ITEM STYLE (Image 3) */
-        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: default; text-align: left; }
-        .notif-item:hover { background: #F8FAFC; }
+        /* NOTIFICATION CLICKABLE STYLES */
+        .notif-link { text-decoration: none; display: block; color: inherit; }
+        .unread-item { background-color: #F0F9FF; }
+        .unread-dot { width: 8px; height: 8px; background-color: #10B981; border-radius: 50%; flex-shrink: 0; margin-left: auto; }
+        .notif-item { display: flex; gap: 12px; padding: 15px 20px; border-bottom: 1px solid #F8FAFC; cursor: pointer; text-align: left; align-items: center; }
+        .notif-item:hover { background: #F1F5F9 !important; }
+        
         .notif-icon { width: 32px; height: 32px; border-radius: 50%; background: #F1F5F9; color: var(--emerald); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .notif-content { flex: 1; }
         .notif-title { font-size: 0.75rem; font-weight: 800; color: var(--sidebar); margin-bottom: 4px; }
@@ -69,13 +71,7 @@
         .user-tag { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: #F1F5F9; padding: 5px 12px; border-radius: 6px; }
 
         /* WORKSPACE */
-        .workspace { 
-            padding: 40px 60px; 
-            overflow-y: auto; /* Enables scrolling for the hero and trackers */
-            flex: 1; 
-        }
-
-        /* Ensure the hero section doesn't push content off-screen */
+        .workspace { padding: 40px 60px; overflow-y: auto; flex: 1; }
         .hero { flex-shrink: 0; }
         .hero h1 { font-size: 2.2rem; font-weight: 800; margin: 0; }
         .hero p { font-size: 1rem; color: var(--slate); margin: 10px 0 25px 0; }
@@ -90,7 +86,6 @@
         .status-badge { font-size: 0.7rem; font-weight: 800; padding: 6px 16px; border-radius: 6px; text-transform: uppercase; }
         .status-submitted { background: #F1F5F9; color: var(--slate); }
         .status-awarded { background: #ECFDF5; color: var(--emerald); }
-        .status-pending { background: #FEF3C7; color: #92400E; }
         .status-rejected { background: #FEF2F2; color: #991B1B; }
     </style>
 </head>
@@ -112,25 +107,33 @@
             <div style="position: relative;">
                 <div class="notification-bell" onclick="toggleNotifs()">
                     <i data-feather="bell" style="width: 18px; height: 18px;"></i>
-                    {% set total_unread = applications|selectattr('status', 'equalto', 'Unread')|list|length if applications else 0 %}
-                    <div class="notif-badge {{ 'active' if total_unread > 0 }}" id="notifBadge">{{ total_unread }}</div>
+                    
+                    {% set unread_count = applications|selectattr('status', 'equalto', 'Unread')|list|length if applications else 0 %}
+                    <div class="notif-badge {{ 'active' if unread_count > 0 }}" id="notifBadge">{{ unread_count }}</div>
                 </div>
                 
                 <div class="notification-dropdown" id="notifDropdown">
                     <div class="notif-header">Notifications</div>
-                    <div class="notif-list"> {% if applications %}
-                            {% for notif in applications %}
-                            <div class="notif-item"> <div class="notif-icon"><i data-feather="bell"></i></div>
+                    <div class="notif-list"> 
+                    {% if applications %}
+                        {% for notif in applications %}
+                        <a href="{{ url_for('mark_read', notif_id=notif.notificationID) }}" class="notif-link">
+                            <div class="notif-item {% if notif.status == 'Unread' %}unread-item{% endif %}"> 
+                                <div class="notif-icon"><i data-feather="bell"></i></div>
                                 <div class="notif-content">
                                     <div class="notif-title">{{ notif.type }}</div>
                                     <div class="notif-text">{{ notif.message }}</div>
                                     <div class="notif-time">{{ notif.timestamp.strftime('%b %d, %H:%M') if notif.timestamp else '' }}</div>
                                 </div>
+                                {% if notif.status == 'Unread' %}
+                                    <div class="unread-dot"></div>
+                                {% endif %}
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
-                        {% endif %}
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 30px; text-align: center; color: var(--slate); font-size: 0.8rem;">No new updates</div>
+                    {% endif %}
                     </div>
                 </div>
             </div>
@@ -139,11 +142,10 @@
 
         <div class="workspace">
             <div class="hero">
-                <h1>Welcome back, {{ name.split(' ')[0] }}.</h1>
+                <h1>Welcome back, {{ name.split(' ')[0] if name else 'User' }}.</h1>
                 <p>You have <b>{{ app_count }}</b> active applications. Check your status below.</p>
                 <a href="{{ url_for('scholarship_discovery') }}" class="btn-browse">Browse Scholarships</a> 
             </div>
-            
 
             <div class="scroll-area">
                 <div class="section-label-header">
@@ -198,16 +200,14 @@
 
         function toggleNotifs() { 
             const dropdown = document.getElementById('notifDropdown');
-            const badge = document.getElementById('notifBadge');
             dropdown.classList.toggle('show'); 
-            if (badge) { badge.style.display = 'none'; }
+            // DO NOT add: badge.style.display = 'none'; 
+            // The badge should only disappear when the page reloads after a click.
         }
 
-        /* CONSOLIDATED CLICK HANDLER: Closes dropdown if user clicks anywhere else */
         window.onclick = function(event) {
             const dropdown = document.getElementById('notifDropdown');
             const logoutModal = document.getElementById('logoutModal');
-
             if (dropdown && dropdown.classList.contains('show')) {
                 if (!event.target.closest('.notification-bell') && !event.target.closest('#notifDropdown')) {
                     dropdown.classList.remove('show');

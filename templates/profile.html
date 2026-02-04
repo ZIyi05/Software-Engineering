@@ -155,7 +155,7 @@
                 <div class="form-grid">
                     <div class="field"><label>Faculty</label><input type="text" name="faculty" value="{{ student.faculty }}"></div>
                     <div class="field"><label>Program (Course)</label><input type="text" name="course" value="{{ student.course }}"></div>
-                    <div class="field"><label>Current CGPA</label><input type="text" name="cgpa" value="{{ student.cgpa if student.cgpa else '0.00' }}"></div>
+                    <div class="field"><label>Current CGPA</label><input type="number" name="cgpa" value="{{ student.cgpa if student.cgpa else '0.00' }}" min="0.00" max="4.00" step="0.01" required></div>
                     <div class="field"><label>Total Credit Hours</label><input type="number" name="credits" value="{{ student.total_credits if student.total_credits else 0 }}" min="0"></div>
                 </div>
                 <button type="submit" class="btn-save" id="saveBtn">Save Profile Changes</button>
