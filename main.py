@@ -60,27 +60,35 @@ def login_submit():
     connection = get_db_connection()
     try:
         with connection.cursor() as cur:
+            # We fetch the user by ID
             cur.execute("SELECT * FROM user WHERE userID = %s", (uid,))
             user = cur.fetchone()
     finally:
         connection.close()
 
+    # CRITICAL CHANGE: Added check for user['status'] == 'Active'
     if user and user['password'] == pwd:
-        session['user_id'] = user['userID']
-        session['full_name'] = user['fullName']
-        session['role'] = user['role']
-        
-        log_security_event(uid, f"{user['role'].capitalize()} logged in successfully.")
+        if user['status'] == 'Active':
+            session['user_id'] = user['userID']
+            session['full_name'] = user['fullName']
+            session['role'] = user['role']
+            
+            log_security_event(uid, f"{user['role'].capitalize()} logged in successfully.")
 
-        if user['role'] == 'admin':
-            return redirect(url_for('admin_dashboard'))
-        elif user['role'] == 'reviewer':
-            return redirect(url_for('reviewer_dashboard'))
-        elif user['role'] == 'committee':
-            return redirect(url_for('committee_overview'))
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'reviewer':
+                return redirect(url_for('reviewer_dashboard'))
+            elif user['role'] == 'committee':
+                return redirect(url_for('committee_overview'))
+            else:
+                return redirect(url_for('student_dashboard'))
         else:
-            return redirect(url_for('student_dashboard'))
+            # If the user exists but is Inactive
+            flash("Your account has been deactivated. Please contact the administrator.")
+            return redirect(url_for('index'))
     else:
+        # If the password is wrong or user doesn't exist
         flash("Invalid User ID or Password.")
         return redirect(url_for('index'))
 
@@ -1002,23 +1010,37 @@ def profile():
 def update_profile():
     if 'user_id' not in session:
         return redirect(url_for('index'))
+    
     uID = session['user_id']
+    cgpa = request.form.get('cgpa')
+
+    # --- NEW VALIDATION LOGIC ---
+    try:
+        cgpa_val = float(cgpa)
+        if not (0.0 <= cgpa_val <= 4.0):
+            flash("Error: CGPA must be between 0.0 and 4.0")
+            return redirect(url_for('profile'))
+    except (ValueError, TypeError):
+        flash("Error: Invalid CGPA format")
+        return redirect(url_for('profile'))
+    # ----------------------------
+
+    # Proceed with database update if valid
     fullName = request.form.get('fullName')
     email = request.form.get('email')
     phone = request.form.get('phone')
     faculty = request.form.get('faculty')
     course = request.form.get('course')
-    cgpa = request.form.get('cgpa')
     credits = request.form.get('credits')
+
     connection = get_db_connection()
     try:
         with connection.cursor() as cur:
             cur.execute("UPDATE user SET fullName=%s, email=%s, phone=%s WHERE userID=%s", (fullName, email, phone, uID))
-            cur.execute("UPDATE student SET faculty=%s, course=%s, cgpa=%s, total_credits=%s WHERE studentID=%s", (faculty, course, cgpa, credits, uID))
+            cur.execute("UPDATE student SET faculty=%s, course=%s, cgpa=%s, total_credits=%s WHERE studentID=%s", (faculty, course, cgpa_val, credits, uID))
         connection.commit()
         session['full_name'] = fullName
-        flash("Profile updated successfully!") 
-        
+        flash("Profile updated successfully!")
         return redirect(url_for('profile'))
     except Exception as e:
         connection.rollback()
